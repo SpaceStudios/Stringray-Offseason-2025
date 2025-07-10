@@ -19,7 +19,6 @@ import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.outtake.Outtake;
 import java.util.HashMap;
 import java.util.function.DoubleSupplier;
-
 import org.littletonrobotics.junction.AutoLogOutput;
 
 /** Add your docs here. */
@@ -48,29 +47,40 @@ public class StateMachine {
   private gamepieceState kCoralState;
   private gamepieceState kAlgaeState;
 
-  @AutoLogOutput(key="State Machine/Score Request")
+  @AutoLogOutput(key = "State Machine/Score Request")
   private final Trigger scoreRequest;
-  @AutoLogOutput(key="State Machine/Intake Request")
+
+  @AutoLogOutput(key = "State Machine/Intake Request")
   private final Trigger intakeRequest;
-  @AutoLogOutput(key="State Machine/Target L1")
+
+  @AutoLogOutput(key = "State Machine/Target L1")
   private final Trigger targetL1; // Target L1 or Intake
-  @AutoLogOutput(key="State Machine/Target L2")
+
+  @AutoLogOutput(key = "State Machine/Target L2")
   private final Trigger targetL2; // Target L2 or Processor
-  @AutoLogOutput(key="State Machine/Target L3")
+
+  @AutoLogOutput(key = "State Machine/Target L3")
   private final Trigger targetL3; // Target L3 or Algae Intake Position
-  @AutoLogOutput(key="State Machine/Target L4")
+
+  @AutoLogOutput(key = "State Machine/Target L4")
   private final Trigger targetL4; // Target L4 or Net
-  @AutoLogOutput(key="State Machine/Up")
+
+  @AutoLogOutput(key = "State Machine/Up")
   private final Trigger up;
-  @AutoLogOutput(key="State Machine/Down")
+
+  @AutoLogOutput(key = "State Machine/Down")
   private final Trigger down;
-  @AutoLogOutput(key="State Machine/Left")
+
+  @AutoLogOutput(key = "State Machine/Left")
   private final Trigger left;
-  @AutoLogOutput(key="State Machine/Right")
+
+  @AutoLogOutput(key = "State Machine/Right")
   private final Trigger right;
-  @AutoLogOutput(key="State Machine/Reverse Intake")
+
+  @AutoLogOutput(key = "State Machine/Reverse Intake")
   private final Trigger reverseIntake;
-  @AutoLogOutput(key="State Machine/Manual Elevator")
+
+  @AutoLogOutput(key = "State Machine/Manual Elevator")
   private final Trigger manualElevator;
 
   public StateMachine(
@@ -115,9 +125,7 @@ public class StateMachine {
         .and(drive::nearSource)
         .whileTrue(
             Commands.parallel(
-                intake.setVolts(6), 
-                outtake.setVolts(6), 
-                setCoralState(gamepieceState.INTAKING)));
+                intake.setVolts(6), outtake.setVolts(6), setCoralState(gamepieceState.INTAKING)));
 
     intakeRequest
         .negate()
@@ -131,79 +139,66 @@ public class StateMachine {
         .and(grabber::hasAlgae)
         .onTrue(setAlgaeState(gamepieceState.READY));
 
+    intakeRequest
+        .and(coralStateMap.get(gamepieceState.IDLE))
+        .and(manualElevator.negate())
+        .onTrue(elevator.setHeight(ElevatorConstants.Intake));
+
     targetL1
-      .and(drive::nearSource)
-      .and(coralStateMap.get(gamepieceState.IDLE))
-      .and(manualElevator.negate())
-      .onTrue(elevator.setHeight(ElevatorConstants.Intake));
-    
-    targetL1
-      .and(() -> !(drive.nearSource()))
-      .and(manualElevator.negate())
-      .onTrue(elevator.setHeight(ElevatorConstants.L1));
-    
+        .and(() -> !(drive.nearSource()))
+        .and(manualElevator.negate())
+        .onTrue(elevator.setHeight(ElevatorConstants.L1));
+
     targetL2
-      .and(coralStateMap.get(gamepieceState.READY))
-      .and(() -> !(drive.nearProcessor()))
-      .and(manualElevator.negate())
-      .onTrue(
-        elevator.setHeight(ElevatorConstants.L2));
+        .and(coralStateMap.get(gamepieceState.READY))
+        .and(() -> !(drive.nearProcessor()))
+        .and(manualElevator.negate())
+        .onTrue(elevator.setHeight(ElevatorConstants.L2));
 
     targetL3
-      .and(coralStateMap.get(gamepieceState.IDLE).or(() -> !(outtake.hasCoral())))
-      .and(algaeStateMap.get(gamepieceState.IDLE).or(() -> !(grabber.hasAlgae())))
-      .and(manualElevator.negate())
-      .onTrue(
-        Commands.parallel(
-          elevator.setHeight(getNearestAlgaeHeight(drive.getPose())),
-          setAlgaeState(gamepieceState.INTAKING)));
-    
+        .and(coralStateMap.get(gamepieceState.IDLE).or(() -> !(outtake.hasCoral())))
+        .and(algaeStateMap.get(gamepieceState.IDLE).or(() -> !(grabber.hasAlgae())))
+        .and(manualElevator.negate())
+        .onTrue(
+            Commands.parallel(
+                elevator.setHeight(getNearestAlgaeHeight(drive.getPose())),
+                setAlgaeState(gamepieceState.INTAKING)));
+
     targetL3
-      .and(coralStateMap.get(gamepieceState.READY))
-      .and(manualElevator.negate())
-      .onTrue(
-        elevator.setHeight(ElevatorConstants.L3));
-    
+        .and(coralStateMap.get(gamepieceState.READY))
+        .and(manualElevator.negate())
+        .onTrue(elevator.setHeight(ElevatorConstants.L3));
+
     targetL4
-      .and(coralStateMap.get(gamepieceState.READY))
-      .and(() -> !(drive.nearNet()))
-      .and(manualElevator.negate())
-      .onTrue(
-        elevator.setHeight(ElevatorConstants.L4));
-    
-    scoreRequest
-      .and(coralStateMap.get(gamepieceState.READY))
-      .and(elevator::atSetpoint)
-      .and(() -> (elevator.getSetpoint() == ElevatorConstants.L1) || (elevator.getSetpoint() == ElevatorConstants.L2) || (elevator.getSetpoint() == ElevatorConstants.L3) || (elevator.getSetpoint() == ElevatorConstants.L4))
-      .onTrue(
-        Commands.parallel(
-          outtake.setVolts(6),
-          setCoralState(gamepieceState.IDLE)
-        ));
-    
-    scoreRequest
-      .and(algaeStateMap.get(gamepieceState.READY))
-      .and(elevator::atSetpoint)
-      .and(drive::nearNet)
-      .onTrue(
-        Commands.parallel(
-          grabber.setVoltage(6),
-          setAlgaeState(gamepieceState.IDLE)
-        ));
-    
-    scoreRequest
-      .and(algaeStateMap.get(gamepieceState.READY))
-      .and(elevator::atSetpoint)
-      .and(drive::nearProcessor)
-      .onTrue(
-        Commands.parallel(
-          grabber.setVoltage(6),
-          setAlgaeState(gamepieceState.IDLE)
-        ));
+        .and(coralStateMap.get(gamepieceState.READY))
+        .and(() -> !(drive.nearNet()))
+        .and(manualElevator.negate())
+        .onTrue(elevator.setHeight(ElevatorConstants.L4));
 
-    stateMap
-    .get(robotState.IDLE)
-    .onTrue(Commands.parallel(elevator.setHeight(Meters.zero())));
+    scoreRequest
+        .and(coralStateMap.get(gamepieceState.READY))
+        .and(elevator::atSetpoint)
+        .and(
+            () ->
+                (elevator.getSetpoint() == ElevatorConstants.L1)
+                    || (elevator.getSetpoint() == ElevatorConstants.L2)
+                    || (elevator.getSetpoint() == ElevatorConstants.L3)
+                    || (elevator.getSetpoint() == ElevatorConstants.L4))
+        .onTrue(Commands.parallel(outtake.setVolts(6), setCoralState(gamepieceState.IDLE)));
+
+    scoreRequest
+        .and(algaeStateMap.get(gamepieceState.READY))
+        .and(elevator::atSetpoint)
+        .and(drive::nearNet)
+        .onTrue(Commands.parallel(grabber.setVoltage(6), setAlgaeState(gamepieceState.IDLE)));
+
+    scoreRequest
+        .and(algaeStateMap.get(gamepieceState.READY))
+        .and(elevator::atSetpoint)
+        .and(drive::nearProcessor)
+        .onTrue(Commands.parallel(grabber.setVoltage(6), setAlgaeState(gamepieceState.IDLE)));
+
+    stateMap.get(robotState.IDLE).onTrue(Commands.parallel(elevator.setHeight(Meters.zero())));
 
     algaeStateMap
         .get(gamepieceState.IDLE)
@@ -216,15 +211,13 @@ public class StateMachine {
         .and(drive::nearNet)
         .and(targetL4)
         .onTrue(elevator.setHeight(ElevatorConstants.AN));
-    
+
     algaeStateMap
-      .get(gamepieceState.READY)
-      .and(manualElevator.negate())
-      .and(drive::nearProcessor)
-      .and(targetL2)
-      .onTrue(
-        elevator.setHeight(ElevatorConstants.AP)
-      );
+        .get(gamepieceState.READY)
+        .and(manualElevator.negate())
+        .and(drive::nearProcessor)
+        .and(targetL1)
+        .onTrue(elevator.setHeight(ElevatorConstants.AP));
 
     // Logging Triggers
     this.scoreRequest = scoreRequest;
