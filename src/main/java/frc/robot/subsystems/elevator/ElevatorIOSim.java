@@ -43,7 +43,7 @@ public class ElevatorIOSim implements ElevatorIO {
             true,
             0.0);
 
-    pid = new ProfiledPIDController(80.0, 0.0, 0.0, new Constraints(5.0, 10.0));
+    pid = new ProfiledPIDController(80.0, 0.0, 0.01, new Constraints(5.0, 10.0));
     ff =
         new ElevatorFeedforward(
             0.0,
@@ -80,5 +80,11 @@ public class ElevatorIOSim implements ElevatorIO {
         Volts.of(
             pid.calculate(sim.getPositionMeters(), height.in(Meters))
                 + ff.calculate(pid.getSetpoint().velocity)));
+  }
+
+  @Override
+  public boolean atSetpoint() {
+    return MathUtil.applyDeadband(pid.getSetpoint().position - sim.getPositionMeters(), 0.001)
+        == 0.0;
   }
 }

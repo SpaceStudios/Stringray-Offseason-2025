@@ -44,7 +44,7 @@ public class Elevator extends SubsystemBase {
   }
 
   public boolean atSetpoint() {
-    return data.height == data.setPoint;
+    return io.atSetpoint();
   }
 
   public Command setHeight(Distance height) {

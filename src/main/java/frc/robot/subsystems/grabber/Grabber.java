@@ -23,14 +23,20 @@ public class Grabber extends SubsystemBase {
   }
 
   public Command setVoltage(Voltage voltage) {
-    return this.run(() -> {io.setVolts(voltage);});
+    return this.run(
+        () -> {
+          io.setVolts(voltage);
+        });
   }
 
   public Command setVoltage(double volts) {
-    return this.run(() -> {io.setVolts(Volts.of(volts));});
+    return this.run(
+        () -> {
+          io.setVolts(Volts.of(volts));
+        });
   }
 
-  //TODO add sensor check
+  // TODO add sensor check
   public boolean hasAlgae() {
     return false;
   }

@@ -18,8 +18,19 @@ import java.util.List;
 public class ElevatorConstants {
   // Scoring Poses
   public static final Pose2d[] algaePoses = new Pose2d[] {};
+
   public static final Distance[] algaeSetpoints = new Distance[] {};
+
   private static HashMap<Pose2d, Distance> algaeMap;
+
+  // Presets
+  public static final Distance AN = Meters.of(1.78);
+  public static final Distance AP = Meters.of(0.0);
+  public static final Distance L1 = Meters.of(1.78);
+  public static final Distance L2 = Meters.of(1.78);
+  public static final Distance L3 = Meters.of(1.78);
+  public static final Distance L4 = Meters.of(1.78);
+  public static final Distance Intake = Meters.of(0.0);
 
   // Elevator Constants
   public static final double gearing = (5.0 / 1.0); // Elevator Gearing

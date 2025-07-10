@@ -24,6 +24,7 @@ public interface ElevatorIO {
     public Distance setPoint = Meters.zero();
     public LinearVelocity velocity = MetersPerSecond.zero();
     public LinearAcceleration acceleration = MetersPerSecondPerSecond.zero();
+    public boolean atSetpoint = false;
   }
 
   public default void setHeight(Distance height) {}
@@ -44,4 +45,8 @@ public interface ElevatorIO {
       ElevatorDataAutoLogged data,
       MotorDataAutoLogged leftMotorData,
       MotorDataAutoLogged rightMotorData) {}
+
+  public default boolean atSetpoint() {
+    return true;
+  }
 }

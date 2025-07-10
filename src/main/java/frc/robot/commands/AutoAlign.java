@@ -20,6 +20,7 @@ import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.subsystems.drive.Drive;
+import java.util.List;
 
 /** Add your docs here. */
 public class AutoAlign {
@@ -37,6 +38,14 @@ public class AutoAlign {
   private static Pose2d[] coralPoses = new Pose2d[] {};
 
   private AutoAlign() {}
+
+  public static Pose2d getNearestCoralPose(Pose2d robotPose) {
+    return robotPose.nearest(List.of(coralPoses));
+  }
+
+  public static Pose2d getNearestAlgaePose(Pose2d robotPose) {
+    return robotPose.nearest(List.of(algaePoses));
+  }
 
   public static Command autoalignToTarget(Drive drive, Pose2d targetPose) {
     ProfiledPIDController xController =
