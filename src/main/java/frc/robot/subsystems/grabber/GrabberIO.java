@@ -11,7 +11,9 @@ import frc.robot.util.MotorData;
 public interface GrabberIO {
   public default void setVolts(Voltage volts) {}
 
-  public default void setOutput(double output) {}
+  public default boolean hasAlgae() {
+    return false;
+  }
 
   public default void updateInputs(MotorData data) {}
 }

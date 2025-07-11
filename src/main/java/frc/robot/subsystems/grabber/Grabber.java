@@ -9,6 +9,7 @@ import static edu.wpi.first.units.Units.Volts;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import org.littletonrobotics.junction.AutoLogOutput;
 
 public class Grabber extends SubsystemBase {
   private final GrabberIO io;
@@ -36,8 +37,9 @@ public class Grabber extends SubsystemBase {
         });
   }
 
+  @AutoLogOutput(key = "Grabber/Has Algae")
   // TODO add sensor check
   public boolean hasAlgae() {
-    return false;
+    return io.hasAlgae();
   }
 }

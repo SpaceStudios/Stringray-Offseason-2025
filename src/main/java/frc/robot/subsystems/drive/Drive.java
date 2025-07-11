@@ -366,14 +366,17 @@ public class Drive extends SubsystemBase {
     };
   }
 
+  @AutoLogOutput(key = "Drive/nearNet")
   public boolean nearNet() {
     return false;
   }
 
+  @AutoLogOutput(key = "Drive/near Processor")
   public boolean nearProcessor() {
     return false;
   }
 
+  @AutoLogOutput(key = "Drive/near Source")
   public boolean nearSource() {
     return false;
   }

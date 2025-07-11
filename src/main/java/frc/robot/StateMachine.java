@@ -43,44 +43,49 @@ public class StateMachine {
   private final HashMap<gamepieceState, Trigger> algaeStateMap =
       new HashMap<gamepieceState, Trigger>();
 
+  @AutoLogOutput(key = "State Machine/Current Robot State")
   private robotState currentState;
+
+  @AutoLogOutput(key = "State Machine/Coral State")
   private gamepieceState kCoralState;
+
+  @AutoLogOutput(key = "State Machine/Algae State")
   private gamepieceState kAlgaeState;
 
-  @AutoLogOutput(key = "State Machine/Score Request")
+  @AutoLogOutput(key = "State Machine/Inputs/Score Request")
   private final Trigger scoreRequest;
 
-  @AutoLogOutput(key = "State Machine/Intake Request")
+  @AutoLogOutput(key = "State Machine/Inputs/Intake Request")
   private final Trigger intakeRequest;
 
-  @AutoLogOutput(key = "State Machine/Target L1")
+  @AutoLogOutput(key = "State Machine/Inputs/Target L1")
   private final Trigger targetL1; // Target L1 or Intake
 
-  @AutoLogOutput(key = "State Machine/Target L2")
+  @AutoLogOutput(key = "State Machine/Inputs/Target L2")
   private final Trigger targetL2; // Target L2 or Processor
 
-  @AutoLogOutput(key = "State Machine/Target L3")
+  @AutoLogOutput(key = "State Machine/Inputs/Target L3")
   private final Trigger targetL3; // Target L3 or Algae Intake Position
 
-  @AutoLogOutput(key = "State Machine/Target L4")
+  @AutoLogOutput(key = "State Machine/Inputs/Target L4")
   private final Trigger targetL4; // Target L4 or Net
 
-  @AutoLogOutput(key = "State Machine/Up")
+  @AutoLogOutput(key = "State Machine/Inputs/Up")
   private final Trigger up;
 
-  @AutoLogOutput(key = "State Machine/Down")
+  @AutoLogOutput(key = "State Machine/Inputs/Down")
   private final Trigger down;
 
-  @AutoLogOutput(key = "State Machine/Left")
+  @AutoLogOutput(key = "State Machine/Inputs/Left")
   private final Trigger left;
 
-  @AutoLogOutput(key = "State Machine/Right")
+  @AutoLogOutput(key = "State Machine/Inputs/Right")
   private final Trigger right;
 
-  @AutoLogOutput(key = "State Machine/Reverse Intake")
+  @AutoLogOutput(key = "State Machine/Inputs/Reverse Intake")
   private final Trigger reverseIntake;
 
-  @AutoLogOutput(key = "State Machine/Manual Elevator")
+  @AutoLogOutput(key = "State Machine/Inputs/Manual Elevator")
   private final Trigger manualElevator;
 
   public StateMachine(

@@ -15,27 +15,30 @@ import au.grapplerobotics.interfaces.LaserCanInterface.TimingBudget;
 
 /** Add your docs here. */
 public class SensorIOGrapple implements SensorIO {
-    private final LaserCan laserCan;
-    private final double threshold;
+  private final LaserCan laserCan;
+  private final double threshold;
 
-    public SensorIOGrapple(int id, RangingMode rangingMode, RegionOfInterest regionOfInterest, double threshold) {
-        laserCan = new LaserCan(id);
-        this.threshold = threshold;
-        try {
-            laserCan.setTimingBudget(TimingBudget.TIMING_BUDGET_33MS);
-            laserCan.setRangingMode(rangingMode);
-            laserCan.setRegionOfInterest(regionOfInterest);
-        } catch (ConfigurationFailedException e) {
-            e.printStackTrace();
-        }
+  public SensorIOGrapple(
+      int id, RangingMode rangingMode, RegionOfInterest regionOfInterest, double threshold) {
+    laserCan = new LaserCan(id);
+    this.threshold = threshold;
+    try {
+      laserCan.setTimingBudget(TimingBudget.TIMING_BUDGET_33MS);
+      laserCan.setRangingMode(rangingMode);
+      laserCan.setRegionOfInterest(regionOfInterest);
+    } catch (ConfigurationFailedException e) {
+      e.printStackTrace();
     }
+  }
 
-    @Override
-    public void updateData(SensorDataAutoLogged data) {
-        Measurement measurement = laserCan.getMeasurement();
-        data.connected = (measurement != null);
-        data.raw = measurement.distance_mm;
-        data.detected = (measurement.status == LaserCan.LASERCAN_STATUS_VALID_MEASUREMENT) && (measurement.distance_mm < threshold);
-        data.temperature = Celsius.of(20);
-    }
+  @Override
+  public void updateData(SensorDataAutoLogged data) {
+    Measurement measurement = laserCan.getMeasurement();
+    data.connected = (measurement != null);
+    data.raw = measurement.distance_mm;
+    data.detected =
+        (measurement.status == LaserCan.LASERCAN_STATUS_VALID_MEASUREMENT)
+            && (measurement.distance_mm < threshold);
+    data.temperature = Celsius.of(20);
+  }
 }

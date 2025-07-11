@@ -18,5 +18,10 @@ public interface SensorIO {
   }
 
   public default void updateData(SensorDataAutoLogged data) {}
-  public default boolean detected() {return false;}
+
+  public default boolean detected() {
+    return false;
+  }
+
+  public default void simOverride(boolean value) {}
 }
