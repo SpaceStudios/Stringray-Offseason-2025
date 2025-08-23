@@ -15,58 +15,58 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 /** Add your docs here. */
 public class ElevatorIOTalonFX implements ElevatorIO {
 
-    private final TalonFX leftTalon;
-    private final TalonFX rightTalon;
+  private final TalonFX leftTalon;
+  private final TalonFX rightTalon;
 
-    public ElevatorIOTalonFX() {
-        leftTalon = new TalonFX(21);
-        rightTalon = new TalonFX(22);
-        
-        rightTalon.setControl(new Follower(leftTalon.getDeviceID(), true));
+  public ElevatorIOTalonFX() {
+    leftTalon = new TalonFX(21);
+    rightTalon = new TalonFX(22);
 
-        final TalonFXConfiguration configuration = new TalonFXConfiguration();
+    rightTalon.setControl(new Follower(leftTalon.getDeviceID(), true));
 
-        configuration.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+    final TalonFXConfiguration configuration = new TalonFXConfiguration();
 
-        configuration.Slot0.GravityType = GravityTypeValue.Elevator_Static;
-        configuration.Slot0.kP = ElevatorConstants.PID.kP[0];
-        configuration.Slot0.kP = ElevatorConstants.PID.kI[0];
-        configuration.Slot0.kP = ElevatorConstants.PID.kD[0];
-        configuration.Slot0.kG = ElevatorConstants.PID.kG[0];
-        configuration.Slot0.kS = ElevatorConstants.PID.kS[0];
+    configuration.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
-        configuration.Slot1.GravityType = GravityTypeValue.Elevator_Static;
-        configuration.Slot1.kP = ElevatorConstants.PID.kP[1];
-        configuration.Slot1.kI = ElevatorConstants.PID.kI[1];
-        configuration.Slot1.kD = ElevatorConstants.PID.kD[1];
-        configuration.Slot1.kG = ElevatorConstants.PID.kG[1];
-        configuration.Slot1.kS = ElevatorConstants.PID.kS[1];
+    configuration.Slot0.GravityType = GravityTypeValue.Elevator_Static;
+    configuration.Slot0.kP = ElevatorConstants.PID.kP[0];
+    configuration.Slot0.kP = ElevatorConstants.PID.kI[0];
+    configuration.Slot0.kP = ElevatorConstants.PID.kD[0];
+    configuration.Slot0.kG = ElevatorConstants.PID.kG[0];
+    configuration.Slot0.kS = ElevatorConstants.PID.kS[0];
 
-        configuration.Slot2.GravityType = GravityTypeValue.Elevator_Static;
-        configuration.Slot2.kP = ElevatorConstants.PID.kP[2];
-        configuration.Slot2.kI = ElevatorConstants.PID.kI[2];
-        configuration.Slot2.kD = ElevatorConstants.PID.kD[2];
-        configuration.Slot2.kG = ElevatorConstants.PID.kG[2];
-        configuration.Slot2.kS = ElevatorConstants.PID.kS[2];
+    configuration.Slot1.GravityType = GravityTypeValue.Elevator_Static;
+    configuration.Slot1.kP = ElevatorConstants.PID.kP[1];
+    configuration.Slot1.kI = ElevatorConstants.PID.kI[1];
+    configuration.Slot1.kD = ElevatorConstants.PID.kD[1];
+    configuration.Slot1.kG = ElevatorConstants.PID.kG[1];
+    configuration.Slot1.kS = ElevatorConstants.PID.kS[1];
 
-        // Do not put any configuration below this
-        tryUntilOk(5, () -> leftTalon.getConfigurator().apply(configuration, 0.25));
-    }
+    configuration.Slot2.GravityType = GravityTypeValue.Elevator_Static;
+    configuration.Slot2.kP = ElevatorConstants.PID.kP[2];
+    configuration.Slot2.kI = ElevatorConstants.PID.kI[2];
+    configuration.Slot2.kD = ElevatorConstants.PID.kD[2];
+    configuration.Slot2.kG = ElevatorConstants.PID.kG[2];
+    configuration.Slot2.kS = ElevatorConstants.PID.kS[2];
 
-    @Override
-    public void updateData(elevatorDataAutoLogged data) {}
+    // Do not put any configuration below this
+    tryUntilOk(5, () -> leftTalon.getConfigurator().apply(configuration, 0.25));
+  }
 
-    @Override
-    public void setHeight(double height) {}
+  @Override
+  public void updateData(elevatorDataAutoLogged data) {}
 
-    @Override
-    public void setVoltage(double voltage) {}
+  @Override
+  public void setHeight(double height) {}
 
-    @Override
-    public void runVelocity(double joystick) {}
+  @Override
+  public void setVoltage(double voltage) {}
 
-    @Override
-    public double getHeight() {
-        return 0.0;
-    }
+  @Override
+  public void runVelocity(double joystick) {}
+
+  @Override
+  public double getHeight() {
+    return 0.0;
+  }
 }

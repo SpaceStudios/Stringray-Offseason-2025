@@ -16,10 +16,10 @@ public class ElevatorConstants {
   public static final double maxVelocity = 20;
 
   public class PID {
-    public static final double[] kP = new double[] {0.9,0.9,0.9};
-    public static final double[] kI = new double[] {0.0,0.0,0.0};
-    public static final double[] kD = new double[] {0.0,0.0,0.0};
-    public static final double[] kG = new double[] {0.0,0.0,0.0};
-    public static final double[] kS = new double[] {0.0,0.0,0.0};
+    public static final double[] kP = new double[] {0.9, 0.9, 0.9};
+    public static final double[] kI = new double[] {0.0, 0.0, 0.0};
+    public static final double[] kD = new double[] {0.0, 0.0, 0.0};
+    public static final double[] kG = new double[] {0.0, 0.0, 0.0};
+    public static final double[] kS = new double[] {0.0, 0.0, 0.0};
   }
 }

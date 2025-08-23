@@ -4,39 +4,33 @@
 
 package frc.robot;
 
-import java.util.function.DoubleSupplier;
-
-import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.subsystems.elevator.Elevator;
 
 /** Add your docs here. */
 public class Superstructure {
-    public enum CoralTarget {
-        L4(1.34),
-        L3(0.0),
-        L2(0.0),
-        L1(0.0);
+  public enum CoralTarget {
+    L4(1.34),
+    L3(0.0),
+    L2(0.0),
+    L1(0.0);
 
-        public double height;
+    public double height;
 
-        private CoralTarget(double height) {
-            this.height = height;
-        }
+    private CoralTarget(double height) {
+      this.height = height;
     }
-    public static class ControllerLayout {
-        public DoubleSupplier driveX;
-        public DoubleSupplier driveY;
-        public DoubleSupplier operatorY;
-        public Trigger scoreRequest;
-        public Trigger intakeRequest;
-        public Trigger manualElevator;
-    }
+  }
 
-    public Superstructure(ControllerLayout layout, Elevator elevator) {   
-        layout
-            .manualElevator
-            .whileTrue(elevator.runVelocity(layout.operatorY));
-    }
+  // public static class ControllerLayout {
+  //   public DoubleSupplier driveX;
+  //   public DoubleSupplier driveY;
+  //   public DoubleSupplier operatorY;
+  //   public Trigger scoreRequest;
+  //   public Trigger intakeRequest;
+  //   public Trigger manualElevator;
+  // }
 
-    public void periodic() {}
+  public Superstructure(Elevator elevator) {}
+
+  public void periodic() {}
 }
