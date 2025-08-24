@@ -4,6 +4,7 @@
 
 package frc.robot;
 
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -65,7 +66,7 @@ public class Superstructure {
   public Superstructure(
       Drive drive, Elevator elevator, Outtake outtake, Hopper hopper, ControllerLayout layout) {
     for (state kState : state.values()) {
-      stateMap.put(kState, new Trigger(() -> (kCurrentState == kState)));
+      stateMap.put(kState, new Trigger(() -> (kCurrentState == kState) && DriverStation.isEnabled()));
     }
 
     this.layout = layout;
@@ -126,6 +127,8 @@ public class Superstructure {
 
     // Idle State Triggers
     stateMap.get(state.IDLE).and(outtake::getDetected).onTrue(this.setState(state.CORAL_READY));
+
+    stateMap.get(state.IDLE).onTrue(elevator.setElevatorHeight(0.0));
 
     // Sim State Triggers
     stateMap
