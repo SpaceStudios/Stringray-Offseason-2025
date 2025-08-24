@@ -31,6 +31,9 @@ import frc.robot.subsystems.drive.ModuleIOTalonFX;
 import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.elevator.ElevatorIO;
 import frc.robot.subsystems.elevator.ElevatorIOSim;
+import frc.robot.subsystems.hopper.Hopper;
+import frc.robot.subsystems.hopper.HopperIO;
+import frc.robot.subsystems.hopper.HopperIOSim;
 import frc.robot.subsystems.outtake.Outtake;
 import frc.robot.subsystems.outtake.OuttakeIO;
 import frc.robot.subsystems.outtake.OuttakeIOSim;
@@ -47,6 +50,7 @@ public class RobotContainer {
   private final Drive drive;
   private final Elevator elevator;
   private final Outtake outtake;
+  private final Hopper hopper;
   public final Superstructure superstructure;
 
   // Controller
@@ -72,6 +76,7 @@ public class RobotContainer {
                 new ModuleIOTalonFX(TunerConstants.BackRight));
         elevator = new Elevator(new ElevatorIO() {});
         outtake = new Outtake(new OuttakeIO() {});
+        hopper = new Hopper(new HopperIO() {});
         break;
 
       case SIM:
@@ -85,6 +90,7 @@ public class RobotContainer {
                 new ModuleIOSim(TunerConstants.BackRight));
         elevator = new Elevator(new ElevatorIOSim());
         outtake = new Outtake(new OuttakeIOSim());
+        hopper = new Hopper(new HopperIOSim());
         break;
 
       default:
@@ -98,6 +104,7 @@ public class RobotContainer {
                 new ModuleIO() {});
         elevator = new Elevator(new ElevatorIO() {});
         outtake = new Outtake(new OuttakeIO() {});
+        hopper = new Hopper(new HopperIO() {});
         break;
     }
 
@@ -132,7 +139,7 @@ public class RobotContainer {
     simLayout.L3 = controller.b();
     simLayout.L4 = controller.y();
 
-    superstructure = new Superstructure(drive, elevator, outtake, simLayout);
+    superstructure = new Superstructure(drive, elevator, outtake, hopper, simLayout);
     // Configure the button bindings
     configureButtonBindings();
   }

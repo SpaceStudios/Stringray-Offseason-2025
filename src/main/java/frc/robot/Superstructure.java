@@ -11,6 +11,7 @@ import frc.robot.commands.AutoAlign;
 import frc.robot.commands.AutoAlign.IntakeLocation;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.elevator.Elevator;
+import frc.robot.subsystems.hopper.Hopper;
 import frc.robot.subsystems.outtake.Outtake;
 import frc.robot.util.FieldConstants;
 import frc.robot.util.FieldConstants.ReefConstants.coralTarget;
@@ -61,7 +62,8 @@ public class Superstructure {
 
   LoggedMechanism2d mech;
 
-  public Superstructure(Drive drive, Elevator elevator, Outtake outtake, ControllerLayout layout) {
+  public Superstructure(
+      Drive drive, Elevator elevator, Outtake outtake, Hopper hopper, ControllerLayout layout) {
     for (state kState : state.values()) {
       stateMap.put(kState, new Trigger(() -> (kCurrentState == kState)));
     }
@@ -104,12 +106,26 @@ public class Superstructure {
         .onTrue(
             Commands.parallel(
                 setState(state.CORAL_INTAKE),
-                elevator.setElevatorHeight(FieldConstants.SourceConstants.elevatorSetpoint)));
+                elevator
+                    .setElevatorHeight(FieldConstants.SourceConstants.elevatorSetpoint)
+                    .until(elevator::nearSetpoint)));
 
     layout
         .scoreRequest
         .and(outtake::getDetected)
         .onTrue(outtake.setVoltage(5).until(() -> (!outtake.getDetected())));
+
+    // Coral State Triggers
+    stateMap
+        .get(state.CORAL_INTAKE)
+        .whileTrue(Commands.parallel(hopper.setVoltage(5), outtake.setVoltage(5)));
+    stateMap
+        .get(state.CORAL_INTAKE)
+        .and(outtake::getDetected)
+        .onTrue(this.setState(state.CORAL_READY));
+
+    // Idle State Triggers
+    stateMap.get(state.IDLE).and(outtake::getDetected).onTrue(this.setState(state.CORAL_READY));
 
     // Sim State Triggers
     stateMap
@@ -128,7 +144,9 @@ public class Superstructure {
   public Command setState(state newState) {
     return Commands.runOnce(
         () -> {
-          System.out.println(newState.toString());
+          if (kCurrentState != newState) {
+            System.out.println(newState.toString());
+          }
           this.kCurrentState = newState;
         });
   }

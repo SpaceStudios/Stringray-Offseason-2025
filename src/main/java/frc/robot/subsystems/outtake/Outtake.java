@@ -28,9 +28,13 @@ public class Outtake extends SubsystemBase {
 
   public Command setVoltage(double voltage) {
     return this.run(
-        () -> {
-          io.setVoltage(voltage);
-        });
+            () -> {
+              io.setVoltage(voltage);
+            })
+        .finallyDo(
+            () -> {
+              io.setVoltage(0.0);
+            });
   }
 
   public Command setDetected(boolean detected) {
