@@ -25,6 +25,19 @@ public class FieldConstants {
   public static final double safeDistance = Units.inchesToMeters(16.5);
 
   public static class ReefConstants {
+    public enum coralTarget {
+      L1(0.42),
+      L2(0.79),
+      L3(1.18),
+      L4(1.34);
+
+      public double height;
+
+      private coralTarget(double height) {
+        this.height = height;
+      }
+    }
+
     public static final Pose2d[] aprilTags =
         new Pose2d[] {
           AllianceFlipUtil.apply(fieldLayout.getTagPose(17).get().toPose2d()),
@@ -104,6 +117,7 @@ public class FieldConstants {
           sourceTags[0].transformBy(new Transform2d(safeDistance, 0.0, Rotation2d.kZero)),
           sourceTags[1].transformBy(new Transform2d(safeDistance, 0.0, Rotation2d.kZero))
         };
+    public static final double elevatorSetpoint = 0.0;
   }
 
   public class BargeConstants {
@@ -117,6 +131,11 @@ public class FieldConstants {
           bargeTags[1].transformBy(new Transform2d(safeDistance * 1.5, 0.0, Rotation2d.k180deg))
         };
     public static final Pose2d net = bargePoses[0];
+    public static final double elevatorSetpoint = 1.78;
+  }
+
+  public class ProcessorConstants {
+    public static final double elevatorSetpoint = 0.0;
   }
 
   public static void Log() {

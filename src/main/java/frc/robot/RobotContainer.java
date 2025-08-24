@@ -19,6 +19,7 @@ import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.robot.Superstructure.ControllerLayout;
 import frc.robot.commands.DriveCommands;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.drive.Drive;
@@ -30,6 +31,9 @@ import frc.robot.subsystems.drive.ModuleIOTalonFX;
 import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.elevator.ElevatorIO;
 import frc.robot.subsystems.elevator.ElevatorIOSim;
+import frc.robot.subsystems.outtake.Outtake;
+import frc.robot.subsystems.outtake.OuttakeIO;
+import frc.robot.subsystems.outtake.OuttakeIOSim;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
@@ -42,10 +46,14 @@ public class RobotContainer {
   // Subsystems
   private final Drive drive;
   private final Elevator elevator;
+  private final Outtake outtake;
   public final Superstructure superstructure;
 
   // Controller
   private final CommandXboxController controller = new CommandXboxController(0);
+
+  // private final ControllerLayout compLayout = new ControllerLayout();
+  private final ControllerLayout simLayout = new ControllerLayout();
 
   // Dashboard inputs
   private final LoggedDashboardChooser<Command> autoChooser;
@@ -63,6 +71,7 @@ public class RobotContainer {
                 new ModuleIOTalonFX(TunerConstants.BackLeft),
                 new ModuleIOTalonFX(TunerConstants.BackRight));
         elevator = new Elevator(new ElevatorIO() {});
+        outtake = new Outtake(new OuttakeIO() {});
         break;
 
       case SIM:
@@ -75,6 +84,7 @@ public class RobotContainer {
                 new ModuleIOSim(TunerConstants.BackLeft),
                 new ModuleIOSim(TunerConstants.BackRight));
         elevator = new Elevator(new ElevatorIOSim());
+        outtake = new Outtake(new OuttakeIOSim());
         break;
 
       default:
@@ -87,6 +97,7 @@ public class RobotContainer {
                 new ModuleIO() {},
                 new ModuleIO() {});
         elevator = new Elevator(new ElevatorIO() {});
+        outtake = new Outtake(new OuttakeIO() {});
         break;
     }
 
@@ -109,7 +120,19 @@ public class RobotContainer {
     autoChooser.addOption(
         "Drive SysId (Dynamic Reverse)", drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
 
-    superstructure = new Superstructure(elevator);
+    // Setting Up Superstructure
+
+    simLayout.driveX = () -> -controller.getLeftY();
+    simLayout.driveY = () -> -controller.getLeftX();
+    simLayout.intakeRequest = controller.leftTrigger();
+    simLayout.scoreRequest = controller.rightTrigger();
+    simLayout.manualElevator = controller.povUp();
+    simLayout.L1 = controller.a();
+    simLayout.L2 = controller.x();
+    simLayout.L3 = controller.b();
+    simLayout.L4 = controller.y();
+
+    superstructure = new Superstructure(drive, elevator, outtake, simLayout);
     // Configure the button bindings
     configureButtonBindings();
   }

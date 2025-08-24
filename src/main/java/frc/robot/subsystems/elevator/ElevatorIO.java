@@ -20,7 +20,7 @@ public interface ElevatorIO {
     public double motorOutput = 0.0;
     public double motorCurrent = 0.0;
     public double motorSupplyCurrent = 0.0;
-    
+
     public boolean followerConnected = false;
     public double followerTemperature = 0.0;
     public double followerVoltage = 0.0;

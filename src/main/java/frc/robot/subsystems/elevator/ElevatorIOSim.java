@@ -28,7 +28,7 @@ public class ElevatorIOSim implements ElevatorIO {
   private final ElevatorFeedforward ff =
       new ElevatorFeedforward(
           0.0,
-          0.06,
+          0.06 + 0.541,
           (DCMotor.getKrakenX60(1).KvRadPerSecPerVolt * ElevatorConstants.drumRadius)
               / ElevatorConstants.gearing);
 

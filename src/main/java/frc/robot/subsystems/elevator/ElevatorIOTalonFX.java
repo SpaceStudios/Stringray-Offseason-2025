@@ -16,7 +16,6 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
-
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
@@ -46,7 +45,8 @@ public class ElevatorIOTalonFX implements ElevatorIO {
   private final Debouncer rightConnectedDebouncer = new Debouncer(0.5);
 
   private final VoltageOut voltageOut = new VoltageOut(0.0).withEnableFOC(false);
-  private final MotionMagicVoltage positionTorque = new MotionMagicVoltage(0.0).withEnableFOC(false);
+  private final MotionMagicVoltage positionTorque =
+      new MotionMagicVoltage(0.0).withEnableFOC(false);
 
   private double setpoint = 0.0;
 
@@ -89,10 +89,13 @@ public class ElevatorIOTalonFX implements ElevatorIO {
     configuration.Slot2.kV = ElevatorConstants.PID.kV;
     configuration.Slot2.kA = ElevatorConstants.PID.kA;
 
-    configuration.Feedback.SensorToMechanismRatio = ElevatorConstants.gearing/(ElevatorConstants.drumRadius * Math.PI * 2);
+    configuration.Feedback.SensorToMechanismRatio =
+        ElevatorConstants.gearing / (ElevatorConstants.drumRadius * Math.PI * 2);
 
-    configuration.TorqueCurrent.PeakForwardTorqueCurrent = ElevatorConstants.MotorConstants.maxCurrent;
-    configuration.TorqueCurrent.PeakReverseTorqueCurrent = -ElevatorConstants.MotorConstants.maxCurrent;
+    configuration.TorqueCurrent.PeakForwardTorqueCurrent =
+        ElevatorConstants.MotorConstants.maxCurrent;
+    configuration.TorqueCurrent.PeakReverseTorqueCurrent =
+        -ElevatorConstants.MotorConstants.maxCurrent;
 
     configuration.CurrentLimits.StatorCurrentLimit = ElevatorConstants.MotorConstants.maxCurrent;
     configuration.CurrentLimits.StatorCurrentLimitEnable = true;
@@ -100,11 +103,13 @@ public class ElevatorIOTalonFX implements ElevatorIO {
     configuration.CurrentLimits.SupplyCurrentLimit = ElevatorConstants.MotorConstants.maxCurrent;
     configuration.CurrentLimits.SupplyCurrentLimitEnable = true;
 
-    configuration.CurrentLimits.SupplyCurrentLowerLimit = ElevatorConstants.MotorConstants.maxCurrentLow;
+    configuration.CurrentLimits.SupplyCurrentLowerLimit =
+        ElevatorConstants.MotorConstants.maxCurrentLow;
     configuration.CurrentLimits.SupplyCurrentLowerTime = 0.0;
 
-    configuration.ClosedLoopRamps.VoltageClosedLoopRampPeriod = ElevatorConstants.MotorConstants.rampPeriod;
-    
+    configuration.ClosedLoopRamps.VoltageClosedLoopRampPeriod =
+        ElevatorConstants.MotorConstants.rampPeriod;
+
     configuration.MotionMagic.MotionMagicAcceleration = ElevatorConstants.PID.maxAcceleration;
     configuration.MotionMagic.MotionMagicCruiseVelocity = ElevatorConstants.PID.maxVelocity;
 
@@ -113,7 +118,7 @@ public class ElevatorIOTalonFX implements ElevatorIO {
 
     // Do not put any configuration below this
     tryUntilOk(5, () -> leftTalon.getConfigurator().apply(configuration, 0.25));
-    
+
     position = leftTalon.getPosition();
     velocity = leftTalon.getVelocity();
     voltage = leftTalon.getMotorVoltage();
@@ -127,18 +132,17 @@ public class ElevatorIOTalonFX implements ElevatorIO {
     followerTemperature = rightTalon.getDeviceTemp();
 
     BaseStatusSignal.setUpdateFrequencyForAll(
-      50.0,
-      position,
-      velocity,
-      voltage,
-      statorCurrent,
-      supplyCurrent,
-      temperature,
-      followerVoltage,
-      followerStatorCurrent,
-      followerSupplyCurrent,
-      followerTemperature
-    );
+        50.0,
+        position,
+        velocity,
+        voltage,
+        statorCurrent,
+        supplyCurrent,
+        temperature,
+        followerVoltage,
+        followerStatorCurrent,
+        followerSupplyCurrent,
+        followerTemperature);
 
     leftTalon.optimizeBusUtilization();
     rightTalon.optimizeBusUtilization();
@@ -147,24 +151,31 @@ public class ElevatorIOTalonFX implements ElevatorIO {
   @Override
   public void updateData(elevatorDataAutoLogged data) {
     BaseStatusSignal.refreshAll(
-      position,
-      velocity,
-      voltage,
-      statorCurrent,
-      supplyCurrent,
-      temperature,
-      followerVoltage,
-      followerStatorCurrent,
-      followerSupplyCurrent,
-      followerTemperature
-    );
-    
+        position,
+        velocity,
+        voltage,
+        statorCurrent,
+        supplyCurrent,
+        temperature,
+        followerVoltage,
+        followerStatorCurrent,
+        followerSupplyCurrent,
+        followerTemperature);
+
     data.elevatorHeight = position.getValueAsDouble();
     data.elevatorVelocity = velocity.getValueAsDouble();
     data.elevatorSetpoint = setpoint;
 
-    data.connected = leftConnectedDebouncer.calculate(BaseStatusSignal.isAllGood(voltage,statorCurrent,supplyCurrent,temperature));
-    data.followerConnected = rightConnectedDebouncer.calculate(BaseStatusSignal.isAllGood(followerVoltage,followerStatorCurrent,followerSupplyCurrent,followerTemperature));
+    data.connected =
+        leftConnectedDebouncer.calculate(
+            BaseStatusSignal.isAllGood(voltage, statorCurrent, supplyCurrent, temperature));
+    data.followerConnected =
+        rightConnectedDebouncer.calculate(
+            BaseStatusSignal.isAllGood(
+                followerVoltage,
+                followerStatorCurrent,
+                followerSupplyCurrent,
+                followerTemperature));
 
     data.motorPosition = position.getValueAsDouble();
     data.motorVelocity = velocity.getValueAsDouble();
