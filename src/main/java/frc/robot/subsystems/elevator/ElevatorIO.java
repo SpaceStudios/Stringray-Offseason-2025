@@ -19,6 +19,14 @@ public interface ElevatorIO {
     public double motorVoltage = 0.0;
     public double motorOutput = 0.0;
     public double motorCurrent = 0.0;
+    public double motorSupplyCurrent = 0.0;
+    
+    public boolean followerConnected = false;
+    public double followerTemperature = 0.0;
+    public double followerVoltage = 0.0;
+    public double followerOutput = 0.0;
+    public double followerCurrent = 0.0;
+    public double followerSupplyCurrent = 0.0;
 
     // Elevator Data
     public double elevatorHeight = 0.0;

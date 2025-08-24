@@ -15,11 +15,26 @@ public class ElevatorConstants {
   public static final double maxHeight = 1.78;
   public static final double maxVelocity = 20;
 
-  public class PID {
+  public static class PID {
     public static final double[] kP = new double[] {0.9, 0.9, 0.9};
     public static final double[] kI = new double[] {0.0, 0.0, 0.0};
     public static final double[] kD = new double[] {0.0, 0.0, 0.0};
     public static final double[] kG = new double[] {0.0, 0.0, 0.0};
     public static final double[] kS = new double[] {0.0, 0.0, 0.0};
+
+    public static final double maxAcceleration = 10.0;
+    public static final double maxVelocity = 3.5;
+
+    public static final double kV = 3.122;
+    public static final double kA = 0.1189;
+
+    public static final double kMM_Expo_kV = 3.122;
+    public static final double kMM_Expo_kA = 1.9;
+  }
+
+  public class MotorConstants {
+    public static final int maxCurrent = 120;
+    public static final int maxCurrentLow = 60;
+    public static final double rampPeriod = 0.1;
   }
 }

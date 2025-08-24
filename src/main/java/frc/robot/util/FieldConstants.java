@@ -102,15 +102,7 @@ public class FieldConstants {
     public static final Pose2d[] sourcePoses =
         new Pose2d[] {
           sourceTags[0].transformBy(new Transform2d(safeDistance, 0.0, Rotation2d.kZero)),
-          sourceTags[0].transformBy(
-              new Transform2d(safeDistance, safeDistance * 1.5, Rotation2d.kZero)),
-          sourceTags[0].transformBy(
-              new Transform2d(safeDistance, safeDistance * -1.5, Rotation2d.kZero)),
-          sourceTags[1].transformBy(new Transform2d(safeDistance, 0.0, Rotation2d.kZero)),
-          sourceTags[1].transformBy(
-              new Transform2d(safeDistance, safeDistance * 1.5, Rotation2d.kZero)),
-          sourceTags[1].transformBy(
-              new Transform2d(safeDistance, safeDistance * -1.5, Rotation2d.kZero))
+          sourceTags[1].transformBy(new Transform2d(safeDistance, 0.0, Rotation2d.kZero))
         };
   }
 
