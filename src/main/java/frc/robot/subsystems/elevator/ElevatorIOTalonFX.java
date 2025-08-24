@@ -48,6 +48,7 @@ public class ElevatorIOTalonFX implements ElevatorIO {
   private final VoltageOut voltageOut = new VoltageOut(0.0).withEnableFOC(false);
   private final MotionMagicVoltage positionTorque = new MotionMagicVoltage(0.0).withEnableFOC(false);
 
+  private double setpoint = 0.0;
 
   public ElevatorIOTalonFX() {
     leftTalon = new TalonFX(21);
@@ -160,6 +161,7 @@ public class ElevatorIOTalonFX implements ElevatorIO {
     
     data.elevatorHeight = position.getValueAsDouble();
     data.elevatorVelocity = velocity.getValueAsDouble();
+    data.elevatorSetpoint = setpoint;
 
     data.connected = leftConnectedDebouncer.calculate(BaseStatusSignal.isAllGood(voltage,statorCurrent,supplyCurrent,temperature));
     data.followerConnected = rightConnectedDebouncer.calculate(BaseStatusSignal.isAllGood(followerVoltage,followerStatorCurrent,followerSupplyCurrent,followerTemperature));
@@ -181,6 +183,7 @@ public class ElevatorIOTalonFX implements ElevatorIO {
 
   @Override
   public void setHeight(double height) {
+    setpoint = height;
     leftTalon.setControl(positionTorque.withPosition(height));
   }
 
