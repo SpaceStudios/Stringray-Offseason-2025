@@ -10,9 +10,9 @@ import frc.robot.subsystems.elevator.Elevator;
 public class Superstructure {
   public enum CoralTarget {
     L4(1.34),
-    L3(0.0),
-    L2(0.0),
-    L1(0.0);
+    L3(1.18),
+    L2(0.79),
+    L1(0.42);
 
     public double height;
 
@@ -30,7 +30,9 @@ public class Superstructure {
   //   public Trigger manualElevator;
   // }
 
-  public Superstructure(Elevator elevator) {}
+  public Superstructure(Elevator elevator) {
+    elevator.setElevatorHeight(0.1);
+  }
 
   public void periodic() {}
 }
