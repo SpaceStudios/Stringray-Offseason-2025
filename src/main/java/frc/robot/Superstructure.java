@@ -14,6 +14,7 @@ import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.hopper.Hopper;
 import frc.robot.subsystems.outtake.Outtake;
+import frc.robot.subsystems.outtake.OuttakeConstants;
 import frc.robot.util.FieldConstants;
 import frc.robot.util.FieldConstants.ReefConstants.coralTarget;
 import java.util.HashMap;
@@ -39,6 +40,7 @@ public class Superstructure {
     public Trigger autoAlignLeft;
     public Trigger autoAlignRight;
     public Trigger cancelRequest;
+    public Trigger revFunnel;
   }
 
   private coralTarget kCoralTarget = coralTarget.L4;
@@ -112,14 +114,40 @@ public class Superstructure {
                     .until(elevator::nearSetpoint)));
 
     layout
-        .scoreRequest
-        .and(outtake::getDetected)
-        .onTrue(outtake.setVoltage(5).until(() -> (!outtake.getDetected())));
+      .scoreRequest
+      .and(outtake::getDetected)
+      .and(() -> (elevator.getSetpoint() == coralTarget.L1.height))
+      .onTrue(outtake.setVoltage(OuttakeConstants.L1).until(() -> (!outtake.getDetected())));
 
+    layout
+      .scoreRequest
+      .and(outtake::getDetected)
+      .and(() -> (elevator.getSetpoint() == coralTarget.L2.height))
+      .onTrue(outtake.setVoltage(OuttakeConstants.L2).until(() -> (!outtake.getDetected())));
+    
+    layout
+      .scoreRequest
+      .and(outtake::getDetected)
+      .and(() -> (elevator.getSetpoint() == coralTarget.L3.height))
+      .onTrue(outtake.setVoltage(OuttakeConstants.L3).until(() -> (!outtake.getDetected())));
+    
+    layout
+      .scoreRequest
+      .and(outtake::getDetected)
+      .and(() -> (elevator.getSetpoint() == coralTarget.L4.height))
+      .onTrue(outtake.setVoltage(OuttakeConstants.L4).until(() -> (!outtake.getDetected())));
+
+    layout
+      .revFunnel
+      .whileTrue(
+        hopper.setVoltage(-OuttakeConstants.intake)
+      );
+    
     // Coral State Triggers
     stateMap
         .get(state.CORAL_INTAKE)
-        .whileTrue(Commands.parallel(hopper.setVoltage(5), outtake.setVoltage(5)));
+        .whileTrue(Commands.parallel(hopper.setVoltage(OuttakeConstants.intake), outtake.setVoltage(OuttakeConstants.intake)));
+
     stateMap
         .get(state.CORAL_INTAKE)
         .and(outtake::getDetected)
@@ -127,8 +155,6 @@ public class Superstructure {
 
     // Idle State Triggers
     stateMap.get(state.IDLE).and(outtake::getDetected).onTrue(this.setState(state.CORAL_READY));
-
-    stateMap.get(state.IDLE).onTrue(elevator.setElevatorHeight(0.0));
 
     // Sim State Triggers
     stateMap

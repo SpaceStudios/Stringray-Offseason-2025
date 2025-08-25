@@ -46,6 +46,10 @@ public class Elevator extends SubsystemBase {
     return io.getHeight();
   }
 
+  public double getSetpoint() {
+    return data.elevatorSetpoint;
+  }
+
   public boolean nearSetpoint() {
     return MathUtil.isNear(data.elevatorSetpoint, data.elevatorHeight, 0.025);
   }
