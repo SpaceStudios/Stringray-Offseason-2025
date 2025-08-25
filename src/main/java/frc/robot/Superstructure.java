@@ -145,6 +145,19 @@ public class Superstructure {
 
     layout.revFunnel.whileTrue(hopper.setVoltage(-OuttakeConstants.intake));
 
+    // Auto Align
+    layout
+        .autoAlignLeft
+        .or(layout.autoAlignRight)
+        .and(stateMap.get(state.CORAL_READY))
+        .whileTrue(
+            AutoAlign.alignToPose(
+                () ->
+                    (layout.autoAlignLeft.getAsBoolean()
+                        ? AutoAlign.getBestLeftBranch(drive.getPose())
+                        : AutoAlign.getBestRightBranch(drive.getPose())),
+                drive));
+
     // Coral State Triggers
     stateMap
         .get(state.CORAL_INTAKE)

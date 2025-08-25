@@ -10,6 +10,8 @@ import org.littletonrobotics.junction.AutoLog;
 public interface OuttakeIO {
   @AutoLog
   public class OuttakeData {
+    public boolean connected = false;
+
     public double voltage = 0.0;
     public double temperature = 0.0;
     public double statorCurrent = 0.0;

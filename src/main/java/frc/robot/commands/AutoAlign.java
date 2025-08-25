@@ -66,7 +66,27 @@ public class AutoAlign {
     return MathUtil.isNear(0, actual.relativeTo(target).getTranslation().getNorm(), 0.25);
   }
 
-  public static Pose2d getBestSource(Pose2d pos) {
-    return pos.nearest(List.of(FieldConstants.SourceConstants.sourcePoses));
+  private static final List<Pose2d> tagList = List.of(FieldConstants.ReefConstants.aprilTags);
+  private static final List<Pose2d> sourceList =
+      List.of(FieldConstants.SourceConstants.sourcePoses);
+
+  public static Pose2d getBestSource(Pose2d pose) {
+    return pose.nearest(sourceList);
+  }
+
+  public static Pose2d getBestLeftBranch(Pose2d pose) {
+    int index = tagList.indexOf(pose.nearest(tagList));
+    if (index > 2) {
+      return FieldConstants.ReefConstants.rightBranches[index];
+    }
+    return FieldConstants.ReefConstants.leftBranches[index];
+  }
+
+  public static Pose2d getBestRightBranch(Pose2d pose) {
+    int index = tagList.indexOf(pose.nearest(tagList));
+    if (index > 2) {
+      return FieldConstants.ReefConstants.leftBranches[index];
+    }
+    return FieldConstants.ReefConstants.rightBranches[index];
   }
 }
