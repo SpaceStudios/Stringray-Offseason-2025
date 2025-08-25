@@ -22,6 +22,11 @@ import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.mechanism.LoggedMechanism2d;
 
+// !!!Important!!!
+// If anything interacts with a subsystem it must use whileTrue for both your and other people's
+// safety.
+// This also helps the cancelRequestButton to work
+
 /** Add your docs here. */
 public class Superstructure {
   public static class ControllerLayout {
@@ -68,7 +73,8 @@ public class Superstructure {
   public Superstructure(
       Drive drive, Elevator elevator, Outtake outtake, Hopper hopper, ControllerLayout layout) {
     for (state kState : state.values()) {
-      stateMap.put(kState, new Trigger(() -> (kCurrentState == kState) && DriverStation.isEnabled()));
+      stateMap.put(
+          kState, new Trigger(() -> (kCurrentState == kState) && DriverStation.isEnabled()));
     }
 
     this.layout = layout;
@@ -85,28 +91,28 @@ public class Superstructure {
     layout
         .L1
         .and(layout.manualElevator)
-        .onTrue(elevator.setElevatorHeight(coralTarget.L1.height).until(elevator::nearSetpoint));
+        .whileTrue(elevator.setElevatorHeight(coralTarget.L1.height).until(elevator::nearSetpoint));
 
     layout
         .L2
         .and(layout.manualElevator)
-        .onTrue(elevator.setElevatorHeight(coralTarget.L2.height).until(elevator::nearSetpoint));
+        .whileTrue(elevator.setElevatorHeight(coralTarget.L2.height).until(elevator::nearSetpoint));
 
     layout
         .L3
         .and(layout.manualElevator)
-        .onTrue(elevator.setElevatorHeight(coralTarget.L3.height).until(elevator::nearSetpoint));
+        .whileTrue(elevator.setElevatorHeight(coralTarget.L3.height).until(elevator::nearSetpoint));
 
     layout
         .L4
         .and(layout.manualElevator)
         .and(outtake::getDetected)
-        .onTrue(elevator.setElevatorHeight(coralTarget.L4.height).until(elevator::nearSetpoint));
+        .whileTrue(elevator.setElevatorHeight(coralTarget.L4.height).until(elevator::nearSetpoint));
 
     layout
         .intakeRequest
         .and(() -> (AutoAlign.getBestIntake(drive) == IntakeLocation.SOURCE))
-        .onTrue(
+        .whileTrue(
             Commands.parallel(
                 setState(state.CORAL_INTAKE),
                 elevator
@@ -114,39 +120,38 @@ public class Superstructure {
                     .until(elevator::nearSetpoint)));
 
     layout
-      .scoreRequest
-      .and(outtake::getDetected)
-      .and(() -> (elevator.getSetpoint() == coralTarget.L1.height))
-      .onTrue(outtake.setVoltage(OuttakeConstants.L1).until(() -> (!outtake.getDetected())));
+        .scoreRequest
+        .and(outtake::getDetected)
+        .and(() -> (elevator.getSetpoint() == coralTarget.L1.height))
+        .whileTrue(outtake.setVoltage(OuttakeConstants.L1).until(() -> (!outtake.getDetected())));
 
     layout
-      .scoreRequest
-      .and(outtake::getDetected)
-      .and(() -> (elevator.getSetpoint() == coralTarget.L2.height))
-      .onTrue(outtake.setVoltage(OuttakeConstants.L2).until(() -> (!outtake.getDetected())));
-    
-    layout
-      .scoreRequest
-      .and(outtake::getDetected)
-      .and(() -> (elevator.getSetpoint() == coralTarget.L3.height))
-      .onTrue(outtake.setVoltage(OuttakeConstants.L3).until(() -> (!outtake.getDetected())));
-    
-    layout
-      .scoreRequest
-      .and(outtake::getDetected)
-      .and(() -> (elevator.getSetpoint() == coralTarget.L4.height))
-      .onTrue(outtake.setVoltage(OuttakeConstants.L4).until(() -> (!outtake.getDetected())));
+        .scoreRequest
+        .and(outtake::getDetected)
+        .and(() -> (elevator.getSetpoint() == coralTarget.L2.height))
+        .whileTrue(outtake.setVoltage(OuttakeConstants.L2).until(() -> (!outtake.getDetected())));
 
     layout
-      .revFunnel
-      .whileTrue(
-        hopper.setVoltage(-OuttakeConstants.intake)
-      );
-    
+        .scoreRequest
+        .and(outtake::getDetected)
+        .and(() -> (elevator.getSetpoint() == coralTarget.L3.height))
+        .whileTrue(outtake.setVoltage(OuttakeConstants.L3).until(() -> (!outtake.getDetected())));
+
+    layout
+        .scoreRequest
+        .and(outtake::getDetected)
+        .and(() -> (elevator.getSetpoint() == coralTarget.L4.height))
+        .whileTrue(outtake.setVoltage(OuttakeConstants.L4).until(() -> (!outtake.getDetected())));
+
+    layout.revFunnel.whileTrue(hopper.setVoltage(-OuttakeConstants.intake));
+
     // Coral State Triggers
     stateMap
         .get(state.CORAL_INTAKE)
-        .whileTrue(Commands.parallel(hopper.setVoltage(OuttakeConstants.intake), outtake.setVoltage(OuttakeConstants.intake)));
+        .whileTrue(
+            Commands.parallel(
+                hopper.setVoltage(OuttakeConstants.intake),
+                outtake.setVoltage(OuttakeConstants.intake)));
 
     stateMap
         .get(state.CORAL_INTAKE)

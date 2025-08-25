@@ -138,6 +138,9 @@ public class RobotContainer {
     simLayout.L2 = controller.x();
     simLayout.L3 = controller.b();
     simLayout.L4 = controller.y();
+    simLayout.revFunnel = controller.povDown();
+    simLayout.autoAlignLeft = controller.leftBumper();
+    simLayout.autoAlignRight = controller.rightBumper();
 
     superstructure = new Superstructure(drive, elevator, outtake, hopper, simLayout);
     // Configure the button bindings

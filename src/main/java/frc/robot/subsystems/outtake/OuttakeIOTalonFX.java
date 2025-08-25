@@ -8,8 +8,9 @@ import com.ctre.phoenix6.hardware.TalonFX;
 
 /** Add your docs here. */
 public class OuttakeIOTalonFX implements OuttakeIO {
-    private final TalonFX talon;
-    public OuttakeIOTalonFX() {
-        talon = new TalonFX(0); // TODO replace this with the actual outtake id;
-    }
+  private final TalonFX talon;
+
+  public OuttakeIOTalonFX() {
+    talon = new TalonFX(0); // TODO replace this with the actual outtake id;
+  }
 }
