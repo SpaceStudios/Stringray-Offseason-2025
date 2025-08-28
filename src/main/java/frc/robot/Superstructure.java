@@ -50,7 +50,6 @@ public class Superstructure {
 
   private coralTarget kCoralTarget = coralTarget.L4;
   private state kCurrentState = state.IDLE;
-  private boolean overrideLEDs = false;
 
   public enum state {
     IDLE,
@@ -91,59 +90,45 @@ public class Superstructure {
     layout
         .L1
         .and(layout.manualElevator)
-        .whileTrue(elevator.setElevatorHeight(coralTarget.L1.height).until(elevator::nearSetpoint));
+        .onTrue(elevator.setElevatorHeight(coralTarget.L1.height).until(elevator::nearSetpoint));
 
     layout
         .L2
         .and(layout.manualElevator)
-        .whileTrue(elevator.setElevatorHeight(coralTarget.L2.height).until(elevator::nearSetpoint));
+        .onTrue(elevator.setElevatorHeight(coralTarget.L2.height).until(elevator::nearSetpoint));
 
     layout
         .L3
         .and(layout.manualElevator)
-        .whileTrue(elevator.setElevatorHeight(coralTarget.L3.height).until(elevator::nearSetpoint));
+        .onTrue(elevator.setElevatorHeight(coralTarget.L3.height).until(elevator::nearSetpoint));
 
     layout
         .L4
         .and(layout.manualElevator)
         .and(outtake::getDetected)
-        .whileTrue(elevator.setElevatorHeight(coralTarget.L4.height).until(elevator::nearSetpoint));
+        .onTrue(elevator.setElevatorHeight(coralTarget.L4.height).until(elevator::nearSetpoint));
 
     layout
         .intakeRequest
         .and(() -> (AutoAlign.getBestIntake(drive) == IntakeLocation.SOURCE))
-        .whileTrue(
+        .onTrue(
             Commands.parallel(
                 setState(state.CORAL_INTAKE),
                 elevator
                     .setElevatorHeight(FieldConstants.SourceConstants.elevatorSetpoint)
                     .until(elevator::nearSetpoint)));
 
-    layout
-        .scoreRequest
-        .and(outtake::getDetected)
-        .and(() -> (elevator.getSetpoint() == coralTarget.L1.height))
-        .whileTrue(outtake.setVoltage(OuttakeConstants.L1).until(() -> (!outtake.getDetected())));
-
-    layout
-        .scoreRequest
-        .and(outtake::getDetected)
-        .and(() -> (elevator.getSetpoint() == coralTarget.L2.height))
-        .whileTrue(outtake.setVoltage(OuttakeConstants.L2).until(() -> (!outtake.getDetected())));
-
-    layout
-        .scoreRequest
-        .and(outtake::getDetected)
-        .and(() -> (elevator.getSetpoint() == coralTarget.L3.height))
-        .whileTrue(outtake.setVoltage(OuttakeConstants.L3).until(() -> (!outtake.getDetected())));
-
-    layout
-        .scoreRequest
-        .and(outtake::getDetected)
-        .and(() -> (elevator.getSetpoint() == coralTarget.L4.height))
-        .whileTrue(outtake.setVoltage(OuttakeConstants.L4).until(() -> (!outtake.getDetected())));
-
     layout.revFunnel.whileTrue(hopper.setVoltage(-OuttakeConstants.intake));
+
+    layout
+        .scoreRequest
+        .and(stateMap.get(state.CORAL_PRESCORE))
+        .and(outtake::getDetected)
+        .onTrue(
+            Commands.sequence(
+                elevator.setElevatorHeight(() -> (kCoralTarget.height)).until(elevator::nearSetpoint),
+                outtake.setVoltage(OuttakeConstants.voltageMap.get(elevator.getSetpoint())).until(() -> !(outtake.getDetected())),
+                this.setState(state.IDLE)));
 
     // Auto Align
     layout
@@ -156,12 +141,22 @@ public class Superstructure {
                     (layout.autoAlignLeft.getAsBoolean()
                         ? AutoAlign.getBestLeftBranch(drive.getPose())
                         : AutoAlign.getBestRightBranch(drive.getPose())),
-                drive));
+                drive).andThen(this.setState(state.CORAL_PRESCORE)));
+    
+    layout
+      .cancelRequest
+      .onTrue(
+        Commands.parallel(
+          hopper.setVoltage(0.0),
+          outtake.setVoltage(0.0),
+          elevator.setElevatorHeight(0.0),
+          this.setState(state.IDLE)
+        ));
 
     // Coral State Triggers
     stateMap
         .get(state.CORAL_INTAKE)
-        .whileTrue(
+        .onTrue(
             Commands.parallel(
                 hopper.setVoltage(OuttakeConstants.intake),
                 outtake.setVoltage(OuttakeConstants.intake)));

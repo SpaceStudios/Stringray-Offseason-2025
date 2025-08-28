@@ -6,8 +6,9 @@ package frc.robot.subsystems.elevator;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
+  import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.util.FieldConstants.ReefConstants.coralTarget;
+
 import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.Logger;
 
@@ -27,19 +28,31 @@ public class Elevator extends SubsystemBase {
   }
 
   public Command setElevatorHeight(double height) {
-    return Commands.run(
+    return this.run(
         () -> {
           io.setHeight(height);
-        },
-        this);
+        });
+  }
+
+  public Command setElevatorHeight(DoubleSupplier height) {
+    return this.run(
+        () -> {
+          io.setHeight(height.getAsDouble());
+        });
+  }
+
+  public Command setElevatorHeight(coralTarget height) {
+    return this.run(
+        () -> {
+          io.setHeight(height.height);
+        });
   }
 
   public Command runVelocity(DoubleSupplier axis) {
-    return Commands.run(
+    return this.run(
         () -> {
           io.runVelocity(axis.getAsDouble());
-        },
-        this);
+        });
   }
 
   public double getHeight() {

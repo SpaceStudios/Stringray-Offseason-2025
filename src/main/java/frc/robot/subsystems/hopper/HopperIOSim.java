@@ -12,6 +12,7 @@ public class HopperIOSim implements HopperIO {
 
   @Override
   public void getData(HopperDataAutoLogged data) {
+    data.connected = true;
     data.voltage = voltage;
   }
 

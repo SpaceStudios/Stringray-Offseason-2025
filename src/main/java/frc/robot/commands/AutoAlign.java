@@ -43,7 +43,7 @@ public class AutoAlign {
                   yController.calculate(currentPose.getY()),
                   rotController.calculate(currentPose.getRotation().getRadians()));
           drive.runVelocity(ChassisSpeeds.fromFieldRelativeSpeeds(speeds, drive.getRotation()));
-        });
+        }).finallyDo(() -> {drive.runVelocity(new ChassisSpeeds());}).until(() -> (AutoAlign.isNear(poseSupplier.get(), drive.getPose())));
   }
 
   public static enum IntakeLocation {
