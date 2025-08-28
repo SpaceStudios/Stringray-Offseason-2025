@@ -6,9 +6,8 @@ package frc.robot.subsystems.elevator;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj2.command.Command;
-  import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.util.FieldConstants.ReefConstants.coralTarget;
-
 import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.Logger;
 
@@ -64,6 +63,6 @@ public class Elevator extends SubsystemBase {
   }
 
   public boolean nearSetpoint() {
-    return MathUtil.isNear(data.elevatorSetpoint, data.elevatorHeight, 0.025);
+    return MathUtil.isNear(data.elevatorSetpoint, data.elevatorHeight, 0.05);
   }
 }

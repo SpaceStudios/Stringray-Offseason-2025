@@ -20,7 +20,7 @@ public class OuttakeIOSim implements OuttakeIO {
   @Override
   public void getData(OuttakeDataAutoLogged data) {
     data.connected = true;
-    
+
     data.detected = outDebouncer.calculate(detected);
     data.voltage = voltage;
   }

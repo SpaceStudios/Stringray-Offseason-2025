@@ -6,10 +6,10 @@ package frc.robot.subsystems.hopper;
 
 /** Add your docs here. */
 public class HopperConstants {
-    public static final int statorCurrent = 120;
-    public static final int supplyCurrent = 60;
-    public static final int supplylowCurrent = 60;
+  public static final int statorCurrent = 120;
+  public static final int supplyCurrent = 60;
+  public static final int supplylowCurrent = 60;
 
-    public static final double rampPeriod = 0.5;
-    public static final boolean inverted = true;
+  public static final double rampPeriod = 0.5;
+  public static final boolean inverted = true;
 }

@@ -4,9 +4,8 @@
 
 package frc.robot.subsystems.outtake;
 
-import java.util.Map;
-
 import frc.robot.util.FieldConstants.ReefConstants.coralTarget;
+import java.util.Map;
 
 /** Add your docs here. */
 public class OuttakeConstants {
@@ -16,11 +15,18 @@ public class OuttakeConstants {
   public static final double L3 = 5.0;
   public static final double L4 = 5.0;
 
-  public static final Map<Double, Double> voltageMap = Map.of(
-    coralTarget.L1.height, L1,
-    coralTarget.L2.height, L2, 
-    coralTarget.L3.height, L3,
-    coralTarget.L4.height, L4); 
+  public static final Map<Double, Double> voltageMap =
+      Map.of(
+          0.0,
+          0.0,
+          coralTarget.L1.height,
+          L1,
+          coralTarget.L2.height,
+          L2,
+          coralTarget.L3.height,
+          L3,
+          coralTarget.L4.height,
+          L4);
 
   public static class MotorLimits {
     public static final int torque = 120;

@@ -13,7 +13,6 @@ import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
-
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Temperature;
@@ -43,7 +42,10 @@ public class OuttakeIOTalonFX implements OuttakeIO {
     TalonFXConfiguration config = new TalonFXConfiguration();
 
     config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-    config.MotorOutput.Inverted = OuttakeConstants.MotorLimits.inverted ? InvertedValue.Clockwise_Positive : InvertedValue.CounterClockwise_Positive;
+    config.MotorOutput.Inverted =
+        OuttakeConstants.MotorLimits.inverted
+            ? InvertedValue.Clockwise_Positive
+            : InvertedValue.CounterClockwise_Positive;
 
     config.CurrentLimits.SupplyCurrentLimit = OuttakeConstants.MotorLimits.supply;
     config.CurrentLimits.SupplyCurrentLimitEnable = true;
@@ -69,7 +71,7 @@ public class OuttakeIOTalonFX implements OuttakeIO {
     sensor.getData(sensorData);
     data.connected = connectedDebouncer.calculate(talon.isConnected());
 
-    BaseStatusSignal.refreshAll(voltage,temperature,statorCurrent,supplyCurrent);
+    BaseStatusSignal.refreshAll(voltage, temperature, statorCurrent, supplyCurrent);
     data.voltage = voltage.getValueAsDouble();
     data.temperature = temperature.getValueAsDouble();
     data.statorCurrent = statorCurrent.getValueAsDouble();

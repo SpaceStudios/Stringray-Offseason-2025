@@ -30,20 +30,25 @@ public class AutoAlign {
     yController.setGoal(targetPose.getY());
     rotController.setGoal(targetPose.getRotation().getRadians());
     return Commands.run(
-        () -> {
-          if (targetPose != poseSupplier.get()) {
-            xController.setGoal(poseSupplier.get().getX());
-            yController.setGoal(poseSupplier.get().getY());
-            rotController.setGoal(poseSupplier.get().getRotation().getRadians());
-          }
-          Pose2d currentPose = drive.getPose();
-          ChassisSpeeds speeds =
-              new ChassisSpeeds(
-                  xController.calculate(currentPose.getX()),
-                  yController.calculate(currentPose.getY()),
-                  rotController.calculate(currentPose.getRotation().getRadians()));
-          drive.runVelocity(ChassisSpeeds.fromFieldRelativeSpeeds(speeds, drive.getRotation()));
-        }).finallyDo(() -> {drive.runVelocity(new ChassisSpeeds());}).until(() -> (AutoAlign.isNear(poseSupplier.get(), drive.getPose())));
+            () -> {
+              if (targetPose != poseSupplier.get()) {
+                xController.setGoal(poseSupplier.get().getX());
+                yController.setGoal(poseSupplier.get().getY());
+                rotController.setGoal(poseSupplier.get().getRotation().getRadians());
+              }
+              Pose2d currentPose = drive.getPose();
+              ChassisSpeeds speeds =
+                  new ChassisSpeeds(
+                      xController.calculate(currentPose.getX()),
+                      yController.calculate(currentPose.getY()),
+                      rotController.calculate(currentPose.getRotation().getRadians()));
+              drive.runVelocity(ChassisSpeeds.fromFieldRelativeSpeeds(speeds, drive.getRotation()));
+            })
+        .finallyDo(
+            () -> {
+              drive.runVelocity(new ChassisSpeeds());
+            })
+        .until(() -> (AutoAlign.isNear(poseSupplier.get(), drive.getPose())));
   }
 
   public static enum IntakeLocation {

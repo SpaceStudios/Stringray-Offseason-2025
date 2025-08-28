@@ -126,8 +126,12 @@ public class Superstructure {
         .and(outtake::getDetected)
         .onTrue(
             Commands.sequence(
-                elevator.setElevatorHeight(() -> (kCoralTarget.height)).until(elevator::nearSetpoint),
-                outtake.setVoltage(OuttakeConstants.voltageMap.get(elevator.getSetpoint())).until(() -> !(outtake.getDetected())),
+                elevator
+                    .setElevatorHeight(() -> (kCoralTarget.height))
+                    .until(elevator::nearSetpoint),
+                outtake
+                    .setVoltage(() -> (OuttakeConstants.voltageMap.get(elevator.getSetpoint())))
+                    .until(() -> !(outtake.getDetected())),
                 this.setState(state.IDLE)));
 
     // Auto Align
@@ -137,29 +141,28 @@ public class Superstructure {
         .and(stateMap.get(state.CORAL_READY))
         .whileTrue(
             AutoAlign.alignToPose(
-                () ->
-                    (layout.autoAlignLeft.getAsBoolean()
-                        ? AutoAlign.getBestLeftBranch(drive.getPose())
-                        : AutoAlign.getBestRightBranch(drive.getPose())),
-                drive).andThen(this.setState(state.CORAL_PRESCORE)));
-    
-    layout
-      .cancelRequest
-      .onTrue(
+                    () ->
+                        (layout.autoAlignLeft.getAsBoolean()
+                            ? AutoAlign.getBestLeftBranch(drive.getPose())
+                            : AutoAlign.getBestRightBranch(drive.getPose())),
+                    drive)
+                .andThen(this.setState(state.CORAL_PRESCORE)));
+
+    // Cancel
+    layout.cancelRequest.onTrue(
         Commands.parallel(
-          hopper.setVoltage(0.0),
-          outtake.setVoltage(0.0),
-          elevator.setElevatorHeight(0.0),
-          this.setState(state.IDLE)
-        ));
+            hopper.setVoltage(0.0),
+            outtake.setVoltage(() -> (0.0)),
+            elevator.setElevatorHeight(0.0),
+            this.setState(state.IDLE)));
 
     // Coral State Triggers
     stateMap
         .get(state.CORAL_INTAKE)
         .onTrue(
             Commands.parallel(
-                hopper.setVoltage(OuttakeConstants.intake),
-                outtake.setVoltage(OuttakeConstants.intake)));
+                hopper.setVoltage(OuttakeConstants.intake).until(outtake::getDetected),
+                outtake.setVoltage(() -> OuttakeConstants.intake).until(outtake::getDetected)));
 
     stateMap
         .get(state.CORAL_INTAKE)

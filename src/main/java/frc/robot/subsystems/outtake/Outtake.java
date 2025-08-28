@@ -7,6 +7,7 @@ package frc.robot.subsystems.outtake;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.Logger;
 
 public class Outtake extends SubsystemBase {
@@ -26,10 +27,10 @@ public class Outtake extends SubsystemBase {
     Logger.processInputs("Outtake", data);
   }
 
-  public Command setVoltage(double voltage) {
+  public Command setVoltage(DoubleSupplier voltage) {
     return this.run(
             () -> {
-              io.setVoltage(voltage);
+              io.setVoltage(voltage.getAsDouble());
             })
         .finallyDo(
             () -> {

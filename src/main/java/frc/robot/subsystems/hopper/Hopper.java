@@ -24,9 +24,10 @@ public class Hopper extends SubsystemBase {
   }
 
   public Command setVoltage(double volts) {
-    return run(() -> {
-          io.setVoltage(volts);
-        })
+    return this.run(
+            () -> {
+              io.setVoltage(volts);
+            })
         .finallyDo(
             () -> {
               io.setVoltage(0.0);

@@ -11,7 +11,7 @@ public interface HopperIO {
   @AutoLog
   public class HopperData {
     public boolean connected = false;
-    
+
     public double voltage = 0.0;
     public double temperature = 0.0;
     public double statorCurrent = 0.0;
