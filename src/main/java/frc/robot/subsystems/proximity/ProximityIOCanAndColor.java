@@ -5,13 +5,12 @@
 package frc.robot.subsystems.proximity;
 
 import com.reduxrobotics.sensors.canandcolor.Canandcolor;
-
 import edu.wpi.first.math.filter.Debouncer;
 
 /** Add your docs here. */
 public class ProximityIOCanAndColor implements ProximityIO {
   private final Canandcolor sensor;
-    private final double threshold;
+  private final double threshold;
   private final Debouncer connectedDebouncer = new Debouncer(0.5);
 
   public ProximityIOCanAndColor(int id) {
@@ -26,7 +25,7 @@ public class ProximityIOCanAndColor implements ProximityIO {
   @Override
   public void getData(ProximityDataAutoLogged data) {
     data.connected = connectedDebouncer.calculate(sensor.isConnected());
-    
+
     data.distance = sensor.getProximity();
     data.detected = data.distance <= threshold;
 

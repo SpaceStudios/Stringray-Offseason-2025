@@ -171,6 +171,15 @@ public class Superstructure {
         .and(outtake::getDetected)
         .onTrue(this.setState(state.CORAL_READY));
 
+    stateMap
+        .get(state.CORAL_READY)
+        .and(
+            () ->
+                (AutoAlign.isNear(AutoAlign.getBestLeftBranch(drive.getPose()), drive.getPose())
+                    || AutoAlign.isNear(
+                        AutoAlign.getBestRightBranch(drive.getPose()), drive.getPose())))
+        .onTrue(this.setState(state.CORAL_PRESCORE));
+
     // Idle State Triggers
     stateMap.get(state.IDLE).and(outtake::getDetected).onTrue(this.setState(state.CORAL_READY));
 

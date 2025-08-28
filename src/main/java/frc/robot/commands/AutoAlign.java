@@ -20,11 +20,11 @@ import java.util.function.Supplier;
 public class AutoAlign {
   public static Command alignToPose(Supplier<Pose2d> poseSupplier, Drive drive) {
     ProfiledPIDController xController =
-        new ProfiledPIDController(10.0, 0, 0, new Constraints(5.0, 10.0));
+        new ProfiledPIDController(8.0, 0, 0, new Constraints(5.0, 10.0));
     ProfiledPIDController yController =
-        new ProfiledPIDController(10.0, 0, 0, new Constraints(5.0, 10.0));
+        new ProfiledPIDController(8.0, 0, 0, new Constraints(5.0, 10.0));
     ProfiledPIDController rotController =
-        new ProfiledPIDController(5.0, 0, 0, new Constraints(5.0, 10.0));
+        new ProfiledPIDController(100.0, 0, 0, new Constraints(5.0, 10.0));
     Pose2d targetPose = poseSupplier.get();
     xController.setGoal(targetPose.getX());
     yController.setGoal(targetPose.getY());
