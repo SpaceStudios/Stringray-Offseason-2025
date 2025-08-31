@@ -207,6 +207,11 @@ public class ElevatorIOTalonFX implements ElevatorIO {
   public void runVelocity(double joystick) {}
 
   @Override
+  public void resetEncoders() {
+    leftTalon.setPosition(0.0);
+  }
+
+  @Override
   public double getHeight() {
     return position.getValueAsDouble();
   }

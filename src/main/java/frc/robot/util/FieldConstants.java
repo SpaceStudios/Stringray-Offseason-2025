@@ -38,6 +38,17 @@ public class FieldConstants {
       }
     }
 
+    public enum algaeTarget {
+      L2(0.79),
+      L3(1.18);
+
+      public double height;
+
+      private algaeTarget(double height) {
+        this.height = height;
+      }
+    }
+
     public static final Pose2d[] aprilTags =
         new Pose2d[] {
           AllianceFlipUtil.apply(fieldLayout.getTagPose(17).get().toPose2d()),

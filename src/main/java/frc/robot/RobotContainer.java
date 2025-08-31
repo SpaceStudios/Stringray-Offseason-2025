@@ -31,6 +31,9 @@ import frc.robot.subsystems.drive.ModuleIOTalonFX;
 import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.elevator.ElevatorIO;
 import frc.robot.subsystems.elevator.ElevatorIOSim;
+import frc.robot.subsystems.gripper.Gripper;
+import frc.robot.subsystems.gripper.GripperIO;
+import frc.robot.subsystems.gripper.GripperIOSim;
 import frc.robot.subsystems.hopper.Hopper;
 import frc.robot.subsystems.hopper.HopperIO;
 import frc.robot.subsystems.hopper.HopperIOSim;
@@ -51,6 +54,7 @@ public class RobotContainer {
   private final Elevator elevator;
   private final Outtake outtake;
   private final Hopper hopper;
+  private final Gripper gripper;
   public final Superstructure superstructure;
 
   // Controller
@@ -77,6 +81,7 @@ public class RobotContainer {
         elevator = new Elevator(new ElevatorIO() {});
         outtake = new Outtake(new OuttakeIO() {});
         hopper = new Hopper(new HopperIO() {});
+        gripper = new Gripper(new GripperIO() {});
         break;
 
       case SIM:
@@ -91,6 +96,7 @@ public class RobotContainer {
         elevator = new Elevator(new ElevatorIOSim());
         outtake = new Outtake(new OuttakeIOSim());
         hopper = new Hopper(new HopperIOSim());
+        gripper = new Gripper(new GripperIOSim());
         break;
 
       default:
@@ -105,6 +111,7 @@ public class RobotContainer {
         elevator = new Elevator(new ElevatorIO() {});
         outtake = new Outtake(new OuttakeIO() {});
         hopper = new Hopper(new HopperIO() {});
+        gripper = new Gripper(new GripperIO() {});
         break;
     }
 
@@ -142,8 +149,12 @@ public class RobotContainer {
     simLayout.autoAlignLeft = controller.leftBumper();
     simLayout.autoAlignRight = controller.rightBumper();
     simLayout.cancelRequest = controller.povLeft();
+    simLayout.resetGyro = controller.povRight();
+    simLayout.dejamCoral = controller.start();
+    simLayout.setPrescoreCoral = controller.leftStick();
+    simLayout.setPrescoreAlgae = controller.rightStick();
 
-    superstructure = new Superstructure(drive, elevator, outtake, hopper, simLayout);
+    superstructure = new Superstructure(drive, elevator, outtake, hopper, gripper, simLayout);
     // Configure the button bindings
     configureButtonBindings();
   }

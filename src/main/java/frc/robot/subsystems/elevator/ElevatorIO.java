@@ -42,6 +42,8 @@ public interface ElevatorIO {
 
   public default void runVelocity(double joystick) {}
 
+  public default void resetEncoders() {}
+
   public default double getHeight() {
     return 0.0;
   }
