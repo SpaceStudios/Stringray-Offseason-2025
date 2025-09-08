@@ -15,8 +15,10 @@ package frc.robot;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.wpilibj.GenericHID;
+import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Superstructure.ControllerLayout;
@@ -136,8 +138,8 @@ public class RobotContainer {
 
     // Setting Up Superstructure
 
-    simLayout.driveX = () -> -controller.getLeftY();
-    simLayout.driveY = () -> -controller.getLeftX();
+    simLayout.driveX = () -> controller.getLeftY();
+    simLayout.driveY = () -> controller.getLeftX();
     simLayout.intakeRequest = controller.leftTrigger();
     simLayout.scoreRequest = controller.rightTrigger();
     simLayout.manualElevator = controller.povUp();
@@ -154,7 +156,7 @@ public class RobotContainer {
     simLayout.setPrescoreCoral = controller.leftStick();
     simLayout.setPrescoreAlgae = controller.rightStick();
 
-    superstructure = new Superstructure(drive, elevator, outtake, hopper, gripper, simLayout);
+    superstructure = new Superstructure(drive, elevator, outtake, hopper, gripper, simLayout, this);
     // Configure the button bindings
     configureButtonBindings();
   }
@@ -170,8 +172,8 @@ public class RobotContainer {
     drive.setDefaultCommand(
         DriveCommands.joystickDrive(
             drive,
-            () -> -controller.getLeftY(),
-            () -> -controller.getLeftX(),
+            () -> controller.getLeftY(),
+            () -> controller.getLeftX(),
             () -> -controller.getRightX()));
 
     // // Lock to 0° when A button is held
@@ -197,6 +199,18 @@ public class RobotContainer {
     //                         new Pose2d(drive.getPose().getTranslation(), new Rotation2d())),
     //                 drive)
     //             .ignoringDisable(true));
+  }
+
+  public Command controllerRumble(double time, double strength) {
+    return Commands.run(
+            () -> {
+              controller.setRumble(RumbleType.kBothRumble, strength);
+            })
+        .withTimeout(time)
+        .finallyDo(
+            () -> {
+              controller.setRumble(RumbleType.kBothRumble, 0.0);
+            });
   }
 
   /**

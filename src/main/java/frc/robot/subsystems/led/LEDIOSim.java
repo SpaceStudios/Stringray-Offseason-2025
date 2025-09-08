@@ -7,13 +7,11 @@ package frc.robot.subsystems.led;
 import com.ctre.phoenix.led.Animation;
 
 /** Add your docs here. */
-public interface LEDIO {
-  public class ledData {
-    public String currentColor = "000000"; // Current Color Hexcode
-    public double temperature = 0.0;
-  }
+public class LEDIOSim implements LEDIO {
+  private Animation kAnimation = LEDConstants.disabledAnim;
 
-  public default void setAnimation(Animation anim) {}
+  public LEDIOSim() {}
 
-  public default void getData(ledData data) {}
+  @Override
+  public void getData(ledData data) {}
 }

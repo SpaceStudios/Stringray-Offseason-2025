@@ -83,7 +83,13 @@ public class Superstructure {
   LoggedMechanism2d mech;
 
   public Superstructure(
-      Drive drive, Elevator elevator, Outtake outtake, Hopper hopper, Gripper gripper, ControllerLayout layout) {
+      Drive drive,
+      Elevator elevator,
+      Outtake outtake,
+      Hopper hopper,
+      Gripper gripper,
+      ControllerLayout layout,
+      RobotContainer container) {
     for (state kState : state.values()) {
       stateMap.put(
           kState, new Trigger(() -> (kCurrentState == kState) && DriverStation.isEnabled()));
@@ -232,7 +238,9 @@ public class Superstructure {
     stateMap
         .get(state.CORAL_INTAKE)
         .and(outtake::getDetected)
-        .onTrue(this.setState(state.CORAL_READY));
+        .onTrue(
+            Commands.parallel(
+                this.setState(state.CORAL_READY), container.controllerRumble(5.0, 0.5)));
 
     stateMap
         .get(state.CORAL_READY)
@@ -253,7 +261,8 @@ public class Superstructure {
 
     stateMap
         .get(state.CORAL_PRESCORE)
-        .and(() -> (jamesWaitDebouncer.calculate(stateMap.get(state.CORAL_PRESCORE).getAsBoolean())))
+        .and(
+            () -> (jamesWaitDebouncer.calculate(stateMap.get(state.CORAL_PRESCORE).getAsBoolean())))
         .onTrue(new PrintCommand("You are too slow"));
 
     layout
@@ -285,12 +294,11 @@ public class Superstructure {
             Commands.parallel(
                 this.setState(state.ALGAE_INTAKE),
                 elevator.setElevatorHeight(() -> (algaeTarget.L3.height))));
-    
+
     layout
         .intakeRequest
         .and(stateMap.get(state.ALGAE_INTAKE))
-        .whileTrue(
-                gripper.setVoltage(() -> (5.0)));
+        .whileTrue(gripper.setVoltage(() -> (5.0)));
 
     // Idle State Triggers
     stateMap.get(state.IDLE).and(outtake::getDetected).onTrue(this.setState(state.CORAL_READY));
@@ -298,7 +306,10 @@ public class Superstructure {
     // Sim State Triggers
     stateMap
         .get(state.CORAL_INTAKE)
-        .and(() -> (AutoAlign.isNear(AutoAlign.getBestSource(drive.getPose()), drive.getPose())))
+        .and(
+            () ->
+                (AutoAlign.isNearWaypoint(
+                    AutoAlign.getBestSource(drive.getPose()), drive.getPose())))
         .onTrue(outtake.setDetected(true));
 
     // Non State Stuff

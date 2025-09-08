@@ -59,10 +59,13 @@ public class AutoAlign {
                         rotController.setGoal(poseSupplier.get().getRotation().getRadians());
                       }
                       Pose2d currentPose = drive.getPose();
+                      Pose2d relativePose = currentPose.relativeTo(poseSupplier.get());
                       ChassisSpeeds speeds =
                           new ChassisSpeeds(
-                              xController.calculate(currentPose.getX()),
-                              yController.calculate(currentPose.getY()),
+                              Math.abs(xController.calculate(currentPose.getX()))
+                                  * (relativePose.getX() / (-Math.abs(relativePose.getX()))),
+                              Math.abs(yController.calculate(currentPose.getY()))
+                                  * (relativePose.getY() / (-Math.abs(relativePose.getY()))),
                               rotController.calculate(currentPose.getRotation().getRadians()));
                       drive.runVelocity(
                           ChassisSpeeds.fromFieldRelativeSpeeds(speeds, drive.getRotation()));

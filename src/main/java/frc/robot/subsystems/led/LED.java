@@ -11,16 +11,15 @@ import frc.robot.Superstructure.state;
 public class LED extends SubsystemBase {
   private state currentState;
   /** Creates a new LED. */
-  public LED() {}
+  public LED(LEDIO io) {}
 
   @Override
-  public void periodic() {
-    
-  }
+  public void periodic() {}
 
   public Command setState(state kState) {
-    return this.run(() -> {
-      this.currentState = kState;
-    });
+    return this.run(
+        () -> {
+          this.currentState = kState;
+        });
   }
 }
