@@ -308,19 +308,6 @@ public class Superstructure {
     // Idle State Triggers
     stateMap.get(state.IDLE).and(outtake::getDetected).onTrue(this.setState(state.CORAL_READY));
 
-    // Testing
-    stateMap
-        .get(state.IDLE)
-        .whileTrue(
-            Commands.run(
-                    () -> {
-                      layout.driveController.setRumble(RumbleType.kLeftRumble, 0.5);
-                    })
-                .finallyDo(
-                    () -> {
-                      layout.driveController.setRumble(RumbleType.kBothRumble, 0);
-                    }));
-
     // Sim State Triggers
     stateMap
         .get(state.CORAL_INTAKE)
