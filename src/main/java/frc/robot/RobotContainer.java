@@ -155,8 +155,9 @@ public class RobotContainer {
     simLayout.dejamCoral = controller.start();
     simLayout.setPrescoreCoral = controller.leftStick();
     simLayout.setPrescoreAlgae = controller.rightStick();
+    simLayout.driveController = controller;
 
-    superstructure = new Superstructure(drive, elevator, outtake, hopper, gripper, simLayout, this);
+    superstructure = new Superstructure(drive, elevator, outtake, hopper, gripper, simLayout);
     // Configure the button bindings
     configureButtonBindings();
   }

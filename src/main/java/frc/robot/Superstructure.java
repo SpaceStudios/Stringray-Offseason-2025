@@ -8,9 +8,11 @@ import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.PrintCommand;
+import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.commands.AutoAlign;
 import frc.robot.commands.AutoAlign.IntakeLocation;
@@ -25,6 +27,7 @@ import frc.robot.util.FieldConstants.ReefConstants.algaeTarget;
 import frc.robot.util.FieldConstants.ReefConstants.coralTarget;
 import java.util.HashMap;
 import java.util.function.DoubleSupplier;
+import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.mechanism.LoggedMechanism2d;
 
@@ -52,6 +55,7 @@ public class Superstructure {
     public Trigger autoAlignCage;
     public Trigger setPrescoreCoral;
     public Trigger setPrescoreAlgae;
+    public CommandXboxController driveController;
   }
 
   private coralTarget kCoralTarget = coralTarget.L4;
@@ -82,14 +86,16 @@ public class Superstructure {
 
   LoggedMechanism2d mech;
 
+  @AutoLogOutput(key = "Superstructure/Sim Intake")
+  private Trigger simIntakeTrigger = new Trigger(() -> false);
+
   public Superstructure(
       Drive drive,
       Elevator elevator,
       Outtake outtake,
       Hopper hopper,
       Gripper gripper,
-      ControllerLayout layout,
-      RobotContainer container) {
+      ControllerLayout layout) {
     for (state kState : state.values()) {
       stateMap.put(
           kState, new Trigger(() -> (kCurrentState == kState) && DriverStation.isEnabled()));
@@ -238,9 +244,8 @@ public class Superstructure {
     stateMap
         .get(state.CORAL_INTAKE)
         .and(outtake::getDetected)
-        .onTrue(
-            Commands.parallel(
-                this.setState(state.CORAL_READY), container.controllerRumble(5.0, 0.5)));
+        .whileTrue(Commands.parallel(this.setState(state.CORAL_READY), new PrintCommand("Intaked")))
+        .onFalse(this.rumbleCommand(layout.driveController, 5.0, 1.0));
 
     stateMap
         .get(state.CORAL_READY)
@@ -303,14 +308,39 @@ public class Superstructure {
     // Idle State Triggers
     stateMap.get(state.IDLE).and(outtake::getDetected).onTrue(this.setState(state.CORAL_READY));
 
+    // Testing
+    stateMap
+        .get(state.IDLE)
+        .whileTrue(
+            Commands.run(
+                    () -> {
+                      layout.driveController.setRumble(RumbleType.kLeftRumble, 0.5);
+                    })
+                .finallyDo(
+                    () -> {
+                      layout.driveController.setRumble(RumbleType.kBothRumble, 0);
+                    }));
+
     // Sim State Triggers
     stateMap
         .get(state.CORAL_INTAKE)
+        .and(Robot::isSimulation)
         .and(
             () ->
                 (AutoAlign.isNearWaypoint(
                     AutoAlign.getBestSource(drive.getPose()), drive.getPose())))
-        .onTrue(outtake.setDetected(true));
+        .onTrue(Commands.parallel(outtake.setDetected(true), new PrintCommand("Intaked")));
+
+    simIntakeTrigger =
+        stateMap
+            .get(state.CORAL_INTAKE)
+            .and(Robot::isSimulation)
+            .and(
+                () ->
+                    (AutoAlign.isNearWaypoint(
+                        AutoAlign.getBestSource(drive.getPose()), drive.getPose())));
+
+    simIntakeTrigger.onTrue(outtake.setDetected(true));
 
     // Non State Stuff
     layout.resetGyro.onTrue(
@@ -330,6 +360,7 @@ public class Superstructure {
   public Command setState(state newState) {
     return Commands.runOnce(
         () -> {
+          System.out.println(newState.toString());
           if (kCurrentState != newState) {
             System.out.println(newState.toString());
           }
@@ -356,5 +387,21 @@ public class Superstructure {
     // layout.cancelRequest.getAsBoolean());
     // Logger.recordOutput("Superstructure/Layout/L1", layout.L1.getAsBoolean());
     // Logger.recordOutput("Superstructure/Layout/L1", layout.L1.getAsBoolean());
+  }
+
+  public Command rumbleCommand(CommandXboxController controller, double seconds, double intensity) {
+    return Commands.run(
+            () -> {
+              controller.setRumble(RumbleType.kBothRumble, intensity);
+            })
+        .withTimeout(0.1)
+        .andThen(
+            Commands.waitSeconds(seconds)
+                .andThen(
+                    Commands.run(
+                        () -> {
+                          controller.setRumble(RumbleType.kBothRumble, intensity);
+                        }))
+                .withTimeout(0.1));
   }
 }

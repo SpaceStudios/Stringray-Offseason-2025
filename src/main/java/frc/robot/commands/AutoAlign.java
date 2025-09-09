@@ -18,6 +18,7 @@ import frc.robot.util.FieldConstants;
 // import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
+import org.littletonrobotics.junction.Logger;
 
 /** Add your docs here. */
 public class AutoAlign {
@@ -39,6 +40,7 @@ public class AutoAlign {
         new ProfiledPIDController(5.0, 0.01, 0.02, new TrapezoidProfile.Constraints(3.0, 4.0));
     ProfiledPIDController rotController =
         new ProfiledPIDController(100.0, 0, 0, new TrapezoidProfile.Constraints(10.0, 10.0));
+    rotController.enableContinuousInput(-Math.PI, Math.PI);
     Pose2d targetPose = poseSupplier.get();
     xController.setGoal(targetPose.getX());
     yController.setGoal(targetPose.getY());
@@ -59,13 +61,11 @@ public class AutoAlign {
                         rotController.setGoal(poseSupplier.get().getRotation().getRadians());
                       }
                       Pose2d currentPose = drive.getPose();
-                      Pose2d relativePose = currentPose.relativeTo(poseSupplier.get());
+                      Logger.recordOutput("AutoAlign/Target", poseSupplier.get());
                       ChassisSpeeds speeds =
                           new ChassisSpeeds(
-                              Math.abs(xController.calculate(currentPose.getX()))
-                                  * (relativePose.getX() / (-Math.abs(relativePose.getX()))),
-                              Math.abs(yController.calculate(currentPose.getY()))
-                                  * (relativePose.getY() / (-Math.abs(relativePose.getY()))),
+                              xController.calculate(currentPose.getX()),
+                              yController.calculate(currentPose.getY()),
                               rotController.calculate(currentPose.getRotation().getRadians()));
                       drive.runVelocity(
                           ChassisSpeeds.fromFieldRelativeSpeeds(speeds, drive.getRotation()));

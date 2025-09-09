@@ -9,7 +9,7 @@ import edu.wpi.first.math.filter.Debouncer.DebounceType;
 
 /** Add your docs here. */
 public class OuttakeIOSim implements OuttakeIO {
-  private final Debouncer outDebouncer = new Debouncer(0.5, DebounceType.kFalling);
+  private final Debouncer outDebouncer = new Debouncer(0.0, DebounceType.kFalling);
   private boolean detected = false;
   private double voltage = 0.0;
 
@@ -29,6 +29,7 @@ public class OuttakeIOSim implements OuttakeIO {
 
   @Override
   public void setDetected(boolean detected) {
+    System.out.println("IO Detected: " + detected);
     this.detected = detected;
   }
 }

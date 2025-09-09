@@ -8,6 +8,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import java.util.function.DoubleSupplier;
+import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 public class Outtake extends SubsystemBase {
@@ -41,10 +42,12 @@ public class Outtake extends SubsystemBase {
   public Command setDetected(boolean detected) {
     return Commands.runOnce(
         () -> {
+          System.out.println(detected);
           io.setDetected(detected);
         });
   }
 
+  @AutoLogOutput(key = "Outtake/Detected")
   public boolean getDetected() {
     return data.detected;
   }
