@@ -31,11 +31,11 @@ public class LEDConstants {
               ? (int) (Color.kRed.blue * 255)
               : (int) (Color.kBlue.blue * 255));
 
-    public static int[] convertColorToInt(Color color) {
-        return new int[] {
-            (int) (color.red*255),
-            (int) (color.blue*255),
-            (int) (color.green*255)
-        };
-    }
+  public static int[] convertColorToInt(Color color) {
+    return new int[] {(int) (color.red * 255), (int) (color.blue * 255), (int) (color.green * 255)};
+  }
+
+  public class DeviceConstants {
+    public static final double brightness = 0.5;    
+  }
 }

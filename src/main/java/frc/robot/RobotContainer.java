@@ -24,6 +24,9 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Superstructure.ControllerLayout;
 import frc.robot.commands.DriveCommands;
 import frc.robot.generated.TunerConstants;
+import frc.robot.subsystems.climb.Climb;
+import frc.robot.subsystems.climb.ClimbIO;
+import frc.robot.subsystems.climb.ClimbIOSim;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.GyroIO;
 import frc.robot.subsystems.drive.GyroIOPigeon2;
@@ -39,6 +42,9 @@ import frc.robot.subsystems.gripper.GripperIOSim;
 import frc.robot.subsystems.hopper.Hopper;
 import frc.robot.subsystems.hopper.HopperIO;
 import frc.robot.subsystems.hopper.HopperIOSim;
+import frc.robot.subsystems.led.LED;
+import frc.robot.subsystems.led.LEDIO;
+import frc.robot.subsystems.led.LEDIOCandle;
 import frc.robot.subsystems.outtake.Outtake;
 import frc.robot.subsystems.outtake.OuttakeIO;
 import frc.robot.subsystems.outtake.OuttakeIOSim;
@@ -57,6 +63,8 @@ public class RobotContainer {
   private final Outtake outtake;
   private final Hopper hopper;
   private final Gripper gripper;
+  private final Climb climb;
+  private final LED led;
   public final Superstructure superstructure;
 
   // Controller
@@ -84,6 +92,8 @@ public class RobotContainer {
         outtake = new Outtake(new OuttakeIO() {});
         hopper = new Hopper(new HopperIO() {});
         gripper = new Gripper(new GripperIO() {});
+        climb = new Climb(new ClimbIO() {});
+        led = new LED(new LEDIOCandle());
         break;
 
       case SIM:
@@ -99,6 +109,8 @@ public class RobotContainer {
         outtake = new Outtake(new OuttakeIOSim());
         hopper = new Hopper(new HopperIOSim());
         gripper = new Gripper(new GripperIOSim());
+        climb = new Climb(new ClimbIOSim());
+        led = new LED(new LEDIO() {});
         break;
 
       default:
@@ -114,6 +126,8 @@ public class RobotContainer {
         outtake = new Outtake(new OuttakeIO() {});
         hopper = new Hopper(new HopperIO() {});
         gripper = new Gripper(new GripperIO() {});
+        climb = new Climb(new ClimbIO() {});
+        led = new LED(new LEDIO() {});
         break;
     }
 
@@ -147,17 +161,17 @@ public class RobotContainer {
     simLayout.L2 = controller.x();
     simLayout.L3 = controller.b();
     simLayout.L4 = controller.y();
-    simLayout.revFunnel = controller.povDown();
+    simLayout.climbRequest = controller.povDown();
     simLayout.autoAlignLeft = controller.leftBumper();
     simLayout.autoAlignRight = controller.rightBumper();
     simLayout.cancelRequest = controller.povLeft();
     simLayout.resetGyro = controller.povRight();
-    simLayout.dejamCoral = controller.start();
+    simLayout.revFunnel = controller.start();
     simLayout.setPrescoreCoral = controller.leftStick();
     simLayout.setPrescoreAlgae = controller.rightStick();
     simLayout.driveController = controller;
 
-    superstructure = new Superstructure(drive, elevator, outtake, hopper, gripper, simLayout);
+    superstructure = new Superstructure(drive, elevator, outtake, hopper, gripper, climb, simLayout, led);
     // Configure the button bindings
     configureButtonBindings();
   }

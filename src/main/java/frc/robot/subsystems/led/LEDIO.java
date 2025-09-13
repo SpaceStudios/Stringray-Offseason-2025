@@ -9,8 +9,10 @@ import com.ctre.phoenix.led.Animation;
 /** Add your docs here. */
 public interface LEDIO {
   public class ledData {
+    public boolean connected = false;
     public String currentColor = "000000"; // Current Color Hexcode
     public double temperature = 0.0;
+    public double current = 0.0;
   }
 
   public default void setAnimation(Animation anim) {}

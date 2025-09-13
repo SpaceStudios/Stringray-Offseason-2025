@@ -16,14 +16,16 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.commands.AutoAlign;
 import frc.robot.commands.AutoAlign.IntakeLocation;
+import frc.robot.subsystems.climb.Climb;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.gripper.Gripper;
+import frc.robot.subsystems.gripper.GripperConstants;
 import frc.robot.subsystems.hopper.Hopper;
+import frc.robot.subsystems.led.LED;
 import frc.robot.subsystems.outtake.Outtake;
 import frc.robot.subsystems.outtake.OuttakeConstants;
 import frc.robot.util.FieldConstants;
-import frc.robot.util.FieldConstants.ReefConstants.algaeTarget;
 import frc.robot.util.FieldConstants.ReefConstants.coralTarget;
 import java.util.HashMap;
 import java.util.function.DoubleSupplier;
@@ -45,7 +47,6 @@ public class Superstructure {
     public Trigger L3;
     public Trigger L4;
     public Trigger climbRequest;
-    public Trigger climbPull;
     public Trigger autoAlignLeft;
     public Trigger autoAlignRight;
     public Trigger cancelRequest;
@@ -61,7 +62,8 @@ public class Superstructure {
   private coralTarget kCoralTarget = coralTarget.L4;
   private state kCurrentState = state.IDLE;
   private final Debouncer jamesWaitDebouncer = new Debouncer(0.5);
-  private boolean shouldAutoRun = false;
+
+  private final Command autoElevatorCommand;
 
   private Pose2d[] testPath =
       AutoAlign.generatePath1Waypoint(
@@ -84,6 +86,8 @@ public class Superstructure {
   private final HashMap<state, Trigger> stateMap = new HashMap<state, Trigger>();
   private final ControllerLayout layout;
 
+  private final LED led;
+
   LoggedMechanism2d mech;
 
   @AutoLogOutput(key = "Superstructure/Sim Intake")
@@ -95,14 +99,27 @@ public class Superstructure {
       Outtake outtake,
       Hopper hopper,
       Gripper gripper,
-      ControllerLayout layout) {
+      Climb climb,
+      ControllerLayout layout,
+      LED led) {
     for (state kState : state.values()) {
       stateMap.put(
           kState, new Trigger(() -> (kCurrentState == kState) && DriverStation.isEnabled()));
     }
 
-    this.layout = layout;
+    this.autoElevatorCommand = (Commands.sequence(
+            elevator
+                .setElevatorHeight(() -> (kCoralTarget.height))
+                .until(elevator::nearSetpoint),
+            Commands.parallel(
+                outtake
+                    .setVoltage(() -> (OuttakeConstants.voltageMap.get(elevator.getSetpoint())))
+                    .until(() -> !(outtake.getDetected())),
+                outtake.setDetected(false)),
+            this.setState(state.IDLE)));
 
+    this.layout = layout;
+    this.led = led;
     // Setting Up Controls
     layout.L1.and(layout.manualElevator.negate()).onTrue(this.setCoralTarget(coralTarget.L1));
 
@@ -150,21 +167,7 @@ public class Superstructure {
         .scoreRequest
         .and(stateMap.get(state.CORAL_PRESCORE))
         .and(outtake::getDetected)
-        .onTrue(
-            Commands.sequence(
-                Commands.runOnce(
-                    () -> {
-                      this.shouldAutoRun = false;
-                    }),
-                elevator
-                    .setElevatorHeight(() -> (kCoralTarget.height))
-                    .until(elevator::nearSetpoint),
-                Commands.parallel(
-                    outtake
-                        .setVoltage(() -> (OuttakeConstants.voltageMap.get(elevator.getSetpoint())))
-                        .until(() -> !(outtake.getDetected())),
-                    outtake.setDetected(false)),
-                this.setState(state.IDLE)));
+        .onTrue(autoElevatorCommand);
 
     layout
         .L1
@@ -258,17 +261,12 @@ public class Superstructure {
 
     stateMap
         .get(state.CORAL_PRESCORE)
-        .onTrue(
-            Commands.runOnce(
-                () -> {
-                  this.shouldAutoRun = true;
-                }));
-
-    stateMap
-        .get(state.CORAL_PRESCORE)
         .and(
             () -> (jamesWaitDebouncer.calculate(stateMap.get(state.CORAL_PRESCORE).getAsBoolean())))
-        .onTrue(new PrintCommand("You are too slow"));
+        .onTrue(Commands.parallel(
+            new PrintCommand("You are too slow"),
+            autoElevatorCommand
+        ));
 
     layout
         .setPrescoreCoral
@@ -277,34 +275,49 @@ public class Superstructure {
         .onTrue(this.setState(state.CORAL_PRESCORE));
 
     // Algae
-    stateMap.get(state.ALGAE_INTAKE).onTrue(Commands.print("Hello"));
-    stateMap.get(state.ALGAE_INTAKE).and(() -> true).onTrue(this.setState(state.ALGAE_READY));
-
     layout
         .L2
-        .and(stateMap.get(state.CORAL_PRESCORE).negate())
-        .and(() -> !(outtake.getDetected()))
+        .and(stateMap.get(state.IDLE))
+        .and(() -> (!outtake.getDetected()))
         .and(() -> (AutoAlign.getBestIntake(drive) == IntakeLocation.REEF))
         .onTrue(
             Commands.parallel(
                 this.setState(state.ALGAE_INTAKE),
-                elevator.setElevatorHeight(() -> (algaeTarget.L2.height))));
+                elevator.setElevatorHeight(
+                    () -> (FieldConstants.ReefConstants.algaeTarget.L2.height))));
 
     layout
         .L3
-        .and(stateMap.get(state.CORAL_PRESCORE).negate())
-        .and(() -> !(outtake.getDetected()))
+        .and(stateMap.get(state.IDLE))
+        .and(() -> (!outtake.getDetected()))
         .and(() -> (AutoAlign.getBestIntake(drive) == IntakeLocation.REEF))
         .onTrue(
             Commands.parallel(
                 this.setState(state.ALGAE_INTAKE),
-                elevator.setElevatorHeight(() -> (algaeTarget.L3.height))));
+                elevator.setElevatorHeight(
+                    () -> (FieldConstants.ReefConstants.algaeTarget.L3.height))));
 
+    stateMap.get(state.ALGAE_INTAKE).whileTrue(gripper.setVoltage(() -> (GripperConstants.intake)));
+
+    stateMap
+        .get(state.ALGAE_INTAKE)
+        .and(layout.intakeRequest)
+        .whileTrue(
+            AutoAlign.alignToPose(() -> (AutoAlign.getBestAlgaePose(drive::getPose)), drive));
+
+    // Climb
     layout
-        .intakeRequest
-        .and(stateMap.get(state.ALGAE_INTAKE))
-        .whileTrue(gripper.setVoltage(() -> (5.0)));
+        .climbRequest
+        .whileTrue(Commands.parallel(
+            this.setState(state.CLIMB_PULL),
+            climb.extend()
+        ));
 
+    
+    layout
+        .scoreRequest
+        .and(stateMap.get(state.CLIMB_PULL))
+        .whileTrue(climb.retract());
     // Idle State Triggers
     stateMap.get(state.IDLE).and(outtake::getDetected).onTrue(this.setState(state.CORAL_READY));
 
@@ -352,7 +365,7 @@ public class Superstructure {
             System.out.println(newState.toString());
           }
           this.kCurrentState = newState;
-        });
+        }).andThen(led.setState(newState).withTimeout(0.1));
   }
 
   // Logging
