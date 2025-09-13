@@ -17,7 +17,15 @@ public class LEDConstants {
   private static final Alliance kAlliance =
       DriverStation.getAlliance().isPresent() ? DriverStation.getAlliance().get() : Alliance.Red;
   public static final Map<state, Animation> animMap =
-      Map.of(state.IDLE, new SingleFadeAnimation(0, 0, 0, 0, 0, -1));
+      Map.of(
+          state.IDLE,
+          new SingleFadeAnimation(
+              convertColorToInt(Color.kGold)[0],
+              convertColorToInt(Color.kGold)[1],
+              convertColorToInt(Color.kGold)[2],
+              0,
+              0,
+              -1));
 
   public static final Animation disabledAnim =
       new SingleFadeAnimation(
@@ -36,6 +44,6 @@ public class LEDConstants {
   }
 
   public class DeviceConstants {
-    public static final double brightness = 0.5;    
+    public static final double brightness = 0.5;
   }
 }

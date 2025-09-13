@@ -23,6 +23,8 @@ import frc.robot.subsystems.gripper.Gripper;
 import frc.robot.subsystems.gripper.GripperConstants;
 import frc.robot.subsystems.hopper.Hopper;
 import frc.robot.subsystems.led.LED;
+import frc.robot.subsystems.led.LEDIO;
+import frc.robot.subsystems.led.LEDIOCandle;
 import frc.robot.subsystems.outtake.Outtake;
 import frc.robot.subsystems.outtake.OuttakeConstants;
 import frc.robot.util.FieldConstants;
@@ -86,7 +88,7 @@ public class Superstructure {
   private final HashMap<state, Trigger> stateMap = new HashMap<state, Trigger>();
   private final ControllerLayout layout;
 
-  private final LED led;
+  private final LED led = new LED(Robot.isReal() ? new LEDIOCandle() : new LEDIO() {});
 
   LoggedMechanism2d mech;
 
@@ -100,17 +102,17 @@ public class Superstructure {
       Hopper hopper,
       Gripper gripper,
       Climb climb,
-      ControllerLayout layout,
-      LED led) {
+      ControllerLayout layout) {
     for (state kState : state.values()) {
       stateMap.put(
           kState, new Trigger(() -> (kCurrentState == kState) && DriverStation.isEnabled()));
     }
 
-    this.autoElevatorCommand = (Commands.sequence(
-            elevator
-                .setElevatorHeight(() -> (kCoralTarget.height))
-                .until(elevator::nearSetpoint),
+    System.out.println(led != null);
+
+    this.autoElevatorCommand =
+        (Commands.sequence(
+            elevator.setElevatorHeight(() -> (kCoralTarget.height)).until(elevator::nearSetpoint),
             Commands.parallel(
                 outtake
                     .setVoltage(() -> (OuttakeConstants.voltageMap.get(elevator.getSetpoint())))
@@ -119,7 +121,6 @@ public class Superstructure {
             this.setState(state.IDLE)));
 
     this.layout = layout;
-    this.led = led;
     // Setting Up Controls
     layout.L1.and(layout.manualElevator.negate()).onTrue(this.setCoralTarget(coralTarget.L1));
 
@@ -263,10 +264,7 @@ public class Superstructure {
         .get(state.CORAL_PRESCORE)
         .and(
             () -> (jamesWaitDebouncer.calculate(stateMap.get(state.CORAL_PRESCORE).getAsBoolean())))
-        .onTrue(Commands.parallel(
-            new PrintCommand("You are too slow"),
-            autoElevatorCommand
-        ));
+        .onTrue(Commands.parallel(new PrintCommand("You are too slow"), autoElevatorCommand));
 
     layout
         .setPrescoreCoral
@@ -306,18 +304,10 @@ public class Superstructure {
             AutoAlign.alignToPose(() -> (AutoAlign.getBestAlgaePose(drive::getPose)), drive));
 
     // Climb
-    layout
-        .climbRequest
-        .whileTrue(Commands.parallel(
-            this.setState(state.CLIMB_PULL),
-            climb.extend()
-        ));
+    layout.climbRequest.whileTrue(
+        Commands.parallel(this.setState(state.CLIMB_PULL), climb.extend()));
 
-    
-    layout
-        .scoreRequest
-        .and(stateMap.get(state.CLIMB_PULL))
-        .whileTrue(climb.retract());
+    layout.scoreRequest.and(stateMap.get(state.CLIMB_PULL)).whileTrue(climb.retract());
     // Idle State Triggers
     stateMap.get(state.IDLE).and(outtake::getDetected).onTrue(this.setState(state.CORAL_READY));
 
@@ -359,13 +349,13 @@ public class Superstructure {
 
   public Command setState(state newState) {
     return Commands.runOnce(
-        () -> {
-          System.out.println(newState.toString());
-          if (kCurrentState != newState) {
-            System.out.println(newState.toString());
-          }
-          this.kCurrentState = newState;
-        }).andThen(led.setState(newState).withTimeout(0.1));
+            () -> {
+              if (kCurrentState != newState) {
+                System.out.println(newState.toString());
+              }
+              this.kCurrentState = newState;
+            })
+        .andThen(led.setState(newState).withTimeout(0.1));
   }
 
   // Logging

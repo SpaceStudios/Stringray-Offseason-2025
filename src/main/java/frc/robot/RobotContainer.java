@@ -42,9 +42,6 @@ import frc.robot.subsystems.gripper.GripperIOSim;
 import frc.robot.subsystems.hopper.Hopper;
 import frc.robot.subsystems.hopper.HopperIO;
 import frc.robot.subsystems.hopper.HopperIOSim;
-import frc.robot.subsystems.led.LED;
-import frc.robot.subsystems.led.LEDIO;
-import frc.robot.subsystems.led.LEDIOCandle;
 import frc.robot.subsystems.outtake.Outtake;
 import frc.robot.subsystems.outtake.OuttakeIO;
 import frc.robot.subsystems.outtake.OuttakeIOSim;
@@ -64,7 +61,6 @@ public class RobotContainer {
   private final Hopper hopper;
   private final Gripper gripper;
   private final Climb climb;
-  private final LED led;
   public final Superstructure superstructure;
 
   // Controller
@@ -93,7 +89,6 @@ public class RobotContainer {
         hopper = new Hopper(new HopperIO() {});
         gripper = new Gripper(new GripperIO() {});
         climb = new Climb(new ClimbIO() {});
-        led = new LED(new LEDIOCandle());
         break;
 
       case SIM:
@@ -110,7 +105,6 @@ public class RobotContainer {
         hopper = new Hopper(new HopperIOSim());
         gripper = new Gripper(new GripperIOSim());
         climb = new Climb(new ClimbIOSim());
-        led = new LED(new LEDIO() {});
         break;
 
       default:
@@ -127,7 +121,6 @@ public class RobotContainer {
         hopper = new Hopper(new HopperIO() {});
         gripper = new Gripper(new GripperIO() {});
         climb = new Climb(new ClimbIO() {});
-        led = new LED(new LEDIO() {});
         break;
     }
 
@@ -171,7 +164,8 @@ public class RobotContainer {
     simLayout.setPrescoreAlgae = controller.rightStick();
     simLayout.driveController = controller;
 
-    superstructure = new Superstructure(drive, elevator, outtake, hopper, gripper, climb, simLayout, led);
+    superstructure =
+        new Superstructure(drive, elevator, outtake, hopper, gripper, climb, simLayout);
     // Configure the button bindings
     configureButtonBindings();
   }

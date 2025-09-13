@@ -10,24 +10,29 @@ import com.ctre.phoenix.led.CANdleConfiguration;
 
 /** Add your docs here. */
 public class LEDIOCandle implements LEDIO {
-    private final CANdle candle = new CANdle(11);
-    public LEDIOCandle() {
-        final CANdleConfiguration config = new CANdleConfiguration();
-        config.brightnessScalar = LEDConstants.DeviceConstants.brightness;
-        config.disableWhenLOS = false;
-        config.enableOptimizations = true;
-        
-        candle.configAllSettings(config);
-    }
+  private final CANdle candle = new CANdle(11);
+  private Animation currentAnimation = LEDConstants.disabledAnim;
 
-    @Override
-    public void getData(ledData data) {
-        data.temperature = candle.getTemperature();
-        data.current = candle.getCurrent();
-    }
+  public LEDIOCandle() {
+    final CANdleConfiguration config = new CANdleConfiguration();
+    config.brightnessScalar = LEDConstants.DeviceConstants.brightness;
+    config.disableWhenLOS = false;
+    config.enableOptimizations = true;
 
-    @Override
-    public void setAnimation(Animation animation) {
-        candle.animate(animation);
+    candle.configAllSettings(config);
+  }
+
+  @Override
+  public void getData(ledData data) {
+    data.temperature = candle.getTemperature();
+    data.current = candle.getCurrent();
+  }
+
+  @Override
+  public void setAnimation(Animation animation) {
+    if (animation != currentAnimation) {
+      candle.animate(animation);
+      currentAnimation = animation;
     }
+  }
 }
