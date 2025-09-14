@@ -12,7 +12,7 @@ public class GripperIOSim implements GripperIO {
   private boolean detected = false;
   private double voltage = 0.0;
 
-  private final Debouncer voltageOutDebouncer = new Debouncer(0.5, DebounceType.kFalling);
+  private final Debouncer voltageOutDebouncer = new Debouncer(1.5, DebounceType.kBoth);
 
   public GripperIOSim() {}
 

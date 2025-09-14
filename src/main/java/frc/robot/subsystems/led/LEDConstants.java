@@ -6,6 +6,7 @@ package frc.robot.subsystems.led;
 
 import com.ctre.phoenix.led.Animation;
 import com.ctre.phoenix.led.SingleFadeAnimation;
+import com.ctre.phoenix.led.StrobeAnimation;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.util.Color;
@@ -14,6 +15,7 @@ import java.util.Map;
 
 /** Add your docs here. */
 public class LEDConstants {
+  private static final int length = 308;
   private static final Alliance kAlliance =
       DriverStation.getAlliance().isPresent() ? DriverStation.getAlliance().get() : Alliance.Red;
   public static final Map<state, Animation> animMap =
@@ -23,9 +25,81 @@ public class LEDConstants {
               convertColorToInt(Color.kGold)[0],
               convertColorToInt(Color.kGold)[1],
               convertColorToInt(Color.kGold)[2],
-              0,
-              0,
-              -1));
+              255,
+              0.5,
+              length),
+          state.CORAL_INTAKE,
+          new StrobeAnimation(
+              convertColorToInt(Color.kWhite)[0],
+              convertColorToInt(Color.kWhite)[1],
+              convertColorToInt(Color.kWhite)[2],
+              255,
+              0.5,
+              length),
+          state.CORAL_READY,
+          new StrobeAnimation(
+              convertColorToInt(Color.kTeal)[0],
+              convertColorToInt(Color.kTeal)[1],
+              convertColorToInt(Color.kTeal)[2],
+              255,
+              0.5,
+              length),
+          state.CORAL_PRESCORE,
+          new StrobeAnimation(
+              convertColorToInt(Color.kLimeGreen)[0],
+              convertColorToInt(Color.kLimeGreen)[1],
+              convertColorToInt(Color.kLimeGreen)[2],
+              255,
+              0.5,
+              length),
+          state.ALGAE_INTAKE,
+          new StrobeAnimation(
+              convertColorToInt(Color.kTeal)[0],
+              convertColorToInt(Color.kTeal)[1],
+              convertColorToInt(Color.kTeal)[2],
+              255,
+              0.5,
+              length),
+          state.ALGAE_READY,
+          new StrobeAnimation(
+              convertColorToInt(Color.kTeal)[0],
+              convertColorToInt(Color.kTeal)[1],
+              convertColorToInt(Color.kTeal)[2],
+              255,
+              0.5,
+              length),
+          state.ALGAE_PRESCORE,
+          new StrobeAnimation(
+              convertColorToInt(Color.kTeal)[0],
+              convertColorToInt(Color.kTeal)[1],
+              convertColorToInt(Color.kTeal)[2],
+              255,
+              0.5,
+              length),
+          state.MANUAL_ELEVATOR,
+          new StrobeAnimation(
+              convertColorToInt(Color.kTeal)[0],
+              convertColorToInt(Color.kTeal)[1],
+              convertColorToInt(Color.kTeal)[2],
+              255,
+              0.5,
+              length),
+          state.CLIMB_READY,
+          new StrobeAnimation(
+              convertColorToInt(Color.kTeal)[0],
+              convertColorToInt(Color.kTeal)[1],
+              convertColorToInt(Color.kTeal)[2],
+              255,
+              0.5,
+              length),
+          state.CLIMB_PULL,
+          new StrobeAnimation(
+              convertColorToInt(Color.kTeal)[0],
+              convertColorToInt(Color.kTeal)[1],
+              convertColorToInt(Color.kTeal)[2],
+              255,
+              0.5,
+              length));
 
   public static final Animation disabledAnim =
       new SingleFadeAnimation(
@@ -40,7 +114,7 @@ public class LEDConstants {
               : (int) (Color.kBlue.blue * 255));
 
   public static int[] convertColorToInt(Color color) {
-    return new int[] {(int) (color.red * 255), (int) (color.blue * 255), (int) (color.green * 255)};
+    return new int[] {(int) (color.red * 255), (int) (color.green * 255), (int) (color.blue * 255)};
   }
 
   public class DeviceConstants {

@@ -14,6 +14,8 @@
 package frc.robot;
 
 import com.pathplanner.lib.auto.AutoBuilder;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.XboxController;
@@ -45,6 +47,7 @@ import frc.robot.subsystems.hopper.HopperIOSim;
 import frc.robot.subsystems.outtake.Outtake;
 import frc.robot.subsystems.outtake.OuttakeIO;
 import frc.robot.subsystems.outtake.OuttakeIOSim;
+import frc.robot.util.FieldConstants;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
@@ -124,6 +127,12 @@ public class RobotContainer {
         break;
     }
 
+    drive.setPose(
+        new Pose2d(
+            FieldConstants.BargeConstants.bargePoses[0].getX(),
+            FieldConstants.fieldWidth / 2.0,
+            Rotation2d.k180deg));
+
     // Set up auto routines
     autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
 
@@ -151,8 +160,8 @@ public class RobotContainer {
     simLayout.scoreRequest = controller.rightTrigger();
     simLayout.manualElevator = controller.povUp();
     simLayout.L1 = controller.a();
-    simLayout.L2 = controller.x();
-    simLayout.L3 = controller.b();
+    simLayout.L2 = controller.b();
+    simLayout.L3 = controller.x();
     simLayout.L4 = controller.y();
     simLayout.climbRequest = controller.povDown();
     simLayout.autoAlignLeft = controller.leftBumper();
@@ -181,8 +190,8 @@ public class RobotContainer {
     drive.setDefaultCommand(
         DriveCommands.joystickDrive(
             drive,
-            () -> controller.getLeftY(),
-            () -> controller.getLeftX(),
+            () -> -controller.getLeftY(),
+            () -> -controller.getLeftX(),
             () -> -controller.getRightX()));
 
     // // Lock to 0° when A button is held
@@ -228,6 +237,7 @@ public class RobotContainer {
    * @return the command to run in autonomous
    */
   public Command getAutonomousCommand() {
-    return autoChooser.get();
+    // return autoChooser.get();
+    return outtake.setDetected(true);
   }
 }

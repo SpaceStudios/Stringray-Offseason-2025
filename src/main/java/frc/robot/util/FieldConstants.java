@@ -6,12 +6,15 @@ package frc.robot.util;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
+import java.util.List;
+import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
 
 /** Add your docs here. */
@@ -22,14 +25,14 @@ public class FieldConstants {
   public static final double fieldWidth = fieldLayout.getFieldWidth();
   public static final double widthBetweenPegs =
       0.328619; // Width Between Peg in meters ALWAYS go and check the field BEFORE COMPETITION
-  public static final double safeDistance = Units.inchesToMeters(16.5);
+  public static final double safeDistance = Units.inchesToMeters(17);
 
   public static class ReefConstants {
     public enum coralTarget {
       L1(0.42),
       L2(0.79),
       L3(1.18),
-      L4(1.34);
+      L4(1.75);
 
       public double height;
 
@@ -143,6 +146,25 @@ public class FieldConstants {
         };
     public static final Pose2d net = bargePoses[0];
     public static final double elevatorSetpoint = 1.78;
+
+    public static boolean nearNet(Supplier<Pose2d> poseSupplier) {
+      return inNetZone(getNearestNet(poseSupplier), poseSupplier.get());
+    }
+
+    public static boolean inNetZone(Pose2d netPose, Pose2d currentPose) {
+      return MathUtil.isNear(netPose.getX(), currentPose.getX(), 0.25)
+          && MathUtil.isNear(netPose.getY(), currentPose.getY(), FieldConstants.fieldWidth / 4)
+          && MathUtil.isNear(
+              netPose.getRotation().getRadians(),
+              currentPose.getRotation().getRadians(),
+              Math.PI / 4);
+    }
+
+    private static final List<Pose2d> bargePoseList = List.of(bargePoses);
+
+    public static Pose2d getNearestNet(Supplier<Pose2d> poseSupplier) {
+      return poseSupplier.get().nearest(bargePoseList);
+    }
   }
 
   public class ProcessorConstants {

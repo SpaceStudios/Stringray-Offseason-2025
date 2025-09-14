@@ -7,6 +7,7 @@ package frc.robot;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -28,12 +29,15 @@ import frc.robot.subsystems.led.LEDIOCandle;
 import frc.robot.subsystems.outtake.Outtake;
 import frc.robot.subsystems.outtake.OuttakeConstants;
 import frc.robot.util.FieldConstants;
+import frc.robot.util.FieldConstants.BargeConstants;
+import frc.robot.util.FieldConstants.ReefConstants;
 import frc.robot.util.FieldConstants.ReefConstants.coralTarget;
 import java.util.HashMap;
 import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.mechanism.LoggedMechanism2d;
+import org.littletonrobotics.junction.mechanism.LoggedMechanismLigament2d;
 
 /** Add your docs here. */
 public class Superstructure {
@@ -89,8 +93,10 @@ public class Superstructure {
   private final ControllerLayout layout;
 
   private final LED led = new LED(Robot.isReal() ? new LEDIOCandle() : new LEDIO() {});
+  private final Elevator elevator;
 
-  LoggedMechanism2d mech;
+  private final LoggedMechanism2d mech;
+  public final LoggedMechanismLigament2d elevatorDisplay;
 
   @AutoLogOutput(key = "Superstructure/Sim Intake")
   private Trigger simIntakeTrigger = new Trigger(() -> false);
@@ -121,6 +127,14 @@ public class Superstructure {
             this.setState(state.IDLE)));
 
     this.layout = layout;
+    this.elevator = elevator;
+
+    // Setting Up Display
+    mech = new LoggedMechanism2d(1, 1);
+    elevatorDisplay = new LoggedMechanismLigament2d("ElevatorMechanism", 0, 85);
+    mech.getRoot("ElevatorRoot", Units.inchesToMeters(24 - 3), Units.inchesToMeters(4.087))
+        .append(elevatorDisplay);
+
     // Setting Up Controls
     layout.L1.and(layout.manualElevator.negate()).onTrue(this.setCoralTarget(coralTarget.L1));
 
@@ -235,6 +249,7 @@ public class Superstructure {
     // Coral State Triggers
     stateMap
         .get(state.CORAL_INTAKE)
+        .and(elevator::nearSetpoint)
         .onTrue(
             Commands.parallel(
                 hopper.setVoltage(OuttakeConstants.intake).until(outtake::getDetected),
@@ -303,23 +318,73 @@ public class Superstructure {
         .whileTrue(
             AutoAlign.alignToPose(() -> (AutoAlign.getBestAlgaePose(drive::getPose)), drive));
 
+    stateMap
+        .get(state.ALGAE_INTAKE)
+        .and(gripper::getDetected)
+        .whileTrue(this.setState(state.ALGAE_READY));
+
+    stateMap
+        .get(state.ALGAE_READY)
+        .and(() -> !(gripper.getDetected()))
+        .whileTrue(this.setState(state.IDLE));
+
+    stateMap
+        .get(state.IDLE)
+        .and(() -> !(gripper.getDetected()))
+        .whileTrue(this.setState(state.IDLE));
+
+    stateMap
+        .get(state.ALGAE_READY)
+        .and(() -> (BargeConstants.nearNet(drive::getPose)))
+        .whileTrue(this.setState(state.ALGAE_PRESCORE));
+
+    stateMap
+        .get(state.ALGAE_PRESCORE)
+        .and(() -> !(BargeConstants.nearNet(drive::getPose)))
+        .whileTrue(this.setState(state.ALGAE_READY))
+        .onTrue(
+            elevator
+                .setElevatorHeight(ReefConstants.coralTarget.L1.height)
+                .until(elevator::nearSetpoint));
+
+    layout
+        .scoreRequest
+        .and(stateMap.get(state.ALGAE_PRESCORE))
+        .and(gripper::getDetected)
+        .whileTrue(
+            Commands.sequence(
+                elevator
+                    .setElevatorHeight(() -> (BargeConstants.elevatorSetpoint))
+                    .until(elevator::nearSetpoint),
+                Commands.parallel(
+                    gripper.setVoltage(() -> (GripperConstants.net)).until(gripper::getDetected),
+                    gripper.setDetected(false).withTimeout(0.5))));
+
     // Climb
     layout.climbRequest.whileTrue(
         Commands.parallel(this.setState(state.CLIMB_PULL), climb.extend()));
 
     layout.scoreRequest.and(stateMap.get(state.CLIMB_PULL)).whileTrue(climb.retract());
     // Idle State Triggers
-    stateMap.get(state.IDLE).and(outtake::getDetected).onTrue(this.setState(state.CORAL_READY));
+    stateMap.get(state.IDLE).and(outtake::getDetected).whileTrue(this.setState(state.CORAL_READY));
+    stateMap.get(state.IDLE).and(gripper::getDetected).whileTrue(this.setState(state.ALGAE_READY));
 
     // Sim State Triggers
     stateMap
         .get(state.CORAL_INTAKE)
+        .and(elevator::nearSetpoint)
         .and(Robot::isSimulation)
         .and(
             () ->
                 (AutoAlign.isNearWaypoint(
                     AutoAlign.getBestSource(drive.getPose()), drive.getPose())))
         .onTrue(Commands.parallel(outtake.setDetected(true), new PrintCommand("Intaked")));
+
+    stateMap
+        .get(state.ALGAE_INTAKE)
+        .and(Robot::isSimulation)
+        .and(() -> (AutoAlign.isNear(AutoAlign.getBestAlgaePose(drive::getPose), drive.getPose())))
+        .onTrue(Commands.parallel(gripper.setDetected(true)));
 
     simIntakeTrigger =
         stateMap
@@ -370,6 +435,8 @@ public class Superstructure {
         "Superstructure/Layout/Manual Elevator", layout.manualElevator.getAsBoolean());
 
     Logger.recordOutput("Superstructure/State", kCurrentState);
+    elevatorDisplay.setLength(elevator.getHeight());
+    Logger.recordOutput("Superstructure/Mechanism", mech);
 
     Logger.recordOutput("Auto Align/Waypoints", AutoAlign.waypointsLogged);
     Logger.recordOutput("Auto Align/Generated Path", testPath);

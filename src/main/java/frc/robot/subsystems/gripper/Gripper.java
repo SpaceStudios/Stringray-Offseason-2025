@@ -36,6 +36,10 @@ public class Gripper extends SubsystemBase {
         });
   }
 
+  public boolean getDetected() {
+    return data.detected;
+  }
+
   @Override
   public void periodic() {
     // This method will be called once per scheduler run

@@ -35,9 +35,9 @@ public class AutoAlign {
 
   public static Command alignToPose(Supplier<Pose2d> poseSupplier, Drive drive) {
     ProfiledPIDController xController =
-        new ProfiledPIDController(5.0, 0.01, 0.02, new TrapezoidProfile.Constraints(3.0, 4.0));
+        new ProfiledPIDController(0.9, 0.0, 0.0, new TrapezoidProfile.Constraints(3.0, 4.0));
     ProfiledPIDController yController =
-        new ProfiledPIDController(5.0, 0.01, 0.02, new TrapezoidProfile.Constraints(3.0, 4.0));
+        new ProfiledPIDController(0.9, 0.0, 0.0, new TrapezoidProfile.Constraints(3.0, 4.0));
     ProfiledPIDController rotController =
         new ProfiledPIDController(100.0, 0, 0, new TrapezoidProfile.Constraints(10.0, 10.0));
     rotController.enableContinuousInput(-Math.PI, Math.PI);
@@ -51,6 +51,9 @@ public class AutoAlign {
               xController.setGoal(target.getX());
               yController.setGoal(target.getY());
               rotController.setGoal(target.getRotation().getRadians());
+              xController.setP(2.5);
+              yController.setP(2.5);
+              rotController.setP(10.0);
             })
         .andThen(
             Commands.run(

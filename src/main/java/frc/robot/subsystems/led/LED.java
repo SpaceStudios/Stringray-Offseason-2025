@@ -11,7 +11,7 @@ import frc.robot.Superstructure.state;
 
 public class LED extends SubsystemBase {
   private final LEDIO io;
-  private state currentState;
+  private state currentState = state.IDLE;
   /** Creates a new LED. */
   public LED(LEDIO io) {
     this.io = io;
