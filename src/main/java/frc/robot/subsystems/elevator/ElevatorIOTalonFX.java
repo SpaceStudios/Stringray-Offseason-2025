@@ -51,8 +51,8 @@ public class ElevatorIOTalonFX implements ElevatorIO {
   private double setpoint = 0.0;
 
   public ElevatorIOTalonFX() {
-    leftTalon = new TalonFX(21);
-    rightTalon = new TalonFX(22);
+    leftTalon = new TalonFX(11);
+    rightTalon = new TalonFX(10);
 
     rightTalon.setControl(new Follower(leftTalon.getDeviceID(), true));
 

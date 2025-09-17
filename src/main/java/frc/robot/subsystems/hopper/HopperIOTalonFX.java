@@ -27,7 +27,7 @@ public class HopperIOTalonFX implements HopperIO {
   private final StatusSignal<Current> supplyCurrent;
 
   public HopperIOTalonFX() {
-    talon = new TalonFX(0); // TODO: Replace with actual id
+    talon = new TalonFX(30);
 
     TalonFXConfiguration config = new TalonFXConfiguration();
 

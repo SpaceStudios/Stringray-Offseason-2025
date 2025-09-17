@@ -37,7 +37,7 @@ public class OuttakeIOTalonFX implements OuttakeIO {
   private final ProximityDataAutoLogged sensorData = new ProximityDataAutoLogged();
 
   public OuttakeIOTalonFX(ProximityIO sensor) {
-    talon = new TalonFX(0); // TODO replace this with the actual hopper id;
+    talon = new TalonFX(20); // TODO replace this with the actual hopper id;
 
     TalonFXConfiguration config = new TalonFXConfiguration();
 

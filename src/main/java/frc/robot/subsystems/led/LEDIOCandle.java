@@ -10,7 +10,7 @@ import com.ctre.phoenix.led.CANdleConfiguration;
 
 /** Add your docs here. */
 public class LEDIOCandle implements LEDIO {
-  private final CANdle candle = new CANdle(11);
+  private final CANdle candle = new CANdle(60);
   private Animation currentAnimation = LEDConstants.disabledAnim;
 
   public LEDIOCandle() {
