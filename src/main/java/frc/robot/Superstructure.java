@@ -169,7 +169,9 @@ public class Superstructure {
     layout
         .intakeRequest
         .and(() -> (!outtake.getDetected()))
+        .and(() -> (!gripper.getDetected()))
         .and(stateMap.get(state.ALGAE_INTAKE).negate())
+        .and(() -> (AutoAlign.getBestIntake(drive) == IntakeLocation.SOURCE))
         .onTrue(
             Commands.parallel(
                 setState(state.CORAL_INTAKE),
@@ -365,26 +367,35 @@ public class Superstructure {
         .scoreRequest
         .and(stateMap.get(state.ALGAE_PRESCORE))
         .and(gripper::getDetected)
-        .whileTrue(
+        .onTrue(
             Commands.sequence(
                 elevator
                     .setElevatorHeight(() -> (BargeConstants.elevatorSetpoint))
                     .until(elevator::nearSetpoint),
                 Commands.parallel(
-                    gripper.setVoltage(() -> (GripperConstants.net)).until(gripper::getDetected),
-                    gripper.setDetected(false).withTimeout(0.5))));
+                        gripper.setVoltage(() -> (GripperConstants.net)),
+                        gripper.setDetected(false))
+                    .until(() -> !(gripper.getDetected())),
+                this.setState(state.IDLE)));
 
     // Climb
     layout
         .climbRequest
         .and(() -> (Timer.getMatchTime() == -1))
-        .whileTrue(Commands.parallel(this.setState(state.CLIMB_PULL), climb.extend()));
+        .whileTrue(Commands.parallel(this.setState(state.CLIMB_READY), climb.extend()));
+
+    layout
+        .autoAlignCage
+        .and(stateMap.get(state.CLIMB_READY))
+        .and(() -> (Timer.getMatchTime() < 25))
+        .whileTrue(AutoAlign.alignToPose(() -> (AutoAlign.getBestCagePose(drive::getPose)), drive));
 
     layout
         .scoreRequest
         .and(stateMap.get(state.CLIMB_PULL))
         .and(() -> (Timer.getMatchTime() < 25))
         .whileTrue(climb.retract());
+
     // Idle State Triggers
     stateMap.get(state.IDLE).and(outtake::getDetected).whileTrue(this.setState(state.CORAL_READY));
     stateMap.get(state.IDLE).and(gripper::getDetected).whileTrue(this.setState(state.ALGAE_READY));
@@ -404,7 +415,7 @@ public class Superstructure {
         .get(state.ALGAE_INTAKE)
         .and(Robot::isSimulation)
         .and(() -> (AutoAlign.isNear(AutoAlign.getBestAlgaePose(drive::getPose), drive.getPose())))
-        .onTrue(Commands.parallel(gripper.setDetected(true)));
+        .onTrue(Commands.parallel(gripper.setDetected(true).until(gripper::getDetected)));
 
     simIntakeTrigger =
         stateMap
@@ -415,19 +426,43 @@ public class Superstructure {
                     (AutoAlign.isNearWaypoint(
                         AutoAlign.getBestSource(drive.getPose()), drive.getPose())));
 
-    simIntakeTrigger.onTrue(outtake.setDetected(true));
+    simIntakeTrigger.onTrue(outtake.setDetected(true).until(outtake::getDetected));
 
     // Non State Stuff
-    layout.cancelRequest.onTrue(
-        Commands.parallel(
-            this.setState(state.IDLE),
-            outtake.setVoltage(() -> 0.0).withTimeout(0.1),
-            hopper.setVoltage(0.0).withTimeout(0.1),
-            gripper.setVoltage(() -> 0.0).withTimeout(0.1),
-            elevator
-                .setElevatorHeight(0.0)
-                .until(elevator::nearSetpoint)
-                .andThen(elevator.homingSequence())));
+    layout
+        .cancelRequest
+        .and(() -> !(gripper.getDetected()))
+        .and(() -> !(outtake.getDetected()))
+        .onTrue(
+            Commands.parallel(
+                this.setState(state.IDLE),
+                outtake.setVoltage(() -> 0.0).withTimeout(0.1),
+                hopper.setVoltage(0.0).withTimeout(0.1),
+                gripper.setVoltage(() -> 0.0).withTimeout(0.1),
+                elevator
+                    .setElevatorHeight(0.0)
+                    .until(elevator::nearSetpoint)
+                    .andThen(elevator.homingSequence())));
+
+    layout
+        .cancelRequest
+        .and(outtake::getDetected)
+        .onTrue(
+            Commands.parallel(
+                this.setState(state.CORAL_READY),
+                outtake.setVoltage(() -> 0.0).withTimeout(0.1),
+                hopper.setVoltage(0.0).withTimeout(0.1),
+                gripper.setVoltage(() -> 0.0).withTimeout(0.1)));
+
+    layout
+        .cancelRequest
+        .and(gripper::getDetected)
+        .onTrue(
+            Commands.parallel(
+                this.setState(state.ALGAE_READY),
+                outtake.setVoltage(() -> 0.0).withTimeout(0.1),
+                hopper.setVoltage(0.0).withTimeout(0.1),
+                gripper.setVoltage(() -> 0.0).withTimeout(0.1)));
 
     layout.resetGyro.onTrue(
         Commands.runOnce(

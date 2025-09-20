@@ -154,19 +154,16 @@ public class FieldConstants {
           AllianceFlipUtil.apply(
               bargeTags[0].transformBy(
                   new Transform2d(
-                      Units.inchesToMeters(-15.265703),
+                      0.25,
                       Units.inchesToMeters(-0.99995 - 0.25) - Units.inchesToMeters(42.937416),
                       Rotation2d.kZero))),
           AllianceFlipUtil.apply(
               bargeTags[0].transformBy(
-                  new Transform2d(
-                      Units.inchesToMeters(-15.265703),
-                      Units.inchesToMeters(-0.99995 - 0.25),
-                      Rotation2d.kZero))),
+                  new Transform2d(0.25, Units.inchesToMeters(-0.99995 - 0.25), Rotation2d.kZero))),
           AllianceFlipUtil.apply(
               bargeTags[0].transformBy(
                   new Transform2d(
-                      Units.inchesToMeters(-15.265703),
+                      0.25,
                       Units.inchesToMeters(-0.99995 - 0.25) + Units.inchesToMeters(42.937500),
                       Rotation2d.kZero)))
         };

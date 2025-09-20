@@ -67,7 +67,8 @@ public class RobotContainer {
   public final Superstructure superstructure;
 
   // Controller
-  private final CommandXboxController controller = new CommandXboxController(0);
+  private final CommandXboxController driver = new CommandXboxController(0);
+  private final CommandXboxController operator = new CommandXboxController(1);
 
   // private final ControllerLayout compLayout = new ControllerLayout();
   private final ControllerLayout simLayout = new ControllerLayout();
@@ -154,38 +155,38 @@ public class RobotContainer {
 
     // Setting Up Superstructure
     // Defining Axises
-    simLayout.driveX = () -> controller.getLeftY();
-    simLayout.driveY = () -> controller.getLeftX();
+    simLayout.driveX = () -> driver.getLeftY();
+    simLayout.driveY = () -> driver.getLeftX();
 
     // Requests
-    simLayout.intakeRequest = controller.leftTrigger();
-    simLayout.scoreRequest = controller.rightTrigger();
-    simLayout.manualElevator = controller.povUp();
+    simLayout.intakeRequest = driver.leftTrigger();
+    simLayout.scoreRequest = driver.rightTrigger();
+    simLayout.manualElevator = driver.povUp();
 
     // Coral Presets
-    simLayout.L1 = controller.a();
-    simLayout.L2 = controller.b();
-    simLayout.L3 = controller.x();
-    simLayout.L4 = controller.y();
+    simLayout.L1 = driver.a();
+    simLayout.L2 = driver.b();
+    simLayout.L3 = driver.x();
+    simLayout.L4 = driver.y();
 
     // Climb Setup
-    simLayout.climbRequest = controller.povDown();
-    simLayout.autoAlignCage = controller.back();
+    simLayout.climbRequest = driver.povDown();
+    simLayout.autoAlignCage = driver.back();
 
     // Auto Align
-    simLayout.autoAlignLeft = controller.leftBumper();
-    simLayout.autoAlignRight = controller.rightBumper();
+    simLayout.autoAlignLeft = driver.leftBumper();
+    simLayout.autoAlignRight = driver.rightBumper();
 
     // Basic Functions
-    simLayout.cancelRequest = controller.povLeft();
-    simLayout.resetGyro = controller.povRight();
-    simLayout.revFunnel = controller.start();
-    simLayout.dejamCoral = controller.start();
+    simLayout.cancelRequest = driver.povLeft();
+    simLayout.resetGyro = driver.povRight();
+    simLayout.revFunnel = driver.start();
+    simLayout.dejamCoral = driver.start();
 
     // Maybe Useless Stuff?
-    simLayout.setPrescoreCoral = controller.leftStick();
-    simLayout.setPrescoreAlgae = controller.rightStick();
-    simLayout.driveController = controller;
+    simLayout.setPrescoreCoral = driver.leftStick();
+    simLayout.setPrescoreAlgae = driver.rightStick();
+    simLayout.driveController = driver;
 
     superstructure =
         new Superstructure(drive, elevator, outtake, hopper, gripper, climb, simLayout);
@@ -203,10 +204,7 @@ public class RobotContainer {
     // Default command, normal field-relative drive
     drive.setDefaultCommand(
         DriveCommands.joystickDrive(
-            drive,
-            () -> -controller.getLeftY(),
-            () -> -controller.getLeftX(),
-            () -> -controller.getRightX()));
+            drive, () -> -driver.getLeftY(), () -> -driver.getLeftX(), () -> -driver.getRightX()));
 
     // // Lock to 0° when A button is held
     // controller
@@ -236,12 +234,12 @@ public class RobotContainer {
   public Command controllerRumble(double time, double strength) {
     return Commands.run(
             () -> {
-              controller.setRumble(RumbleType.kBothRumble, strength);
+              driver.setRumble(RumbleType.kBothRumble, strength);
             })
         .withTimeout(time)
         .finallyDo(
             () -> {
-              controller.setRumble(RumbleType.kBothRumble, 0.0);
+              driver.setRumble(RumbleType.kBothRumble, 0.0);
             });
   }
 

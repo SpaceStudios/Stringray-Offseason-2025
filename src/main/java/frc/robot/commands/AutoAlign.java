@@ -35,11 +35,11 @@ public class AutoAlign {
 
   public static Command alignToPose(Supplier<Pose2d> poseSupplier, Drive drive) {
     ProfiledPIDController xController =
-        new ProfiledPIDController(0.9, 0.0, 0.0, new TrapezoidProfile.Constraints(3.0, 4.0));
+        new ProfiledPIDController(5.0, 0.0, 0.0, new TrapezoidProfile.Constraints(3.0, 4.0));
     ProfiledPIDController yController =
-        new ProfiledPIDController(0.9, 0.0, 0.0, new TrapezoidProfile.Constraints(3.0, 4.0));
+        new ProfiledPIDController(5.0, 0.0, 0.0, new TrapezoidProfile.Constraints(3.0, 4.0));
     ProfiledPIDController rotController =
-        new ProfiledPIDController(100.0, 0, 0, new TrapezoidProfile.Constraints(10.0, 10.0));
+        new ProfiledPIDController(100.0, 0, 0, new TrapezoidProfile.Constraints(5.0, 10.0));
     rotController.enableContinuousInput(-Math.PI, Math.PI);
     Pose2d targetPose = poseSupplier.get();
     xController.setGoal(targetPose.getX());
@@ -51,20 +51,17 @@ public class AutoAlign {
               xController.setGoal(target.getX());
               yController.setGoal(target.getY());
               rotController.setGoal(target.getRotation().getRadians());
-              xController.setP(2.5);
-              yController.setP(2.5);
-              rotController.setP(10.0);
             })
         .andThen(
             Commands.run(
                     () -> {
-                      if (targetPose != poseSupplier.get()) {
-                        xController.setGoal(poseSupplier.get().getX());
-                        yController.setGoal(poseSupplier.get().getY());
-                        rotController.setGoal(poseSupplier.get().getRotation().getRadians());
-                      }
                       Pose2d currentPose = drive.getPose();
-                      Logger.recordOutput("AutoAlign/Target", poseSupplier.get());
+                      Logger.recordOutput(
+                          "AutoAlign/Target",
+                          new Pose2d(
+                              xController.getGoal().position,
+                              yController.getGoal().position,
+                              Rotation2d.fromRadians(rotController.getGoal().position)));
                       ChassisSpeeds speeds =
                           new ChassisSpeeds(
                               xController.calculate(currentPose.getX()),
@@ -139,6 +136,12 @@ public class AutoAlign {
 
   public static Pose2d getBestAlgaePose(Supplier<Pose2d> pose) {
     return pose.get().nearest(algaeList);
+  }
+
+  private static List<Pose2d> cagePoses = List.of(FieldConstants.BargeConstants.climbPoses);
+
+  public static Pose2d getBestCagePose(Supplier<Pose2d> pose) {
+    return pose.get().nearest(cagePoses);
   }
 
   public static Pose2d[] generatePath1Waypoint(Supplier<Pose2d> end, Supplier<Pose2d> start) {

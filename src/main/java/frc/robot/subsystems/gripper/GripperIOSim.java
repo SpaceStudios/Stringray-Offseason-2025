@@ -12,7 +12,7 @@ public class GripperIOSim implements GripperIO {
   private boolean detected = false;
   private double voltage = 0.0;
 
-  private final Debouncer voltageOutDebouncer = new Debouncer(1.5, DebounceType.kBoth);
+  private final Debouncer voltageOutDebouncer = new Debouncer(0.5, DebounceType.kBoth);
 
   public GripperIOSim() {}
 
@@ -27,8 +27,8 @@ public class GripperIOSim implements GripperIO {
   @Override
   public void setVoltage(double voltage) {
     this.voltage = voltage;
-    if (voltage > 0 && detected) {
-      detected = false;
+    if (voltage > 0 && this.detected) {
+      this.detected = false;
     }
   }
 

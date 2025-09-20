@@ -8,4 +8,11 @@ package frc.robot.subsystems.gripper;
 public class GripperConstants {
   public static final double net = 5.0;
   public static final double intake = 2.0;
+
+  public class MotorConstants {
+    public static final int supplyLimit = 60;
+    public static final int statorLimit = 60;
+    public static final boolean brake = true;
+    public static final boolean inverted = false;
+  }
 }

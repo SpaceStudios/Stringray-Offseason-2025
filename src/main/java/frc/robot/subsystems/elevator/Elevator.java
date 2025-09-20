@@ -30,6 +30,7 @@ public class Elevator extends SubsystemBase {
   public void periodic() {
     // This method will be called once per scheduler run
     io.updateData(data);
+    data.nearSetpoint = nearSetpoint();
     Logger.processInputs("Elevator", data);
     // filterValue = filter.calculate(data.motorCurrent);
   }
@@ -101,6 +102,6 @@ public class Elevator extends SubsystemBase {
   }
 
   public boolean nearSetpoint() {
-    return MathUtil.isNear(data.elevatorSetpoint, data.elevatorHeight, 0.025);
+    return MathUtil.isNear(data.elevatorSetpoint, data.elevatorHeight, 0.0125);
   }
 }

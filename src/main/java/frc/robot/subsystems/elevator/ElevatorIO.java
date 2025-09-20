@@ -32,6 +32,7 @@ public interface ElevatorIO {
     public double elevatorHeight = 0.0;
     public double elevatorSetpoint = 0.0;
     public double elevatorVelocity = 0.0;
+    public boolean nearSetpoint = false;
   }
 
   public default void updateData(elevatorDataAutoLogged data) {}
