@@ -171,7 +171,10 @@ public class FieldConstants {
     public static final double elevatorSetpoint = 0.0;
   }
 
+  private static Pose2d endPose = new Pose2d(fieldLength, fieldWidth, Rotation2d.kZero);
+
   public static void Log() {
+    Logger.recordOutput("Field Constants/ Length * Width", endPose);
     Logger.recordOutput("Field Constants/Reef/AprilTags", ReefConstants.aprilTags);
     Logger.recordOutput("Field Constants/Reef/Left Branches", ReefConstants.leftBranches);
     Logger.recordOutput("Field Constants/Reef/Right Branches", ReefConstants.rightBranches);

@@ -182,7 +182,20 @@ public class Superstructure {
         .scoreRequest
         .and(stateMap.get(state.CORAL_PRESCORE))
         .and(outtake::getDetected)
+        .and(() -> (kCoralTarget != coralTarget.L1))
         .onTrue(autoElevatorCommand);
+
+    layout
+        .scoreRequest
+        .and(outtake::getDetected)
+        .and(() -> (AutoAlign.getBestIntake(drive) == IntakeLocation.REEF))
+        .and(() -> (kCoralTarget == coralTarget.L1))
+        .onTrue(
+            Commands.sequence(
+                elevator.setElevatorHeight(coralTarget.L1).until(elevator::nearSetpoint),
+                Commands.parallel(outtake.setVoltage(() -> (OuttakeConstants.L1)))
+                    .until(() -> !(outtake.getDetected())),
+                elevator.setElevatorHeight(() -> 0.0)));
 
     layout
         .L1
@@ -398,6 +411,17 @@ public class Superstructure {
     simIntakeTrigger.onTrue(outtake.setDetected(true));
 
     // Non State Stuff
+    layout.cancelRequest.onTrue(
+        Commands.parallel(
+            this.setState(state.IDLE),
+            outtake.setVoltage(() -> 0.0).withTimeout(0.1),
+            hopper.setVoltage(0.0).withTimeout(0.1),
+            gripper.setVoltage(() -> 0.0).withTimeout(0.1),
+            elevator
+                .setElevatorHeight(0.0)
+                .until(elevator::nearSetpoint)
+                .andThen(elevator.homingSequence())));
+
     layout.resetGyro.onTrue(
         Commands.runOnce(
             () -> {

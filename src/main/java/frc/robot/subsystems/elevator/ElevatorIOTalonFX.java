@@ -209,6 +209,7 @@ public class ElevatorIOTalonFX implements ElevatorIO {
   @Override
   public void resetEncoders() {
     leftTalon.setPosition(0.0);
+    rightTalon.setPosition(0.0);
   }
 
   @Override

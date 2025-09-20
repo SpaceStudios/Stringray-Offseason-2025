@@ -1,0 +1,136 @@
+{
+ "name":"autos",
+ "version":1,
+ "type":"Swerve",
+ "variables":{
+  "expressions":{
+   "fLength":{
+    "dimension":"Length",
+    "var":{
+     "exp":"17.548 m",
+     "val":17.548
+    }
+   },
+   "fWidth":{
+    "dimension":"Length",
+    "var":{
+     "exp":"8.042 m",
+     "val":8.042
+    }
+   }
+  },
+  "poses":{
+   "AutoStartBottom":{
+    "x":{
+     "exp":"7.085857391357422 m",
+     "val":7.085857391357422
+    },
+    "y":{
+     "exp":"fWidth * 0.2",
+     "val":1.6084
+    },
+    "heading":{
+     "exp":"135 deg",
+     "val":2.356194490192345
+    }
+   },
+   "AutoStartCenter":{
+    "x":{
+     "exp":"7.25 m",
+     "val":7.25
+    },
+    "y":{
+     "exp":"fWidth / 2",
+     "val":4.021
+    },
+    "heading":{
+     "exp":"180 deg",
+     "val":3.141592653589793
+    }
+   },
+   "AutoStartTop":{
+    "x":{
+     "exp":"7.1 m",
+     "val":7.1
+    },
+    "y":{
+     "exp":"fWidth * 0.8",
+     "val":6.4336
+    },
+    "heading":{
+     "exp":"210 deg",
+     "val":3.665191429188092
+    }
+   }
+  }
+ },
+ "config":{
+  "frontLeft":{
+   "x":{
+    "exp":"11 in",
+    "val":0.2794
+   },
+   "y":{
+    "exp":"11 in",
+    "val":0.2794
+   }
+  },
+  "backLeft":{
+   "x":{
+    "exp":"-11 in",
+    "val":-0.2794
+   },
+   "y":{
+    "exp":"11 in",
+    "val":0.2794
+   }
+  },
+  "mass":{
+   "exp":"150 lbs",
+   "val":68.0388555
+  },
+  "inertia":{
+   "exp":"6 kg m ^ 2",
+   "val":6.0
+  },
+  "gearing":{
+   "exp":"6.5",
+   "val":6.5
+  },
+  "radius":{
+   "exp":"2 in",
+   "val":0.0508
+  },
+  "vmax":{
+   "exp":"6000 RPM",
+   "val":628.3185307179587
+  },
+  "tmax":{
+   "exp":"1.2 N * m",
+   "val":1.2
+  },
+  "cof":{
+   "exp":"1.5",
+   "val":1.5
+  },
+  "bumper":{
+   "front":{
+    "exp":"16 in",
+    "val":0.4064
+   },
+   "side":{
+    "exp":"16 in",
+    "val":0.4064
+   },
+   "back":{
+    "exp":"16 in",
+    "val":0.4064
+   }
+  },
+  "differentialTrackWidth":{
+   "exp":"22 in",
+   "val":0.5588
+  }
+ },
+ "generationFeatures":[]
+}
