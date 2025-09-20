@@ -59,10 +59,10 @@ public class GripperIOTalonFX implements GripperIO {
     supplyCurrent = talon.getSupplyCurrent();
     velocity = talon.getVelocity();
 
-    BaseStatusSignal.setUpdateFrequencyForAll(
-        50.0, voltage, temperature, statorCurrent, supplyCurrent, velocity);
+    tryUntilOk(5, () -> (BaseStatusSignal.setUpdateFrequencyForAll(
+        50.0, voltage, temperature, statorCurrent, supplyCurrent, velocity)));
 
-    talon.optimizeBusUtilization();
+    tryUntilOk(5, () -> talon.optimizeBusUtilization());;
   }
 
   @Override
