@@ -13,6 +13,7 @@ import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Timer;
 import java.util.List;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
@@ -141,8 +142,33 @@ public class FieldConstants {
         };
     public static final Pose2d[] bargePoses =
         new Pose2d[] {
-          bargeTags[0].transformBy(new Transform2d(safeDistance * 1.5, 0.0, Rotation2d.k180deg)),
-          bargeTags[1].transformBy(new Transform2d(safeDistance * 1.5, 0.0, Rotation2d.k180deg))
+          AllianceFlipUtil.apply(
+              bargeTags[0].transformBy(
+                  new Transform2d(safeDistance * 1.5, 0.0, Rotation2d.k180deg))),
+          AllianceFlipUtil.apply(
+              bargeTags[1].transformBy(
+                  new Transform2d(safeDistance * 1.5, 0.0, Rotation2d.k180deg)))
+        };
+    public static final Pose2d[] climbPoses =
+        new Pose2d[] {
+          AllianceFlipUtil.apply(
+              bargeTags[0].transformBy(
+                  new Transform2d(
+                      Units.inchesToMeters(-15.265703),
+                      Units.inchesToMeters(-0.99995 - 0.25) - Units.inchesToMeters(42.937416),
+                      Rotation2d.kZero))),
+          AllianceFlipUtil.apply(
+              bargeTags[0].transformBy(
+                  new Transform2d(
+                      Units.inchesToMeters(-15.265703),
+                      Units.inchesToMeters(-0.99995 - 0.25),
+                      Rotation2d.kZero))),
+          AllianceFlipUtil.apply(
+              bargeTags[0].transformBy(
+                  new Transform2d(
+                      Units.inchesToMeters(-15.265703),
+                      Units.inchesToMeters(-0.99995 - 0.25) + Units.inchesToMeters(42.937500),
+                      Rotation2d.kZero)))
         };
     public static final Pose2d net = bargePoses[0];
     public static final double elevatorSetpoint = 1.78;
@@ -174,7 +200,7 @@ public class FieldConstants {
   private static Pose2d endPose = new Pose2d(fieldLength, fieldWidth, Rotation2d.kZero);
 
   public static void Log() {
-    Logger.recordOutput("Field Constants/ Length * Width", endPose);
+    Logger.recordOutput("Field Constants/End Point", endPose);
     Logger.recordOutput("Field Constants/Reef/AprilTags", ReefConstants.aprilTags);
     Logger.recordOutput("Field Constants/Reef/Left Branches", ReefConstants.leftBranches);
     Logger.recordOutput("Field Constants/Reef/Right Branches", ReefConstants.rightBranches);
@@ -183,6 +209,8 @@ public class FieldConstants {
     Logger.recordOutput("Field Constants/Source/Source Poses", SourceConstants.sourcePoses);
     Logger.recordOutput("Field Constants/Barge/Barge Tags", BargeConstants.bargeTags);
     Logger.recordOutput("Field Constants/Barge/Barge Poses", BargeConstants.bargePoses);
+    Logger.recordOutput("Field Constants/Barge/Cage Poses", BargeConstants.climbPoses);
+    Logger.recordOutput("Field Constants/Current Match Time", Timer.getMatchTime());
     Logger.recordOutput(
         "Field Constants/Current Alliance",
         DriverStation.getAlliance().isPresent()

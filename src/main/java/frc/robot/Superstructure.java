@@ -10,6 +10,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.PrintCommand;
@@ -374,10 +375,16 @@ public class Superstructure {
                     gripper.setDetected(false).withTimeout(0.5))));
 
     // Climb
-    layout.climbRequest.whileTrue(
-        Commands.parallel(this.setState(state.CLIMB_PULL), climb.extend()));
+    layout
+        .climbRequest
+        .and(() -> (Timer.getMatchTime() == -1))
+        .whileTrue(Commands.parallel(this.setState(state.CLIMB_PULL), climb.extend()));
 
-    layout.scoreRequest.and(stateMap.get(state.CLIMB_PULL)).whileTrue(climb.retract());
+    layout
+        .scoreRequest
+        .and(stateMap.get(state.CLIMB_PULL))
+        .and(() -> (Timer.getMatchTime() < 25))
+        .whileTrue(climb.retract());
     // Idle State Triggers
     stateMap.get(state.IDLE).and(outtake::getDetected).whileTrue(this.setState(state.CORAL_READY));
     stateMap.get(state.IDLE).and(gripper::getDetected).whileTrue(this.setState(state.ALGAE_READY));
@@ -457,6 +464,9 @@ public class Superstructure {
     Logger.recordOutput("Superstructure/Layout/Score", layout.scoreRequest.getAsBoolean());
     Logger.recordOutput(
         "Superstructure/Layout/Manual Elevator", layout.manualElevator.getAsBoolean());
+    Logger.recordOutput(
+        "Superstructure/Layout/Auto Align Cage", layout.autoAlignCage.getAsBoolean());
+    Logger.recordOutput("Superstructure/Layout/Dejam Coral", layout.dejamCoral.getAsBoolean());
 
     Logger.recordOutput("Superstructure/State", kCurrentState);
     elevatorDisplay.setLength(elevator.getHeight());

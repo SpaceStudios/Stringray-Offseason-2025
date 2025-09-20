@@ -153,22 +153,36 @@ public class RobotContainer {
         "Drive SysId (Dynamic Reverse)", drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
 
     // Setting Up Superstructure
-
+    // Defining Axises
     simLayout.driveX = () -> controller.getLeftY();
     simLayout.driveY = () -> controller.getLeftX();
+
+    // Requests
     simLayout.intakeRequest = controller.leftTrigger();
     simLayout.scoreRequest = controller.rightTrigger();
     simLayout.manualElevator = controller.povUp();
+
+    // Coral Presets
     simLayout.L1 = controller.a();
     simLayout.L2 = controller.b();
     simLayout.L3 = controller.x();
     simLayout.L4 = controller.y();
+
+    // Climb Setup
     simLayout.climbRequest = controller.povDown();
+    simLayout.autoAlignCage = controller.back();
+
+    // Auto Align
     simLayout.autoAlignLeft = controller.leftBumper();
     simLayout.autoAlignRight = controller.rightBumper();
+
+    // Basic Functions
     simLayout.cancelRequest = controller.povLeft();
     simLayout.resetGyro = controller.povRight();
     simLayout.revFunnel = controller.start();
+    simLayout.dejamCoral = controller.start();
+
+    // Maybe Useless Stuff?
     simLayout.setPrescoreCoral = controller.leftStick();
     simLayout.setPrescoreAlgae = controller.rightStick();
     simLayout.driveController = controller;
