@@ -303,6 +303,10 @@ public class Superstructure {
         .and(outtake::getDetected)
         .onTrue(this.setState(state.CORAL_PRESCORE));
 
+    stateMap
+        .get(state.CORAL_READY)
+        .whileTrue(this.rumbleCommand(layout.driveController, 0.25, 1.0));
+
     // Algae
     layout
         .L2
@@ -377,6 +381,10 @@ public class Superstructure {
                         gripper.setDetected(false))
                     .until(() -> !(gripper.getDetected())),
                 this.setState(state.IDLE)));
+
+    stateMap
+        .get(state.ALGAE_READY)
+        .whileTrue(this.rumbleCommand(layout.driveController, 0.25, 1.0));
 
     // Climb
     layout
@@ -520,14 +528,10 @@ public class Superstructure {
             () -> {
               controller.setRumble(RumbleType.kBothRumble, intensity);
             })
-        .withTimeout(0.1)
-        .andThen(
-            Commands.waitSeconds(seconds)
-                .andThen(
-                    Commands.run(
-                        () -> {
-                          controller.setRumble(RumbleType.kBothRumble, intensity);
-                        }))
-                .withTimeout(0.1));
+        .withTimeout(seconds)
+        .finallyDo(
+            () -> {
+              controller.setRumble(RumbleType.kBothRumble, 0.0);
+            });
   }
 }

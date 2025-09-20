@@ -25,7 +25,7 @@ import frc.robot.subsystems.proximity.ProximityIO;
 /** Add your docs here. */
 public class GripperIOTalonFX implements GripperIO {
   private final TalonFX talon = new TalonFX(40);
-  private final ProximityIO io;
+  private final ProximityIO sensor;
   private final ProximityDataAutoLogged proximityData = new ProximityDataAutoLogged();
   private final StatusSignal<Voltage> voltage;
   private final StatusSignal<Temperature> temperature;
@@ -35,8 +35,8 @@ public class GripperIOTalonFX implements GripperIO {
 
   private final VoltageOut voltageControl = new VoltageOut(0.0);
 
-  public GripperIOTalonFX(ProximityIO io) {
-    this.io = io;
+  public GripperIOTalonFX(ProximityIO sensor) {
+    this.sensor = sensor;
 
     TalonFXConfiguration config = new TalonFXConfiguration();
     config.CurrentLimits.StatorCurrentLimit = MotorConstants.statorLimit;
@@ -69,7 +69,7 @@ public class GripperIOTalonFX implements GripperIO {
   public void getData(gripperDataAutoLogged data) {
     StatusCode status =
         BaseStatusSignal.refreshAll(voltage, temperature, statorCurrent, supplyCurrent, velocity);
-    io.getData(proximityData);
+    sensor.getData(proximityData);
 
     data.connected = status.isOK();
     data.detected = proximityData.detected;
