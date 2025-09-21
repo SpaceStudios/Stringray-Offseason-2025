@@ -175,7 +175,7 @@ public class RobotContainer {
 
     // Climb Setup
     simLayout.climbRequest = driver.povDown();
-    simLayout.autoAlignCage = driver.back();
+    simLayout.autoAlignCage = driver.povUp();
 
     // Auto Align
     simLayout.autoAlignLeft = driver.leftBumper();
@@ -184,7 +184,7 @@ public class RobotContainer {
     // Basic Functions
     simLayout.cancelRequest = driver.povLeft();
     simLayout.resetGyro = driver.povRight();
-    simLayout.revFunnel = driver.start();
+    simLayout.revFunnel = driver.back();
     simLayout.dejamCoral = driver.start();
 
     // Maybe Useless Stuff?
