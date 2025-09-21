@@ -64,6 +64,7 @@ public class Superstructure {
     public Trigger setPrescoreCoral;
     public Trigger setPrescoreAlgae;
     public CommandXboxController driveController;
+    public CommandXboxController operatorController;
   }
 
   private coralTarget kCoralTarget = coralTarget.L4;
@@ -182,25 +183,6 @@ public class Superstructure {
     layout.revFunnel.whileTrue(hopper.setVoltage(-OuttakeConstants.intake));
 
     layout
-        .scoreRequest
-        .and(stateMap.get(state.CORAL_PRESCORE))
-        .and(outtake::getDetected)
-        .and(() -> (kCoralTarget != coralTarget.L1))
-        .onTrue(autoElevatorCommand);
-
-    layout
-        .scoreRequest
-        .and(outtake::getDetected)
-        .and(() -> (AutoAlign.getBestIntake(drive) == IntakeLocation.REEF))
-        .and(() -> (kCoralTarget == coralTarget.L1))
-        .onTrue(
-            Commands.sequence(
-                elevator.setElevatorHeight(coralTarget.L1).until(elevator::nearSetpoint),
-                Commands.parallel(outtake.setVoltage(() -> (OuttakeConstants.L1)))
-                    .until(() -> !(outtake.getDetected())),
-                elevator.setElevatorHeight(() -> 0.0)));
-
-    layout
         .L1
         .and(stateMap.get(state.CORAL_PRESCORE))
         .onTrue(
@@ -291,11 +273,34 @@ public class Superstructure {
                         AutoAlign.getBestRightBranch(drive::getPose), drive.getPose())))
         .onTrue(this.setState(state.CORAL_PRESCORE));
 
-    stateMap
-        .get(state.CORAL_PRESCORE)
-        .and(
-            () -> (jamesWaitDebouncer.calculate(stateMap.get(state.CORAL_PRESCORE).getAsBoolean())))
-        .onTrue(Commands.parallel(new PrintCommand("You are too slow"), autoElevatorCommand));
+    // Auto Scoring, Disabled for now
+    // stateMap
+    //     .get(state.CORAL_PRESCORE)
+    //     .and(
+    //         () -> (jamesWaitDebouncer.calculate(stateMap.get(state.CORAL_PRESCORE).getAsBoolean())))
+    //     .onTrue(Commands.parallel(new PrintCommand("You are too slow"), autoElevatorCommand));
+
+
+    // Manual Coral Scoring
+    layout
+        .scoreRequest
+        .and(stateMap.get(state.CORAL_PRESCORE))
+        .and(outtake::getDetected)
+        .and(() -> (kCoralTarget != coralTarget.L1))
+        .onTrue(autoElevatorCommand);
+
+    layout
+        .scoreRequest
+        .and(outtake::getDetected)
+        .and(() -> (AutoAlign.getBestIntake(drive) == IntakeLocation.REEF))
+        .and(() -> (kCoralTarget == coralTarget.L1))
+        .onTrue(
+            Commands.sequence(
+                elevator.setElevatorHeight(coralTarget.L1).until(elevator::nearSetpoint),
+                Commands.parallel(
+                    outtake.setVoltage(() -> (OuttakeConstants.L1)),
+                    elevator.setVoltage(() -> (0.5))).until(() -> !(outtake.getDetected())),
+                elevator.setElevatorHeight(() -> 0.0)));
 
     layout
         .setPrescoreCoral
@@ -305,9 +310,25 @@ public class Superstructure {
 
     stateMap
         .get(state.CORAL_READY)
-        .whileTrue(this.rumbleCommand(layout.driveController, 0.25, 1.0));
-
+        .whileTrue(Commands.parallel(
+            this.rumbleCommand(layout.driveController, 0.5, 1.0),
+            elevator.setElevatorHeight(coralTarget.L1).until(elevator::nearSetpoint)
+        ));
+        
     // Algae
+
+    stateMap
+        .get(state.ALGAE_INTAKE)
+        .and(elevator::nearSetpoint)
+        .and(() -> (elevator.getSetpoint() > 0))
+        .whileTrue(gripper.setVoltage(() -> (GripperConstants.intake)));
+
+    layout
+        .intakeRequest
+        .and(() -> (AutoAlign.getBestIntake(drive) == IntakeLocation.REEF))
+        .and(stateMap.get(state.IDLE))
+        .onTrue(this.setState(state.ALGAE_INTAKE));
+
     layout
         .L2
         .and(stateMap.get(state.IDLE))
@@ -330,7 +351,15 @@ public class Superstructure {
                 elevator.setElevatorHeight(
                     () -> (FieldConstants.ReefConstants.algaeTarget.L3.height))));
 
-    stateMap.get(state.ALGAE_INTAKE).whileTrue(gripper.setVoltage(() -> (GripperConstants.intake)));
+    layout
+        .L2
+        .and(stateMap.get(state.ALGAE_INTAKE))
+        .onTrue(elevator.setElevatorHeight(() -> FieldConstants.ReefConstants.algaeTarget.L2.height));
+
+    layout
+        .L3
+        .and(stateMap.get(state.ALGAE_INTAKE))
+        .onTrue(elevator.setElevatorHeight(() -> FieldConstants.ReefConstants.algaeTarget.L3.height));
 
     stateMap
         .get(state.ALGAE_INTAKE)
@@ -384,7 +413,10 @@ public class Superstructure {
 
     stateMap
         .get(state.ALGAE_READY)
-        .whileTrue(this.rumbleCommand(layout.driveController, 0.25, 1.0));
+        .whileTrue(Commands.parallel(
+            this.rumbleCommand(layout.driveController, 0.25, 1.0),
+            elevator.setElevatorHeight(coralTarget.L1).until(elevator::nearSetpoint)
+        ));
 
     // Climb
     layout
@@ -471,6 +503,16 @@ public class Superstructure {
                 outtake.setVoltage(() -> 0.0).withTimeout(0.1),
                 hopper.setVoltage(0.0).withTimeout(0.1),
                 gripper.setVoltage(() -> 0.0).withTimeout(0.1)));
+
+
+    layout
+        .manualElevator
+        .whileTrue(this.setState(state.MANUAL_ELEVATOR));
+    
+    layout
+        .manualElevator.negate()
+        .and(stateMap.get(state.MANUAL_ELEVATOR))
+        .whileTrue(this.setState(state.IDLE));
 
     layout.resetGyro.onTrue(
         Commands.runOnce(

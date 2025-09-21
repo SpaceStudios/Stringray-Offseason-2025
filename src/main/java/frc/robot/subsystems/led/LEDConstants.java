@@ -37,7 +37,7 @@ public class LEDConstants {
               0.5,
               length),
           state.CORAL_READY,
-          new StrobeAnimation(
+          new SingleFadeAnimation(
               255,
               255,
               255,
@@ -61,18 +61,18 @@ public class LEDConstants {
               0.5,
               length),
           state.ALGAE_READY,
-          new StrobeAnimation(
-              0,
-              255,
-              255,
+          new SingleFadeAnimation(
+                convertColorToInt(Color.kTeal)[0],
+                convertColorToInt(Color.kTeal)[1],
+                convertColorToInt(Color.kTeal)[2],
               255,
               0.5,
               length),
           state.ALGAE_PRESCORE,
-          new SingleFadeAnimation(
-              convertColorToInt(Color.kGreen)[0],
-              convertColorToInt(Color.kGreen)[1],
-              convertColorToInt(Color.kGreen)[2],
+          new StrobeAnimation(
+              convertColorToInt(Color.kPurple)[0],
+              convertColorToInt(Color.kPurple)[1],
+              convertColorToInt(Color.kPurple)[2],
               255,
               0.5,
               length),

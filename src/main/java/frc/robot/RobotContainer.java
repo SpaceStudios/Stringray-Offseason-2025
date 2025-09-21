@@ -22,6 +22,7 @@ import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Superstructure.ControllerLayout;
 import frc.robot.commands.DriveCommands;
@@ -29,6 +30,7 @@ import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.climb.Climb;
 import frc.robot.subsystems.climb.ClimbIO;
 import frc.robot.subsystems.climb.ClimbIOSim;
+import frc.robot.subsystems.climb.ClimbIOTalonFX;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.GyroIO;
 import frc.robot.subsystems.drive.GyroIOPigeon2;
@@ -51,6 +53,7 @@ import frc.robot.subsystems.outtake.Outtake;
 import frc.robot.subsystems.outtake.OuttakeIO;
 import frc.robot.subsystems.outtake.OuttakeIOSim;
 import frc.robot.subsystems.outtake.OuttakeIOTalonFX;
+import frc.robot.subsystems.proximity.ProximityIOCanAndColor;
 import frc.robot.util.FieldConstants;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
@@ -93,10 +96,10 @@ public class RobotContainer {
                 new ModuleIOTalonFX(TunerConstants.BackLeft),
                 new ModuleIOTalonFX(TunerConstants.BackRight));
         elevator = new Elevator(new ElevatorIOTalonFX());
-        outtake = new Outtake(new OuttakeIOTalonFX(null));
+        outtake = new Outtake(new OuttakeIOTalonFX(new ProximityIOCanAndColor(0)));
         hopper = new Hopper(new HopperIOTalonFX());
-        gripper = new Gripper(new GripperIOTalonFX(null));
-        climb = new Climb(new ClimbIO() {});
+        gripper = new Gripper(new GripperIOTalonFX(new ProximityIOCanAndColor(0)));
+        climb = new Climb(new ClimbIOTalonFX());
         break;
 
       case SIM:
@@ -165,7 +168,7 @@ public class RobotContainer {
     // Requests
     simLayout.intakeRequest = driver.leftTrigger();
     simLayout.scoreRequest = driver.rightTrigger();
-    simLayout.manualElevator = driver.povUp();
+    simLayout.manualElevator = new Trigger(() -> false);
 
     // Coral Presets
     simLayout.L1 = driver.a();
@@ -175,7 +178,7 @@ public class RobotContainer {
 
     // Climb Setup
     simLayout.climbRequest = driver.povDown();
-    simLayout.autoAlignCage = driver.povUp();
+    simLayout.autoAlignCage = driver.back();
 
     // Auto Align
     simLayout.autoAlignLeft = driver.leftBumper();
@@ -184,13 +187,14 @@ public class RobotContainer {
     // Basic Functions
     simLayout.cancelRequest = driver.povLeft();
     simLayout.resetGyro = driver.povRight();
-    simLayout.revFunnel = driver.back();
+    simLayout.revFunnel = driver.povUp();
     simLayout.dejamCoral = driver.start();
 
     // Maybe Useless Stuff?
     simLayout.setPrescoreCoral = driver.leftStick();
     simLayout.setPrescoreAlgae = driver.rightStick();
     simLayout.driveController = driver;
+    simLayout.operatorController = operator;
 
     superstructure =
         new Superstructure(drive, elevator, outtake, hopper, gripper, climb, simLayout);
