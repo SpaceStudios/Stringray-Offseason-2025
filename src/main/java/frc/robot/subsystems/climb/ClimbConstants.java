@@ -14,6 +14,7 @@ public class ClimbConstants {
   }
 
   public class MotorLimits {
+    public static final double gearing = (9.0 / 1.0) * (5.0 / 1.0) * (58.0 / 18.0) * (28.0 / 12.0);
     public static final int statorLimit = 120;
     public static final int supplyLimit = 120;
     public static final int supplyLow = 60;
