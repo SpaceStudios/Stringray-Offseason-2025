@@ -24,6 +24,7 @@ import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.gripper.Gripper;
 import frc.robot.subsystems.gripper.GripperConstants;
 import frc.robot.subsystems.hopper.Hopper;
+import frc.robot.subsystems.hopper.HopperConstants;
 import frc.robot.subsystems.led.LED;
 import frc.robot.subsystems.led.LEDIO;
 import frc.robot.subsystems.led.LEDIOCandle;
@@ -115,9 +116,7 @@ public class Superstructure {
       stateMap.put(
           kState, new Trigger(() -> (kCurrentState == kState) && DriverStation.isEnabled()));
     }
-
-    System.out.println(led != null);
-
+    
     this.autoElevatorCommand =
         (Commands.sequence(
             elevator.setElevatorHeight(() -> (kCoralTarget.height)).until(elevator::nearSetpoint),
@@ -146,6 +145,7 @@ public class Superstructure {
 
     layout.L4.and(layout.manualElevator.negate()).onTrue(this.setCoralTarget(coralTarget.L4));
 
+    // Manual Elevator Setpoints
     layout
         .L1
         .and(layout.manualElevator)
@@ -166,61 +166,6 @@ public class Superstructure {
         .and(layout.manualElevator)
         .and(outtake::getDetected)
         .onTrue(elevator.setElevatorHeight(coralTarget.L4.height).until(elevator::nearSetpoint));
-
-    layout
-        .intakeRequest
-        .and(() -> (!outtake.getDetected()))
-        .and(() -> (!gripper.getDetected()))
-        .and(stateMap.get(state.ALGAE_INTAKE).negate())
-        .and(() -> (AutoAlign.getBestIntake(drive) == IntakeLocation.SOURCE))
-        .onTrue(
-            Commands.parallel(
-                setState(state.CORAL_INTAKE),
-                elevator
-                    .setElevatorHeight(FieldConstants.SourceConstants.elevatorSetpoint)
-                    .until(elevator::nearSetpoint)));
-
-    layout.revFunnel.whileTrue(hopper.setVoltage(-OuttakeConstants.intake));
-
-    layout
-        .L1
-        .and(stateMap.get(state.CORAL_PRESCORE))
-        .onTrue(
-            Commands.parallel(
-                elevator
-                    .setElevatorHeight(() -> (coralTarget.L1.height))
-                    .until(elevator::nearSetpoint),
-                this.setCoralTarget(coralTarget.L1)));
-
-    layout
-        .L2
-        .and(stateMap.get(state.CORAL_PRESCORE))
-        .onTrue(
-            Commands.parallel(
-                elevator
-                    .setElevatorHeight(() -> (coralTarget.L2.height))
-                    .until(elevator::nearSetpoint),
-                this.setCoralTarget(coralTarget.L2)));
-
-    layout
-        .L3
-        .and(stateMap.get(state.CORAL_PRESCORE))
-        .onTrue(
-            Commands.parallel(
-                elevator
-                    .setElevatorHeight(() -> (coralTarget.L3.height))
-                    .until(elevator::nearSetpoint),
-                this.setCoralTarget(coralTarget.L3)));
-
-    layout
-        .L4
-        .and(stateMap.get(state.CORAL_PRESCORE))
-        .onTrue(
-            Commands.parallel(
-                elevator
-                    .setElevatorHeight(() -> (coralTarget.L4.height))
-                    .until(elevator::nearSetpoint),
-                this.setCoralTarget(coralTarget.L4)));
 
     // Auto Align
     layout
@@ -245,6 +190,19 @@ public class Superstructure {
             this.setState(state.IDLE)));
 
     // Coral State Triggers
+    layout
+        .intakeRequest
+        .and(() -> (!outtake.getDetected()))
+        .and(() -> (!gripper.getDetected()))
+        .and(stateMap.get(state.ALGAE_INTAKE).negate())
+        .and(() -> (AutoAlign.getBestIntake(drive) == IntakeLocation.SOURCE))
+        .onTrue(
+            Commands.parallel(
+                setState(state.CORAL_INTAKE),
+                elevator
+                    .setElevatorHeight(FieldConstants.SourceConstants.elevatorSetpoint)
+                    .until(elevator::nearSetpoint)));
+
     stateMap
         .get(state.CORAL_INTAKE)
         .and(elevator::nearSetpoint)
@@ -314,6 +272,48 @@ public class Superstructure {
             this.rumbleCommand(layout.driveController, 0.5, 1.0),
             elevator.setElevatorHeight(coralTarget.L1).until(elevator::nearSetpoint)
         ));
+
+    // Elevator goes to level when level has been selected and it is in the prescore.
+    layout
+        .L1
+        .and(stateMap.get(state.CORAL_PRESCORE))
+        .onTrue(
+            Commands.parallel(
+                elevator
+                    .setElevatorHeight(() -> (coralTarget.L1.height))
+                    .until(elevator::nearSetpoint),
+                this.setCoralTarget(coralTarget.L1)));
+
+    layout
+        .L2
+        .and(stateMap.get(state.CORAL_PRESCORE))
+        .onTrue(
+            Commands.parallel(
+                elevator
+                    .setElevatorHeight(() -> (coralTarget.L2.height))
+                    .until(elevator::nearSetpoint),
+                this.setCoralTarget(coralTarget.L2)));
+
+    layout
+        .L3
+        .and(stateMap.get(state.CORAL_PRESCORE))
+        .onTrue(
+            Commands.parallel(
+                elevator
+                    .setElevatorHeight(() -> (coralTarget.L3.height))
+                    .until(elevator::nearSetpoint),
+                this.setCoralTarget(coralTarget.L3)));
+
+    layout
+        .L4
+        .and(stateMap.get(state.CORAL_PRESCORE))
+        .onTrue(
+            Commands.parallel(
+                elevator
+                    .setElevatorHeight(() -> (coralTarget.L4.height))
+                    .until(elevator::nearSetpoint),
+                this.setCoralTarget(coralTarget.L4)));
+
         
     // Algae
 
@@ -519,6 +519,10 @@ public class Superstructure {
             () -> {
               drive.setPose(new Pose2d(drive.getPose().getTranslation(), Rotation2d.kZero));
             }));
+
+    layout.revFunnel.whileTrue(hopper.setVoltage(-OuttakeConstants.intake));
+
+    layout.dejamCoral.whileTrue(Commands.parallel(hopper.setVoltage(OuttakeConstants.intake),outtake.setVoltage(() -> (OuttakeConstants.intake)),gripper.setVoltage(() -> (GripperConstants.net))));
   }
 
   public Command setCoralTarget(coralTarget target) {
