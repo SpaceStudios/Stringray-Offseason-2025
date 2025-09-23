@@ -24,7 +24,6 @@ import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.gripper.Gripper;
 import frc.robot.subsystems.gripper.GripperConstants;
 import frc.robot.subsystems.hopper.Hopper;
-import frc.robot.subsystems.hopper.HopperConstants;
 import frc.robot.subsystems.led.LED;
 import frc.robot.subsystems.led.LEDIO;
 import frc.robot.subsystems.led.LEDIOCandle;
@@ -116,7 +115,7 @@ public class Superstructure {
       stateMap.put(
           kState, new Trigger(() -> (kCurrentState == kState) && DriverStation.isEnabled()));
     }
-    
+
     this.autoElevatorCommand =
         (Commands.sequence(
             elevator.setElevatorHeight(() -> (kCoralTarget.height)).until(elevator::nearSetpoint),
@@ -235,9 +234,9 @@ public class Superstructure {
     // stateMap
     //     .get(state.CORAL_PRESCORE)
     //     .and(
-    //         () -> (jamesWaitDebouncer.calculate(stateMap.get(state.CORAL_PRESCORE).getAsBoolean())))
+    //         () ->
+    // (jamesWaitDebouncer.calculate(stateMap.get(state.CORAL_PRESCORE).getAsBoolean())))
     //     .onTrue(Commands.parallel(new PrintCommand("You are too slow"), autoElevatorCommand));
-
 
     // Manual Coral Scoring
     layout
@@ -256,8 +255,9 @@ public class Superstructure {
             Commands.sequence(
                 elevator.setElevatorHeight(coralTarget.L1).until(elevator::nearSetpoint),
                 Commands.parallel(
-                    outtake.setVoltage(() -> (OuttakeConstants.L1)),
-                    elevator.setVoltage(() -> (0.5))).until(() -> !(outtake.getDetected())),
+                        outtake.setVoltage(() -> (OuttakeConstants.L1)),
+                        elevator.setVoltage(() -> (0.5)))
+                    .until(() -> !(outtake.getDetected())),
                 elevator.setElevatorHeight(() -> 0.0)));
 
     layout
@@ -268,10 +268,10 @@ public class Superstructure {
 
     stateMap
         .get(state.CORAL_READY)
-        .whileTrue(Commands.parallel(
-            this.rumbleCommand(layout.driveController, 0.5, 1.0),
-            elevator.setElevatorHeight(coralTarget.L1).until(elevator::nearSetpoint)
-        ));
+        .whileTrue(
+            Commands.parallel(
+                this.rumbleCommand(layout.driveController, 0.5, 1.0),
+                elevator.setElevatorHeight(coralTarget.L1).until(elevator::nearSetpoint)));
 
     // Elevator goes to level when level has been selected and it is in the prescore.
     layout
@@ -314,7 +314,6 @@ public class Superstructure {
                     .until(elevator::nearSetpoint),
                 this.setCoralTarget(coralTarget.L4)));
 
-        
     // Algae
 
     stateMap
@@ -354,12 +353,14 @@ public class Superstructure {
     layout
         .L2
         .and(stateMap.get(state.ALGAE_INTAKE))
-        .onTrue(elevator.setElevatorHeight(() -> FieldConstants.ReefConstants.algaeTarget.L2.height));
+        .onTrue(
+            elevator.setElevatorHeight(() -> FieldConstants.ReefConstants.algaeTarget.L2.height));
 
     layout
         .L3
         .and(stateMap.get(state.ALGAE_INTAKE))
-        .onTrue(elevator.setElevatorHeight(() -> FieldConstants.ReefConstants.algaeTarget.L3.height));
+        .onTrue(
+            elevator.setElevatorHeight(() -> FieldConstants.ReefConstants.algaeTarget.L3.height));
 
     stateMap
         .get(state.ALGAE_INTAKE)
@@ -413,10 +414,10 @@ public class Superstructure {
 
     stateMap
         .get(state.ALGAE_READY)
-        .whileTrue(Commands.parallel(
-            this.rumbleCommand(layout.driveController, 0.25, 1.0),
-            elevator.setElevatorHeight(coralTarget.L1).until(elevator::nearSetpoint)
-        ));
+        .whileTrue(
+            Commands.parallel(
+                this.rumbleCommand(layout.driveController, 0.25, 1.0),
+                elevator.setElevatorHeight(coralTarget.L1).until(elevator::nearSetpoint)));
 
     // Climb
     layout
@@ -504,13 +505,11 @@ public class Superstructure {
                 hopper.setVoltage(0.0).withTimeout(0.1),
                 gripper.setVoltage(() -> 0.0).withTimeout(0.1)));
 
+    layout.manualElevator.whileTrue(this.setState(state.MANUAL_ELEVATOR));
 
     layout
         .manualElevator
-        .whileTrue(this.setState(state.MANUAL_ELEVATOR));
-    
-    layout
-        .manualElevator.negate()
+        .negate()
         .and(stateMap.get(state.MANUAL_ELEVATOR))
         .whileTrue(this.setState(state.IDLE));
 
@@ -522,7 +521,11 @@ public class Superstructure {
 
     layout.revFunnel.whileTrue(hopper.setVoltage(-OuttakeConstants.intake));
 
-    layout.dejamCoral.whileTrue(Commands.parallel(hopper.setVoltage(OuttakeConstants.intake),outtake.setVoltage(() -> (OuttakeConstants.intake)),gripper.setVoltage(() -> (GripperConstants.net))));
+    layout.dejamCoral.whileTrue(
+        Commands.parallel(
+            hopper.setVoltage(OuttakeConstants.intake),
+            outtake.setVoltage(() -> (OuttakeConstants.intake)),
+            gripper.setVoltage(() -> (GripperConstants.net))));
   }
 
   public Command setCoralTarget(coralTarget target) {

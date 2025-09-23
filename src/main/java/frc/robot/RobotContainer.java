@@ -13,9 +13,14 @@
 
 package frc.robot;
 
+import cheesy.lib.subsystems.vision.Vision;
+import cheesy.lib.subsystems.vision.VisionIO;
+import cheesy.lib.subsystems.vision.VisionIOPhotonVision;
+import cheesy.lib.subsystems.vision.VisionIOPhotonVisionSim;
 import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.XboxController;
@@ -71,6 +76,7 @@ public class RobotContainer {
   private final Hopper hopper;
   private final Gripper gripper;
   private final Climb climb;
+  private final Vision vision;
   public final Superstructure superstructure;
 
   // Controller
@@ -82,6 +88,10 @@ public class RobotContainer {
 
   // Dashboard inputs
   private final LoggedDashboardChooser<Command> autoChooser;
+
+  // Vision Camera Transforms
+  private final Transform3d[] cameraTransforms =
+      new Transform3d[] {new Transform3d(), new Transform3d()};
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
@@ -100,6 +110,14 @@ public class RobotContainer {
         hopper = new Hopper(new HopperIOTalonFX());
         gripper = new Gripper(new GripperIOTalonFX(new ProximityIOCanAndColor(0)));
         climb = new Climb(new ClimbIOTalonFX());
+        vision =
+            new Vision(
+                drive::addVisionMeasurement,
+                FieldConstants.fieldLayout,
+                new VisionIOPhotonVision(
+                    "Left Cam", cameraTransforms[0], FieldConstants.fieldLayout),
+                new VisionIOPhotonVision(
+                    "Right Cam", cameraTransforms[1], FieldConstants.fieldLayout));
         break;
 
       case SIM:
@@ -116,6 +134,14 @@ public class RobotContainer {
         hopper = new Hopper(new HopperIOSim());
         gripper = new Gripper(new GripperIOSim());
         climb = new Climb(new ClimbIOSim());
+        vision =
+            new Vision(
+                drive::addVisionMeasurement,
+                FieldConstants.fieldLayout,
+                new VisionIOPhotonVisionSim(
+                    "Left Cam", cameraTransforms[0], drive::getPose, FieldConstants.fieldLayout),
+                new VisionIOPhotonVisionSim(
+                    "Right Cam", cameraTransforms[1], drive::getPose, FieldConstants.fieldLayout));
         break;
 
       default:
@@ -132,6 +158,8 @@ public class RobotContainer {
         hopper = new Hopper(new HopperIO() {});
         gripper = new Gripper(new GripperIO() {});
         climb = new Climb(new ClimbIO() {});
+        vision =
+            new Vision(drive::addVisionMeasurement, FieldConstants.fieldLayout, new VisionIO[] {});
         break;
     }
 
