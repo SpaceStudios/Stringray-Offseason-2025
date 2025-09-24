@@ -163,7 +163,6 @@ public class Superstructure {
     layout
         .L4
         .and(layout.manualElevator)
-        .and(outtake::getDetected)
         .onTrue(elevator.setElevatorHeight(coralTarget.L4.height).until(elevator::nearSetpoint));
 
     // Auto Align
@@ -179,14 +178,6 @@ public class Superstructure {
                             : AutoAlign.getBestRightBranch(drive::getPose)),
                     drive)
                 .andThen(this.setState(state.CORAL_PRESCORE)));
-
-    // Cancel
-    layout.cancelRequest.onTrue(
-        Commands.parallel(
-            hopper.setVoltage(0.0),
-            outtake.setVoltage(() -> (0.0)),
-            elevator.setElevatorHeight(0.0),
-            this.setState(state.IDLE)));
 
     // Coral State Triggers
     layout
@@ -235,6 +226,7 @@ public class Superstructure {
     //     .get(state.CORAL_PRESCORE)
     //     .and(
     //         () ->
+    //
     // (jamesWaitDebouncer.calculate(stateMap.get(state.CORAL_PRESCORE).getAsBoolean())))
     //     .onTrue(Commands.parallel(new PrintCommand("You are too slow"), autoElevatorCommand));
 
@@ -379,7 +371,7 @@ public class Superstructure {
         .whileTrue(this.setState(state.IDLE));
 
     stateMap
-        .get(state.IDLE)
+        .get(state.ALGAE_PRESCORE)
         .and(() -> !(gripper.getDetected()))
         .whileTrue(this.setState(state.IDLE));
 
@@ -505,13 +497,7 @@ public class Superstructure {
                 hopper.setVoltage(0.0).withTimeout(0.1),
                 gripper.setVoltage(() -> 0.0).withTimeout(0.1)));
 
-    layout.manualElevator.whileTrue(this.setState(state.MANUAL_ELEVATOR));
-
-    layout
-        .manualElevator
-        .negate()
-        .and(stateMap.get(state.MANUAL_ELEVATOR))
-        .whileTrue(this.setState(state.IDLE));
+    layout.manualElevator.whileTrue(this.setState(state.MANUAL_ELEVATOR)).onFalse(this.setState(state.IDLE));
 
     layout.resetGyro.onTrue(
         Commands.runOnce(

@@ -90,12 +90,13 @@ public class Elevator extends SubsystemBase {
               homingDebouncer.calculate(false);
             },
             () -> {
-              io.setVoltage(-6);
+              io.setVoltage(6);
               homed = homingDebouncer.calculate(Math.abs(data.elevatorVelocity) <= 0.2);
             })
         .until(() -> homed)
         .andThen(
             () -> {
+              io.setVoltage(0.0);
               io.resetEncoders();
               homed = true;
             });

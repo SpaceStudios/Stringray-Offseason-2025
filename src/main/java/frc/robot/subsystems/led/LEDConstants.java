@@ -72,9 +72,9 @@ public class LEDConstants {
               length),
           state.MANUAL_ELEVATOR,
           new StrobeAnimation(
-              convertColorToInt(Color.kTeal)[0],
-              convertColorToInt(Color.kTeal)[1],
-              convertColorToInt(Color.kTeal)[2],
+              convertColorToInt(Color.kBlue)[0],
+              convertColorToInt(Color.kBlue)[1],
+              convertColorToInt(Color.kBlue)[2],
               255,
               0.5,
               length),
@@ -105,7 +105,10 @@ public class LEDConstants {
               : (int) (Color.kBlue.green * 255),
           (kAlliance == Alliance.Red)
               ? (int) (Color.kRed.blue * 255)
-              : (int) (Color.kBlue.blue * 255));
+              : (int) (Color.kBlue.blue * 255),
+          255,
+          0.5,
+          length);
 
   public static int[] convertColorToInt(Color color) {
     return new int[] {(int) (color.red * 255), (int) (color.green * 255), (int) (color.blue * 255)};

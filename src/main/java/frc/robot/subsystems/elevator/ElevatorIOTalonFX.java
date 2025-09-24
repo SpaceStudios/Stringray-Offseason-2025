@@ -45,8 +45,7 @@ public class ElevatorIOTalonFX implements ElevatorIO {
   private final Debouncer rightConnectedDebouncer = new Debouncer(0.5);
 
   private final VoltageOut voltageOut = new VoltageOut(0.0).withEnableFOC(false);
-  private final MotionMagicVoltage positionTorque =
-      new MotionMagicVoltage(0.0).withEnableFOC(false);
+  private final MotionMagicVoltage positionTorque = new MotionMagicVoltage(0.0);
 
   private double setpoint = 0.0;
 
@@ -90,7 +89,7 @@ public class ElevatorIOTalonFX implements ElevatorIO {
     configuration.Slot2.kA = ElevatorConstants.PID.kA;
 
     configuration.Feedback.SensorToMechanismRatio =
-        ElevatorConstants.gearing / (ElevatorConstants.drumRadius * Math.PI * 2);
+        ElevatorConstants.drumRadius * Math.PI * 2 / ElevatorConstants.gearing;
 
     configuration.TorqueCurrent.PeakForwardTorqueCurrent =
         ElevatorConstants.MotorConstants.maxCurrent;

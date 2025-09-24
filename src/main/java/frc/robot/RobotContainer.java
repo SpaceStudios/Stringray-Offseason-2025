@@ -106,9 +106,9 @@ public class RobotContainer {
                 new ModuleIOTalonFX(TunerConstants.BackLeft),
                 new ModuleIOTalonFX(TunerConstants.BackRight));
         elevator = new Elevator(new ElevatorIOTalonFX());
-        outtake = new Outtake(new OuttakeIOTalonFX(new ProximityIOCanAndColor(0)));
+        outtake = new Outtake(new OuttakeIOTalonFX(new ProximityIOCanAndColor(21, 0.15)));
         hopper = new Hopper(new HopperIOTalonFX());
-        gripper = new Gripper(new GripperIOTalonFX(new ProximityIOCanAndColor(0)));
+        gripper = new Gripper(new GripperIOTalonFX(new ProximityIOCanAndColor(41)));
         climb = new Climb(new ClimbIOTalonFX());
         vision =
             new Vision(
@@ -196,7 +196,7 @@ public class RobotContainer {
     // Requests
     simLayout.intakeRequest = driver.leftTrigger();
     simLayout.scoreRequest = driver.rightTrigger();
-    simLayout.manualElevator = new Trigger(() -> false);
+    simLayout.manualElevator = driver.back();
 
     // Coral Presets
     simLayout.L1 = driver.a();
@@ -206,7 +206,7 @@ public class RobotContainer {
 
     // Climb Setup
     simLayout.climbRequest = driver.povDown();
-    simLayout.autoAlignCage = driver.back();
+    simLayout.autoAlignCage = new Trigger(() -> false);
 
     // Auto Align
     simLayout.autoAlignLeft = driver.leftBumper();
@@ -240,7 +240,10 @@ public class RobotContainer {
     // Default command, normal field-relative drive
     drive.setDefaultCommand(
         DriveCommands.joystickDrive(
-            drive, () -> -driver.getLeftY(), () -> -driver.getLeftX(), () -> -driver.getRightX()));
+            drive,
+            () -> -driver.getLeftY() * 0.5,
+            () -> -driver.getLeftX() * 0.5,
+            () -> -driver.getRightX()));
 
     // // Lock to 0° when A button is held
     // controller

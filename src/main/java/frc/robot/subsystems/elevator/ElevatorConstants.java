@@ -16,11 +16,11 @@ public class ElevatorConstants {
   public static final double maxVelocity = 20;
 
   public static class PID {
-    public static final double[] kP = new double[] {0.9, 0.9, 0.9};
+    public static final double[] kP = new double[] {80.0, 80.0, 80.0};
     public static final double[] kI = new double[] {0.0, 0.0, 0.0};
     public static final double[] kD = new double[] {0.0, 0.0, 0.0};
-    public static final double[] kG = new double[] {0.0, 0.0, 0.0};
-    public static final double[] kS = new double[] {0.0, 0.0, 0.0};
+    public static final double[] kG = new double[] {0.459, 0.459, 0.459};
+    public static final double[] kS = new double[] {0.74, 0.74, 0.74};
 
     public static final double maxAcceleration = 10.0;
     public static final double maxVelocity = 3.5;
@@ -34,7 +34,7 @@ public class ElevatorConstants {
 
   public class MotorConstants {
     public static final int maxCurrent = 120;
-    public static final int maxCurrentLow = 60;
+    public static final int maxCurrentLow = 80;
     public static final double rampPeriod = 0.1;
   }
 }
