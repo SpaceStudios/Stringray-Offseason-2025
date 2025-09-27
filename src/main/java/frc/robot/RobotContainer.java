@@ -37,6 +37,8 @@ import frc.robot.commands.AutoRoutines;
 import frc.robot.commands.Autos;
 import frc.robot.commands.DriveCommands;
 import frc.robot.generated.TunerConstants;
+import frc.robot.subsystems.autoAlign.AutoAlign;
+import frc.robot.subsystems.autoAlign.AutoAlignConstants;
 import frc.robot.subsystems.climb.Climb;
 import frc.robot.subsystems.climb.ClimbIO;
 import frc.robot.subsystems.climb.ClimbIOSim;
@@ -84,7 +86,7 @@ public class RobotContainer {
   private final Climb climb;
   private final Vision vision;
   public final Superstructure superstructure;
-
+  public final AutoAlign autoAlign;
   // Controller
   private final CommandXboxController driver = new CommandXboxController(0);
   private final CommandXboxController operator = new CommandXboxController(1);
@@ -178,6 +180,11 @@ public class RobotContainer {
         break;
     }
 
+    autoAlign = new AutoAlign();
+
+    AutoAlignConstants.getAprilTagPoses();
+    AutoAlignConstants.setupAutoAlignment();
+
     // Setting Trajectory Following
     AutoRoutines.poseGetter = drive::getPose;
     AutoRoutines.driveFunction = drive::runVelocity;
@@ -233,7 +240,7 @@ public class RobotContainer {
     simLayout.operatorController = operator;
 
     superstructure =
-        new Superstructure(drive, elevator, outtake, hopper, gripper, climb, simLayout);
+        new Superstructure(drive, elevator, outtake, hopper, gripper, climb, simLayout, autoAlign);
 
     // Set up auto routines
     autoChooser = new LoggedDashboardChooser<>("Auto Choices");
@@ -276,7 +283,7 @@ public class RobotContainer {
     // Default command, normal field-relative drive
     drive.setDefaultCommand(
         DriveCommands.joystickDrive(
-            drive, () -> -driver.getLeftY(), () -> -driver.getLeftX(), () -> -driver.getRightX()));
+            drive, () -> driver.getLeftY(), () -> driver.getLeftX(), () -> -driver.getRightX()));
 
     // // Lock to 0° when A button is held
     // controller

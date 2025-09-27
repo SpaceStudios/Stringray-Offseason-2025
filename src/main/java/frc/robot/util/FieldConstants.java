@@ -132,7 +132,6 @@ public class FieldConstants {
           sourceTags[0].transformBy(new Transform2d(safeDistance, 0.0, Rotation2d.kZero)),
           sourceTags[1].transformBy(new Transform2d(safeDistance, 0.0, Rotation2d.kZero))
         };
-    public static final double elevatorSetpoint = 0.0;
   }
 
   public class BargeConstants {

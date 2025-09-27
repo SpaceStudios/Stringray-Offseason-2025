@@ -51,7 +51,7 @@ public class ElevatorConstants {
         case L1:
           return ElevatorSetpoint.L1;
         default:
-          return ElevatorSetpoint.L1;
+          return ElevatorSetpoint.INTAKE;
       }
     }
 
@@ -62,7 +62,7 @@ public class ElevatorConstants {
         case L2:
           return ElevatorSetpoint.A2;
         default:
-          return ElevatorSetpoint.L1;
+          return ElevatorSetpoint.INTAKE;
       }
     }
   }
