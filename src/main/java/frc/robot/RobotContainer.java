@@ -297,6 +297,7 @@ public class RobotContainer {
     // return autoChooser.get();
 
     return Autos.DoubleL4(drive, elevator, outtake, hopper, superstructure);
+    // return Autos.testMultiPath();
     // return TrajectoryFollower.followTrajectory(TrajectoryFollower.loadTrajectory("Test"));
     // return outtake.setDetected(true).andThen(autoChooser.get());
   }

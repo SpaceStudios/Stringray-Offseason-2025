@@ -47,6 +47,10 @@ public class Outtake extends SubsystemBase {
         });
   }
 
+  public void setDetectedFunction(boolean detected) {
+    io.setDetected(detected);
+  }
+
   @AutoLogOutput(key = "Outtake/Detected")
   public boolean getDetected() {
     return data.detected;
