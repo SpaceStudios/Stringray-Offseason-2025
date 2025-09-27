@@ -9,6 +9,7 @@ import static frc.robot.util.PhoenixUtil.tryUntilOk;
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
@@ -25,6 +26,8 @@ public class HopperIOTalonFX implements HopperIO {
   private final StatusSignal<Temperature> temperature;
   private final StatusSignal<Current> statorCurrent;
   private final StatusSignal<Current> supplyCurrent;
+
+  private final VoltageOut voltageControl = new VoltageOut(0.0);
 
   public HopperIOTalonFX() {
     talon = new TalonFX(30);
@@ -51,5 +54,10 @@ public class HopperIOTalonFX implements HopperIO {
         50.0, voltage, temperature, statorCurrent, supplyCurrent);
 
     talon.optimizeBusUtilization();
+  }
+
+  @Override
+  public void setVoltage(double voltage) {
+    talon.setControl(voltageControl.withOutput(voltage));
   }
 }

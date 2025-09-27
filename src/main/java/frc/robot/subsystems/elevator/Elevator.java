@@ -19,7 +19,7 @@ public class Elevator extends SubsystemBase {
   // private final LinearFilter filter = LinearFilter.movingAverage(5);
   // private double filterValue;
 
-  private final Debouncer homingDebouncer = new Debouncer(0.2);
+  private final Debouncer homingDebouncer = new Debouncer(0.1);
   public boolean homed = true;
   /** Creates a new Elevator. */
   public Elevator(ElevatorIO io) {
@@ -76,7 +76,6 @@ public class Elevator extends SubsystemBase {
   }
 
   public Command setVoltage(DoubleSupplier voltage) {
-    Math.sin(Math.PI / 2);
     return this.run(
         () -> {
           io.setVoltage(voltage.getAsDouble());
@@ -91,7 +90,7 @@ public class Elevator extends SubsystemBase {
               System.out.println("Homing");
             },
             () -> {
-              io.setVoltage(-6);
+              io.setVoltage(1);
               homed = homingDebouncer.calculate(Math.abs(data.elevatorVelocity) <= 0.2);
             })
         .until(() -> homed)
@@ -104,6 +103,6 @@ public class Elevator extends SubsystemBase {
   }
 
   public boolean nearSetpoint() {
-    return MathUtil.isNear(data.elevatorSetpoint, data.elevatorHeight, 0.0125);
+    return MathUtil.isNear(data.elevatorSetpoint, data.elevatorHeight, 0.08);
   }
 }

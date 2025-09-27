@@ -30,10 +30,10 @@ public class FieldConstants {
 
   public static class ReefConstants {
     public enum coralTarget {
-      L1(0.42),
+      L1(0.58),
       L2(0.79),
       L3(1.18),
-      L4(1.75);
+      L4(1.78);
 
       public double height;
 

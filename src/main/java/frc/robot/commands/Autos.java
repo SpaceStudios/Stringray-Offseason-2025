@@ -27,13 +27,14 @@ public class Autos {
       Superstructure superstructure) {
     return Commands.sequence(
         simInit(outtake, true),
-        TrajectoryFollower.followTrajectory(TrajectoryFollower.loadTrajectory("aCtoG")),
-        TrajectoryFollower.followTrajectory(TrajectoryFollower.loadTrajectory("GtoS")));
+        AutoRoutines.runTrajectory("aCtoG"),
+        scoreCoral(() -> (coralTarget.L4), elevator, outtake),
+        AutoRoutines.runTrajectory("GtoS"));
   }
 
   public static Command testMultiPath() {
-    return TrajectoryFollower.followTrajectory(TrajectoryFollower.loadTrajectory("aCtoG"))
-        .andThen(TrajectoryFollower.followTrajectory(TrajectoryFollower.loadTrajectory("GtoS")));
+    return AutoRoutines.followTrajectory(AutoRoutines.loadTrajectory("aCtoG"))
+        .andThen(AutoRoutines.followTrajectory(AutoRoutines.loadTrajectory("GtoS")));
   }
 
   public static Command scoreCoral(

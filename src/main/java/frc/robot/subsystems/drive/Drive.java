@@ -15,11 +15,13 @@ package frc.robot.subsystems.drive;
 
 import static edu.wpi.first.units.Units.*;
 
+import choreo.trajectory.SwerveSample;
 import com.ctre.phoenix6.CANBus;
 import edu.wpi.first.hal.FRCNetComm.tInstances;
 import edu.wpi.first.hal.FRCNetComm.tResourceType;
 import edu.wpi.first.hal.HAL;
 import edu.wpi.first.math.Matrix;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -44,6 +46,7 @@ import frc.robot.util.AllianceFlipUtil;
 import frc.robot.util.FieldConstants;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Consumer;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
@@ -320,6 +323,28 @@ public class Drive extends SubsystemBase {
       new Translation2d(TunerConstants.FrontRight.LocationX, TunerConstants.FrontRight.LocationY),
       new Translation2d(TunerConstants.BackLeft.LocationX, TunerConstants.BackLeft.LocationY),
       new Translation2d(TunerConstants.BackRight.LocationX, TunerConstants.BackRight.LocationY)
+    };
+  }
+
+  public Consumer<SwerveSample> driveController() {
+    final PIDController xController = new PIDController(10.0, 0.0, 0.0);
+    final PIDController yController = new PIDController(10.0, 0.0, 0.0);
+    final PIDController rotController = new PIDController(7.5, 0.0, 0.0);
+    rotController.enableContinuousInput(-Math.PI, Math.PI);
+    return (sample) -> {
+      final Pose2d pose = getPose();
+      Logger.recordOutput("Autos/Sample Pose", sample.getPose());
+      Logger.recordOutput(
+          "Autos/Speeds Field Relative", new ChassisSpeeds(sample.vx, sample.vy, sample.omega));
+      ChassisSpeeds speeds =
+          ChassisSpeeds.fromFieldRelativeSpeeds(
+              sample.vx + xController.calculate(pose.getX(), sample.getPose().getX()),
+              sample.vy + yController.calculate(pose.getY(), sample.getPose().getY()),
+              sample.heading
+                  + rotController.calculate(
+                      pose.getRotation().getRadians(), sample.getPose().getRotation().getRadians()),
+              getRotation());
+      this.runVelocity(speeds);
     };
   }
 }

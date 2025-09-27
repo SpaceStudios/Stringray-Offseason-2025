@@ -29,10 +29,10 @@ public class OuttakeConstants {
           L4);
 
   public static class MotorLimits {
-    public static final int torque = 120;
-    public static final int stator = 60;
-    public static final int supply = 60;
-    public static final int supplyLow = 60;
+    public static final int torque = 60;
+    public static final int stator = 30;
+    public static final int supply = 30;
+    public static final int supplyLow = 30;
 
     public static final double rampPeriod = 0.5;
     public static final boolean inverted = false;

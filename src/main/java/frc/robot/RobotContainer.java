@@ -17,19 +17,25 @@ import cheesy.lib.subsystems.vision.Vision;
 import cheesy.lib.subsystems.vision.VisionIO;
 import cheesy.lib.subsystems.vision.VisionIOPhotonVision;
 import cheesy.lib.subsystems.vision.VisionIOPhotonVisionSim;
+import choreo.auto.AutoFactory;
+import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.PrintCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Superstructure.ControllerLayout;
+import frc.robot.commands.AutoRoutines;
 import frc.robot.commands.Autos;
 import frc.robot.commands.DriveCommands;
-import frc.robot.commands.TrajectoryFollower;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.climb.Climb;
 import frc.robot.subsystems.climb.ClimbIO;
@@ -59,6 +65,7 @@ import frc.robot.subsystems.outtake.OuttakeIOSim;
 import frc.robot.subsystems.outtake.OuttakeIOTalonFX;
 import frc.robot.subsystems.proximity.ProximityIOCanAndColor;
 import frc.robot.util.FieldConstants;
+import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
@@ -90,7 +97,18 @@ public class RobotContainer {
 
   // Vision Camera Transforms
   private final Transform3d[] cameraTransforms =
-      new Transform3d[] {new Transform3d(), new Transform3d()};
+      new Transform3d[] {
+        new Transform3d(
+            Units.inchesToMeters(12.066),
+            Units.inchesToMeters(11.906),
+            Units.inchesToMeters(8.355),
+            new Rotation3d(0.0, -Units.degreesToRadians(13.125000), Units.degreesToRadians(-30))),
+        new Transform3d(
+            Units.inchesToMeters(12.066),
+            Units.inchesToMeters(-11.906),
+            Units.inchesToMeters(8.355),
+            new Rotation3d(0.0, -Units.degreesToRadians(13.125000), Units.degreesToRadians(30)))
+      };
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
@@ -105,18 +123,16 @@ public class RobotContainer {
                 new ModuleIOTalonFX(TunerConstants.BackLeft),
                 new ModuleIOTalonFX(TunerConstants.BackRight));
         elevator = new Elevator(new ElevatorIOTalonFX());
-        outtake = new Outtake(new OuttakeIOTalonFX(new ProximityIOCanAndColor(21, 0.15)));
+        outtake = new Outtake(new OuttakeIOTalonFX(new ProximityIOCanAndColor(21, 0.2)));
         hopper = new Hopper(new HopperIOTalonFX());
-        gripper = new Gripper(new GripperIOTalonFX(new ProximityIOCanAndColor(41)));
+        gripper = new Gripper(new GripperIOTalonFX(new ProximityIOCanAndColor(41, 0.15)));
         climb = new Climb(new ClimbIOTalonFX());
         vision =
             new Vision(
                 drive::addVisionMeasurement,
                 FieldConstants.fieldLayout,
                 new VisionIOPhotonVision(
-                    "Left Cam", cameraTransforms[0], FieldConstants.fieldLayout),
-                new VisionIOPhotonVision(
-                    "Right Cam", cameraTransforms[1], FieldConstants.fieldLayout));
+                    "CamLeft", cameraTransforms[0], FieldConstants.fieldLayout));
         break;
 
       case SIM:
@@ -163,9 +179,23 @@ public class RobotContainer {
     }
 
     // Setting Trajectory Following
-    TrajectoryFollower.poseGetter = drive::getPose;
-    TrajectoryFollower.driveFunction = drive::runVelocity;
-    TrajectoryFollower.driveSubsystem = drive;
+    AutoRoutines.poseGetter = drive::getPose;
+    AutoRoutines.driveFunction = drive::runVelocity;
+    AutoRoutines.driveSubsystem = drive;
+    AutoRoutines.autoFactory =
+        new AutoFactory(
+            drive::getPose,
+            drive::setPose,
+            drive.driveController(),
+            true,
+            drive,
+            (traj, edge) -> {
+              Logger.recordOutput(
+                  "Autos/Active Trajectory",
+                  DriverStation.getAlliance().orElse(Alliance.Blue).equals(Alliance.Red)
+                      ? traj.flipped().getPoses()
+                      : traj.getPoses());
+            });
     // Setting Up Superstructure
     // Defining Axises
     simLayout.driveX = () -> driver.getLeftY();
@@ -227,11 +257,8 @@ public class RobotContainer {
     autoChooser.addOption("Homing Sequence", elevator.homingSequence());
     autoChooser.addOption(
         "aCtoG",
-        TrajectoryFollower.followTrajectory(
-            TrajectoryFollower.loadTrajectory("aCtoG").get(),
-            drive::getPose,
-            drive::runVelocity,
-            drive));
+        AutoRoutines.followTrajectory(
+            AutoRoutines.loadTrajectory("aCtoG").get(), drive::getPose, drive::runVelocity, drive));
 
     autoChooser.addDefaultOption(
         "Double L4", Autos.DoubleL4(drive, elevator, outtake, hopper, superstructure));
@@ -295,8 +322,8 @@ public class RobotContainer {
    */
   public Command getAutonomousCommand() {
     // return autoChooser.get();
-
-    return Autos.DoubleL4(drive, elevator, outtake, hopper, superstructure);
+    return new PrintCommand("To be Removed");
+    // return Autos.DoubleL4(drive, elevator, outtake, hopper, superstructure);
     // return Autos.testMultiPath();
     // return TrajectoryFollower.followTrajectory(TrajectoryFollower.loadTrajectory("Test"));
     // return outtake.setDetected(true).andThen(autoChooser.get());

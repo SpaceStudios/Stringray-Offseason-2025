@@ -89,7 +89,7 @@ public class ElevatorIOTalonFX implements ElevatorIO {
     configuration.Slot2.kA = ElevatorConstants.PID.kA;
 
     configuration.Feedback.SensorToMechanismRatio =
-        ElevatorConstants.drumRadius * Math.PI * 2 / ElevatorConstants.gearing;
+        ElevatorConstants.gearing / (ElevatorConstants.drumRadius * Math.PI * 2);
 
     configuration.TorqueCurrent.PeakForwardTorqueCurrent =
         ElevatorConstants.MotorConstants.maxCurrent;
@@ -189,6 +189,13 @@ public class ElevatorIOTalonFX implements ElevatorIO {
     data.followerOutput = rightTalon.get();
     data.followerTemperature = followerTemperature.getValueAsDouble();
     data.followerVoltage = followerVoltage.getValueAsDouble();
+
+    if (data.elevatorHeight < 0) {
+      resetEncoders();
+    }
+    if (data.elevatorHeight > 2) {
+      setHeight(0.0);
+    }
   }
 
   @Override

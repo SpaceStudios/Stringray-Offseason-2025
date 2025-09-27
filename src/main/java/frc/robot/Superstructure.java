@@ -147,23 +147,28 @@ public class Superstructure {
     // Manual Elevator Setpoints
     layout
         .L1
-        .and(layout.manualElevator)
+        .and(stateMap.get(state.MANUAL_ELEVATOR))
         .onTrue(elevator.setElevatorHeight(coralTarget.L1.height).until(elevator::nearSetpoint));
 
     layout
         .L2
-        .and(layout.manualElevator)
+        .and(stateMap.get(state.MANUAL_ELEVATOR))
         .onTrue(elevator.setElevatorHeight(coralTarget.L2.height).until(elevator::nearSetpoint));
 
     layout
         .L3
-        .and(layout.manualElevator)
+        .and(stateMap.get(state.MANUAL_ELEVATOR))
         .onTrue(elevator.setElevatorHeight(coralTarget.L3.height).until(elevator::nearSetpoint));
+
+    // layout
+    //     .L4
+    //     .and(stateMap.get(state.MANUAL_ELEVATOR))
+    //     .onTrue(elevator.setElevatorHeight(coralTarget.L4.height).until(elevator::nearSetpoint));
 
     layout
         .L4
-        .and(layout.manualElevator)
-        .onTrue(elevator.setElevatorHeight(coralTarget.L4.height).until(elevator::nearSetpoint));
+        .and(stateMap.get(state.MANUAL_ELEVATOR))
+        .onTrue(elevator.setElevatorHeight(coralTarget.L4.height).withTimeout(10.0));
 
     // Auto Align
     layout
@@ -195,8 +200,7 @@ public class Superstructure {
 
     stateMap
         .get(state.CORAL_INTAKE)
-        .and(elevator::nearSetpoint)
-        .onTrue(
+        .whileTrue(
             Commands.parallel(
                 hopper.setVoltage(OuttakeConstants.intake).until(outtake::getDetected),
                 outtake.setVoltage(() -> OuttakeConstants.intake).until(outtake::getDetected)));
@@ -220,6 +224,8 @@ public class Superstructure {
                     || AutoAlign.isNear(
                         AutoAlign.getBestRightBranch(drive::getPose), drive.getPose())))
         .onTrue(this.setState(state.CORAL_PRESCORE));
+
+    stateMap.get(state.CORAL_READY).and(layout.scoreRequest).whileTrue(outtake.setVoltage(() -> 6));
 
     // Auto Scoring, Disabled for now
     // stateMap
@@ -308,11 +314,13 @@ public class Superstructure {
 
     // Algae
 
-    stateMap
-        .get(state.ALGAE_INTAKE)
-        .and(elevator::nearSetpoint)
-        .and(() -> (elevator.getSetpoint() > 0))
-        .whileTrue(gripper.setVoltage(() -> (GripperConstants.intake)));
+    // stateMap
+    //     .get(state.ALGAE_INTAKE)
+    //     .and(elevator::nearSetpoint)
+    //     .and(() -> (elevator.getSetpoint() > 0))
+    //     .whileTrue(gripper.setVoltage(() -> (GripperConstants.intake)));
+
+    stateMap.get(state.ALGAE_INTAKE).whileTrue(gripper.setVoltage(() -> (GripperConstants.intake)));
 
     layout
         .intakeRequest

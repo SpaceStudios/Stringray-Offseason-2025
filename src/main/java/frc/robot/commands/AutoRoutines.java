@@ -5,6 +5,7 @@
 package frc.robot.commands;
 
 import choreo.Choreo;
+import choreo.auto.AutoFactory;
 import choreo.trajectory.SwerveSample;
 import choreo.trajectory.Trajectory;
 import edu.wpi.first.math.controller.PIDController;
@@ -23,7 +24,7 @@ import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
 
 /** Add your docs here. */
-public class TrajectoryFollower {
+public class AutoRoutines {
   private static final PIDController xController = new PIDController(10.0, 0, 0);
   private static final PIDController yController = new PIDController(10.0, 0, 0);
   private static final PIDController rotController = new PIDController(7.5, 0, 0);
@@ -38,6 +39,7 @@ public class TrajectoryFollower {
   public static Supplier<Pose2d> poseGetter;
   public static Consumer<ChassisSpeeds> driveFunction;
   public static Drive driveSubsystem;
+  public static AutoFactory autoFactory;
 
   public static void setDataGetters(
       Supplier<Pose2d> kPoseGetter, Consumer<ChassisSpeeds> kDriveFunction, Drive kDriveSys) {
@@ -63,17 +65,7 @@ public class TrajectoryFollower {
               Optional<SwerveSample> sample = traj.sampleAt(timer.get(), isRedAlliance());
               Pose2d pose = poseSupplier.get();
               if (sample.isPresent()) {
-                ChassisSpeeds speeds =
-                    new ChassisSpeeds(
-                        sample.get().vx
-                            + xController.calculate(pose.getX(), sample.get().getPose().getX()),
-                        sample.get().vy
-                            + yController.calculate(pose.getY(), sample.get().getPose().getY()),
-                        sample.get().omega
-                            + rotController.calculate(
-                                pose.getRotation().getRadians(), sample.get().heading));
-                driveSpeeds.accept(
-                    ChassisSpeeds.fromFieldRelativeSpeeds(speeds, pose.getRotation()));
+
               } else {
                 done = true;
               }
@@ -147,6 +139,10 @@ public class TrajectoryFollower {
           done);
     }
     return traj;
+  }
+
+  public static Command runTrajectory(String path) {
+    return autoFactory.trajectoryCmd(path + ".traj");
   }
 
   public static final Map<String, Optional<Trajectory<SwerveSample>>> trajectoryMap =
