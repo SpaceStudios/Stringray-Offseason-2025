@@ -192,18 +192,20 @@ public class ElevatorIOTalonFX implements ElevatorIO {
   }
 
   @Override
-  public void setHeight(double height) {
+  public void setHeight(final double height) {
     setpoint = height;
     leftTalon.setControl(positionTorque.withPosition(height));
   }
 
   @Override
-  public void setVoltage(double voltage) {
+  public void setVoltage(final double voltage) {
     leftTalon.setControl(voltageOut.withOutput(voltage));
   }
 
   @Override
-  public void runVelocity(double joystick) {}
+  public void runVelocity(final double joystick) {
+    leftTalon.setControl(voltageOut.withOutput(12 * joystick));
+  }
 
   @Override
   public void resetEncoders() {

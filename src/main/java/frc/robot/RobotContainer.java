@@ -17,9 +17,6 @@ import cheesy.lib.subsystems.vision.Vision;
 import cheesy.lib.subsystems.vision.VisionIO;
 import cheesy.lib.subsystems.vision.VisionIOPhotonVision;
 import cheesy.lib.subsystems.vision.VisionIOPhotonVisionSim;
-import com.pathplanner.lib.auto.AutoBuilder;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
@@ -30,7 +27,9 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Superstructure.ControllerLayout;
+import frc.robot.commands.Autos;
 import frc.robot.commands.DriveCommands;
+import frc.robot.commands.TrajectoryFollower;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.climb.Climb;
 import frc.robot.subsystems.climb.ClimbIO;
@@ -163,31 +162,10 @@ public class RobotContainer {
         break;
     }
 
-    drive.setPose(
-        new Pose2d(
-            FieldConstants.BargeConstants.bargePoses[0].getX(),
-            FieldConstants.fieldWidth / 2.0,
-            Rotation2d.k180deg));
-
-    // Set up auto routines
-    autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
-
-    // Set up SysId routines
-    autoChooser.addOption(
-        "Drive Wheel Radius Characterization", DriveCommands.wheelRadiusCharacterization(drive));
-    autoChooser.addOption(
-        "Drive Simple FF Characterization", DriveCommands.feedforwardCharacterization(drive));
-    autoChooser.addOption(
-        "Drive SysId (Quasistatic Forward)",
-        drive.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
-    autoChooser.addOption(
-        "Drive SysId (Quasistatic Reverse)",
-        drive.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
-    autoChooser.addOption(
-        "Drive SysId (Dynamic Forward)", drive.sysIdDynamic(SysIdRoutine.Direction.kForward));
-    autoChooser.addOption(
-        "Drive SysId (Dynamic Reverse)", drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
-
+    // Setting Trajectory Following
+    TrajectoryFollower.poseGetter = drive::getPose;
+    TrajectoryFollower.driveFunction = drive::runVelocity;
+    TrajectoryFollower.driveSubsystem = drive;
     // Setting Up Superstructure
     // Defining Axises
     simLayout.driveX = () -> driver.getLeftY();
@@ -226,6 +204,37 @@ public class RobotContainer {
 
     superstructure =
         new Superstructure(drive, elevator, outtake, hopper, gripper, climb, simLayout);
+
+    // Set up auto routines
+    autoChooser = new LoggedDashboardChooser<>("Auto Choices");
+
+    // Set up SysId routines
+    autoChooser.addOption(
+        "Drive Wheel Radius Characterization", DriveCommands.wheelRadiusCharacterization(drive));
+    autoChooser.addOption(
+        "Drive Simple FF Characterization", DriveCommands.feedforwardCharacterization(drive));
+    autoChooser.addOption(
+        "Drive SysId (Quasistatic Forward)",
+        drive.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
+    autoChooser.addOption(
+        "Drive SysId (Quasistatic Reverse)",
+        drive.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
+    autoChooser.addOption(
+        "Drive SysId (Dynamic Forward)", drive.sysIdDynamic(SysIdRoutine.Direction.kForward));
+    autoChooser.addOption(
+        "Drive SysId (Dynamic Reverse)", drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
+
+    autoChooser.addOption("Homing Sequence", elevator.homingSequence());
+    autoChooser.addOption(
+        "aCtoG",
+        TrajectoryFollower.followTrajectory(
+            TrajectoryFollower.loadTrajectory("aCtoG").get(),
+            drive::getPose,
+            drive::runVelocity,
+            drive));
+
+    autoChooser.addDefaultOption(
+        "Double L4", Autos.DoubleL4(drive, elevator, outtake, hopper, superstructure));
     // Configure the button bindings
     configureButtonBindings();
   }
@@ -240,10 +249,7 @@ public class RobotContainer {
     // Default command, normal field-relative drive
     drive.setDefaultCommand(
         DriveCommands.joystickDrive(
-            drive,
-            () -> -driver.getLeftY() * 0.5,
-            () -> -driver.getLeftX() * 0.5,
-            () -> -driver.getRightX()));
+            drive, () -> -driver.getLeftY(), () -> -driver.getLeftX(), () -> -driver.getRightX()));
 
     // // Lock to 0° when A button is held
     // controller
@@ -289,6 +295,9 @@ public class RobotContainer {
    */
   public Command getAutonomousCommand() {
     // return autoChooser.get();
-    return outtake.setDetected(true);
+
+    return Autos.DoubleL4(drive, elevator, outtake, hopper, superstructure);
+    // return TrajectoryFollower.followTrajectory(TrajectoryFollower.loadTrajectory("Test"));
+    // return outtake.setDetected(true).andThen(autoChooser.get());
   }
 }

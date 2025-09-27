@@ -5,11 +5,10 @@
 package frc.robot.commands;
 
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.subsystems.drive.Drive;
@@ -34,23 +33,21 @@ public class AutoAlign {
   public static Pose2d[] waypointsLogged = waypoints.toArray(new Pose2d[waypoints.size()]);
 
   public static Command alignToPose(Supplier<Pose2d> poseSupplier, Drive drive) {
-    ProfiledPIDController xController =
-        new ProfiledPIDController(5.0, 0.0, 0.0, new TrapezoidProfile.Constraints(3.0, 4.0));
-    ProfiledPIDController yController =
-        new ProfiledPIDController(5.0, 0.0, 0.0, new TrapezoidProfile.Constraints(3.0, 4.0));
-    ProfiledPIDController rotController =
-        new ProfiledPIDController(100.0, 0, 0, new TrapezoidProfile.Constraints(5.0, 10.0));
+    PIDController xController = new PIDController(10.0, 0.0, 0.0);
+    PIDController yController = new PIDController(10.0, 0.0, 0.0);
+    PIDController rotController = new PIDController(7.5, 0, 0);
     rotController.enableContinuousInput(-Math.PI, Math.PI);
     Pose2d targetPose = poseSupplier.get();
-    xController.setGoal(targetPose.getX());
-    yController.setGoal(targetPose.getY());
-    rotController.setGoal(targetPose.getRotation().getRadians());
+    xController.setSetpoint(targetPose.getX());
+    ;
+    yController.setSetpoint(targetPose.getY());
+    rotController.setSetpoint(targetPose.getRotation().getRadians());
     return Commands.runOnce(
             () -> {
               Pose2d target = poseSupplier.get();
-              xController.setGoal(target.getX());
-              yController.setGoal(target.getY());
-              rotController.setGoal(target.getRotation().getRadians());
+              xController.setSetpoint(target.getX());
+              yController.setSetpoint(target.getY());
+              rotController.setSetpoint(target.getRotation().getRadians());
             })
         .andThen(
             Commands.run(
@@ -59,9 +56,9 @@ public class AutoAlign {
                       Logger.recordOutput(
                           "AutoAlign/Target",
                           new Pose2d(
-                              xController.getGoal().position,
-                              yController.getGoal().position,
-                              Rotation2d.fromRadians(rotController.getGoal().position)));
+                              xController.getSetpoint(),
+                              yController.getSetpoint(),
+                              Rotation2d.fromRadians(rotController.getSetpoint())));
                       ChassisSpeeds speeds =
                           new ChassisSpeeds(
                               xController.calculate(currentPose.getX()),
@@ -73,9 +70,9 @@ public class AutoAlign {
                 .finallyDo(
                     () -> {
                       drive.runVelocity(new ChassisSpeeds());
-                      xController.reset(drive.getPose().getX());
-                      yController.reset(drive.getPose().getY());
-                      rotController.reset(drive.getPose().getRotation().getRadians());
+                      xController.reset();
+                      yController.reset();
+                      rotController.reset();
                     })
                 .until(() -> (AutoAlign.isNear(poseSupplier.get(), drive.getPose()))));
   }

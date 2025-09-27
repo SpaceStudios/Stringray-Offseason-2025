@@ -33,8 +33,9 @@ public class ElevatorConstants {
   }
 
   public class MotorConstants {
-    public static final int maxCurrent = 120;
-    public static final int maxCurrentLow = 80;
-    public static final double rampPeriod = 0.1;
+    public static final int maxCurrent = 90;
+    public static final int maxCurrentLow = 60;
+    public static final double rampPeriod = 0.2;
+    public static final boolean inverted = false;
   }
 }

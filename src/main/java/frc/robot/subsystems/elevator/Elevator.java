@@ -88,9 +88,10 @@ public class Elevator extends SubsystemBase {
             () -> {
               homed = false;
               homingDebouncer.calculate(false);
+              System.out.println("Homing");
             },
             () -> {
-              io.setVoltage(6);
+              io.setVoltage(-6);
               homed = homingDebouncer.calculate(Math.abs(data.elevatorVelocity) <= 0.2);
             })
         .until(() -> homed)

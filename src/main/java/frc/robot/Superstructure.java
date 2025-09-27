@@ -472,10 +472,7 @@ public class Superstructure {
                 outtake.setVoltage(() -> 0.0).withTimeout(0.1),
                 hopper.setVoltage(0.0).withTimeout(0.1),
                 gripper.setVoltage(() -> 0.0).withTimeout(0.1),
-                elevator
-                    .setElevatorHeight(0.0)
-                    .until(elevator::nearSetpoint)
-                    .andThen(elevator.homingSequence())));
+                elevator.setElevatorHeight(0.0).until(elevator::nearSetpoint)));
 
     layout
         .cancelRequest
@@ -497,7 +494,10 @@ public class Superstructure {
                 hopper.setVoltage(0.0).withTimeout(0.1),
                 gripper.setVoltage(() -> 0.0).withTimeout(0.1)));
 
-    layout.manualElevator.whileTrue(this.setState(state.MANUAL_ELEVATOR)).onFalse(this.setState(state.IDLE));
+    layout
+        .manualElevator
+        .whileTrue(this.setState(state.MANUAL_ELEVATOR))
+        .onFalse(this.setState(state.IDLE));
 
     layout.resetGyro.onTrue(
         Commands.runOnce(
