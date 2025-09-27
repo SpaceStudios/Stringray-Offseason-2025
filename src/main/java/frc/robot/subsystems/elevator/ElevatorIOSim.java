@@ -4,73 +4,106 @@
 
 package frc.robot.subsystems.elevator;
 
+import static frc.robot.subsystems.elevator.ElevatorConstants.*;
+
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.ElevatorFeedforward;
 import edu.wpi.first.math.controller.ProfiledPIDController;
-import edu.wpi.first.math.system.plant.DCMotor;
-import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
+import edu.wpi.first.math.system.plant.LinearSystemId;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj.simulation.ElevatorSim;
+import org.littletonrobotics.junction.Logger;
 
-/** Add your docs here. */
 public class ElevatorIOSim implements ElevatorIO {
-  // private final AScopeElevatorSim elevator;
-  private final ElevatorSim sim =
-      new ElevatorSim(
-          DCMotor.getKrakenX60(2),
-          ElevatorConstants.gearing,
-          ElevatorConstants.mass,
-          ElevatorConstants.drumRadius,
-          0,
-          ElevatorConstants.maxHeight,
-          true,
-          0.0);
-  private final ProfiledPIDController pid =
-      new ProfiledPIDController(40.0, 0, 0.01, new Constraints(5.0, 10.0));
-  private final ElevatorFeedforward ff =
-      new ElevatorFeedforward(
-          0.0,
-          0.06 + 0.541,
-          (DCMotor.getKrakenX60(1).KvRadPerSecPerVolt * ElevatorConstants.drumRadius)
-              / ElevatorConstants.gearing);
 
-  private double voltage = 0.0;
+  private ElevatorSim elevator;
+
+  private ProfiledPIDController pid =
+      new ProfiledPIDController(
+          kP.getAsDouble(), 0.0, 0.0, new TrapezoidProfile.Constraints(3.8, 4));
+
+  private ElevatorFeedforward ff =
+      new ElevatorFeedforward(
+          kS.getAsDouble(), kG.getAsDouble(), kV.getAsDouble(), kG.getAsDouble());
+  private double volts = 0.0;
 
   public ElevatorIOSim() {
-    // elevator = new AScopeElevatorSim(AscopeModel.getRobot("Stringray"), new int[] {0, 1, 2});
+    this.pid.setTolerance(0.01);
+    this.elevator =
+        new ElevatorSim(
+            LinearSystemId.createElevatorSystem(gearbox, elevatorMass, drumRadius, gearing),
+            gearbox,
+            minHeight,
+            maxHeight,
+            simGravity,
+            minHeight);
+    ff.maxAchievableVelocity(12, elevator.getVelocityMetersPerSecond());
+    ff.maxAchievableAcceleration(12, elevator.getVelocityMetersPerSecond());
   }
 
   @Override
-  public void updateData(final elevatorDataAutoLogged data) {
-    setVoltage(pid.calculate(sim.getPositionMeters()) + ff.calculate(pid.getGoal().velocity));
+  public void updateInputs(ElevatorIOInputs inputs) {
+    elevator.update(0.02);
+    inputs.position = elevator.getPositionMeters();
+    inputs.velocity = elevator.getVelocityMetersPerSecond();
+    inputs.leftVolts = volts;
+    inputs.rightVolts = volts;
 
-    sim.update(0.020);
-    // elevator.setHeight(Meters.of(sim.getPositionMeters()));
-    data.connected = true;
-    data.motorCurrent = sim.getCurrentDrawAmps();
-    data.motorVoltage = voltage;
+    inputs.leftSupplyCurrent = elevator.getCurrentDrawAmps();
+    inputs.rightSupplyCurrent = elevator.getCurrentDrawAmps();
 
-    data.elevatorHeight = getHeight();
-    data.elevatorVelocity = sim.getVelocityMetersPerSecond();
-    data.elevatorSetpoint = pid.getGoal().position;
+    inputs.targetHeight = pid.getGoal().position;
+
+    if (kP.hasChanged(hashCode())) {
+      pid.setP(kP.getAsDouble());
+    }
+
+    if (kI.hasChanged(hashCode())) {
+      pid.setI(kI.getAsDouble());
+    }
+
+    if (kD.hasChanged(hashCode())) {
+      pid.setD(kD.getAsDouble());
+    }
+
+    if (kV.hasChanged(hashCode())) {
+      ff.setKv(kV.getAsDouble());
+    }
+
+    if (kS.hasChanged(hashCode())) {
+      ff.setKs(kS.getAsDouble());
+    }
+
+    if (kA.hasChanged(hashCode())) {
+      ff.setKa(kA.getAsDouble());
+    }
+
+    if (kG.hasChanged(hashCode())) {
+      ff.setKg(kG.getAsDouble());
+    }
   }
 
   @Override
-  public void setHeight(final double height) {
-    pid.setGoal(height);
+  public void setControl(double position) {
+    setVolts(
+        pid.calculate(elevator.getPositionMeters(), position)
+            + ff.calculate(pid.getSetpoint().velocity));
   }
 
   @Override
-  public double getHeight() {
-    return sim.getPositionMeters();
+  public void setVolts(double voltage) {
+    this.volts = voltage;
+    elevator.setInputVoltage(MathUtil.clamp(voltage, -12, 12));
   }
 
   @Override
-  public void setVoltage(final double voltage) {
-    this.voltage = voltage;
-    sim.setInputVoltage(voltage);
+  public void resetEncoder() {
+    elevator.setInputVoltage(0);
   }
 
   @Override
-  public void runVelocity(final double joystick) {
-    setHeight(getHeight() + (joystick * ElevatorConstants.maxVelocity * 0.020));
+  public double positionError() {
+    Logger.recordOutput("Debug/Elevator/Error", pid.getPositionError());
+    return pid.getPositionError();
   }
 }

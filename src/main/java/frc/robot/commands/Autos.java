@@ -14,8 +14,6 @@ import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.hopper.Hopper;
 import frc.robot.subsystems.outtake.Outtake;
 import frc.robot.subsystems.outtake.OuttakeConstants;
-import frc.robot.util.FieldConstants.ReefConstants.coralTarget;
-import java.util.function.Supplier;
 
 /** Some Preset Autos */
 public class Autos {
@@ -28,7 +26,7 @@ public class Autos {
     return Commands.sequence(
         simInit(outtake, true),
         AutoRoutines.runTrajectory("aCtoG"),
-        scoreCoral(() -> (coralTarget.L4), elevator, outtake),
+        // scoreCoral(() -> (coralTarget.L4), elevator, outtake),
         AutoRoutines.runTrajectory("GtoS"));
   }
 
@@ -37,17 +35,17 @@ public class Autos {
         .andThen(AutoRoutines.followTrajectory(AutoRoutines.loadTrajectory("GtoS")));
   }
 
-  public static Command scoreCoral(
-      Supplier<coralTarget> targetSupplier, Elevator elevator, Outtake outtake) {
-    return Commands.sequence(
-        elevator
-            .setElevatorHeight(() -> (targetSupplier.get().height))
-            .until(elevator::nearSetpoint),
-        outtake
-            .setVoltage(() -> (OuttakeConstants.voltageMap.get(targetSupplier.get().height)))
-            .until(() -> !(outtake.getDetected())),
-        elevator.setElevatorHeight(0.0).until(elevator::nearSetpoint));
-  }
+  // public static Command scoreCoral(
+  //     Supplier<coralTarget> targetSupplier, Elevator elevator, Outtake outtake) {
+  //   return Commands.sequence(
+  //       // elevator
+  //       //     .setElevatorHeight(() -> (targetSupplier.get().height))
+  //       //     .until(elevator::nearSetpoint),
+  //       // outtake
+  //           .setVoltage(() -> (OuttakeConstants.voltageMap.get(targetSupplier.get().height)))
+  //           .until(() -> !(outtake.getDetected()))));
+  //       // elevator.setElevatorHeight(0.0).until(elevator::nearSetpoint));
+  // }
 
   public static Command intakeCoral(Superstructure superstructure, Outtake outtake, Hopper hopper) {
     return Commands.parallel(

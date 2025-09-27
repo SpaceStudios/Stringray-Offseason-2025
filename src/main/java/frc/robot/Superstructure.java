@@ -21,6 +21,7 @@ import frc.robot.commands.AutoAlign.IntakeLocation;
 import frc.robot.subsystems.climb.Climb;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.elevator.Elevator;
+import frc.robot.subsystems.elevator.ElevatorConstants.ElevatorSetpoint;
 import frc.robot.subsystems.gripper.Gripper;
 import frc.robot.subsystems.gripper.GripperConstants;
 import frc.robot.subsystems.hopper.Hopper;
@@ -31,7 +32,6 @@ import frc.robot.subsystems.outtake.Outtake;
 import frc.robot.subsystems.outtake.OuttakeConstants;
 import frc.robot.util.FieldConstants;
 import frc.robot.util.FieldConstants.BargeConstants;
-import frc.robot.util.FieldConstants.ReefConstants;
 import frc.robot.util.FieldConstants.ReefConstants.coralTarget;
 import java.util.HashMap;
 import java.util.function.DoubleSupplier;
@@ -118,7 +118,9 @@ public class Superstructure {
 
     this.autoElevatorCommand =
         (Commands.sequence(
-            elevator.setElevatorHeight(() -> (kCoralTarget.height)).until(elevator::nearSetpoint),
+            elevator
+                .setTarget(() -> (ElevatorSetpoint.getSetpointFromCoralTarget(kCoralTarget)))
+                .until(elevator::atSetpoint),
             Commands.parallel(
                 outtake
                     .setVoltage(() -> (OuttakeConstants.voltageMap.get(elevator.getSetpoint())))
@@ -148,17 +150,26 @@ public class Superstructure {
     layout
         .L1
         .and(stateMap.get(state.MANUAL_ELEVATOR))
-        .onTrue(elevator.setElevatorHeight(coralTarget.L1.height).until(elevator::nearSetpoint));
+        .onTrue(
+            elevator
+                .setTarget(() -> (ElevatorSetpoint.getSetpointFromCoralTarget(coralTarget.L3)))
+                .until(elevator::atSetpoint));
 
     layout
         .L2
         .and(stateMap.get(state.MANUAL_ELEVATOR))
-        .onTrue(elevator.setElevatorHeight(coralTarget.L2.height).until(elevator::nearSetpoint));
+        .onTrue(
+            elevator
+                .setTarget(() -> (ElevatorSetpoint.getSetpointFromCoralTarget(coralTarget.L3)))
+                .until(elevator::atSetpoint));
 
     layout
         .L3
         .and(stateMap.get(state.MANUAL_ELEVATOR))
-        .onTrue(elevator.setElevatorHeight(coralTarget.L3.height).until(elevator::nearSetpoint));
+        .onTrue(
+            elevator
+                .setTarget(() -> (ElevatorSetpoint.getSetpointFromCoralTarget(coralTarget.L3)))
+                .until(elevator::atSetpoint));
 
     // layout
     //     .L4
@@ -168,7 +179,9 @@ public class Superstructure {
     layout
         .L4
         .and(stateMap.get(state.MANUAL_ELEVATOR))
-        .onTrue(elevator.setElevatorHeight(coralTarget.L4.height).withTimeout(10.0));
+        .onTrue(
+            elevator.setTarget(
+                () -> (ElevatorSetpoint.getSetpointFromCoralTarget(coralTarget.L4))));
 
     // Auto Align
     layout
@@ -194,9 +207,7 @@ public class Superstructure {
         .onTrue(
             Commands.parallel(
                 setState(state.CORAL_INTAKE),
-                elevator
-                    .setElevatorHeight(FieldConstants.SourceConstants.elevatorSetpoint)
-                    .until(elevator::nearSetpoint)));
+                elevator.setTarget(() -> ElevatorSetpoint.INTAKE).until(elevator::atSetpoint)));
 
     stateMap
         .get(state.CORAL_INTAKE)
@@ -251,12 +262,14 @@ public class Superstructure {
         .and(() -> (kCoralTarget == coralTarget.L1))
         .onTrue(
             Commands.sequence(
-                elevator.setElevatorHeight(coralTarget.L1).until(elevator::nearSetpoint),
+                elevator
+                    .setTarget(() -> ElevatorSetpoint.getSetpointFromCoralTarget(coralTarget.L1))
+                    .until(elevator::atSetpoint),
                 Commands.parallel(
                         outtake.setVoltage(() -> (OuttakeConstants.L1)),
-                        elevator.setVoltage(() -> (0.5)))
+                        elevator.overideElevator(() -> (0.5)))
                     .until(() -> !(outtake.getDetected())),
-                elevator.setElevatorHeight(() -> 0.0)));
+                elevator.setTarget(() -> ElevatorSetpoint.INTAKE)));
 
     layout
         .setPrescoreCoral
@@ -269,7 +282,9 @@ public class Superstructure {
         .whileTrue(
             Commands.parallel(
                 this.rumbleCommand(layout.driveController, 0.5, 1.0),
-                elevator.setElevatorHeight(coralTarget.L1).until(elevator::nearSetpoint)));
+                elevator
+                    .setTarget(() -> ElevatorSetpoint.getSetpointFromCoralTarget(coralTarget.L1))
+                    .until(elevator::atSetpoint)));
 
     // Elevator goes to level when level has been selected and it is in the prescore.
     layout
@@ -278,8 +293,8 @@ public class Superstructure {
         .onTrue(
             Commands.parallel(
                 elevator
-                    .setElevatorHeight(() -> (coralTarget.L1.height))
-                    .until(elevator::nearSetpoint),
+                    .setTarget(() -> ElevatorSetpoint.getSetpointFromCoralTarget(coralTarget.L1))
+                    .until(elevator::atSetpoint),
                 this.setCoralTarget(coralTarget.L1)));
 
     layout
@@ -288,8 +303,8 @@ public class Superstructure {
         .onTrue(
             Commands.parallel(
                 elevator
-                    .setElevatorHeight(() -> (coralTarget.L2.height))
-                    .until(elevator::nearSetpoint),
+                    .setTarget(() -> ElevatorSetpoint.getSetpointFromCoralTarget(coralTarget.L2))
+                    .until(elevator::atSetpoint),
                 this.setCoralTarget(coralTarget.L2)));
 
     layout
@@ -298,8 +313,8 @@ public class Superstructure {
         .onTrue(
             Commands.parallel(
                 elevator
-                    .setElevatorHeight(() -> (coralTarget.L3.height))
-                    .until(elevator::nearSetpoint),
+                    .setTarget(() -> ElevatorSetpoint.getSetpointFromCoralTarget(coralTarget.L3))
+                    .until(elevator::atSetpoint),
                 this.setCoralTarget(coralTarget.L3)));
 
     layout
@@ -308,8 +323,8 @@ public class Superstructure {
         .onTrue(
             Commands.parallel(
                 elevator
-                    .setElevatorHeight(() -> (coralTarget.L4.height))
-                    .until(elevator::nearSetpoint),
+                    .setTarget(() -> ElevatorSetpoint.getSetpointFromCoralTarget(coralTarget.L4))
+                    .until(elevator::atSetpoint),
                 this.setCoralTarget(coralTarget.L4)));
 
     // Algae
@@ -336,8 +351,10 @@ public class Superstructure {
         .onTrue(
             Commands.parallel(
                 this.setState(state.ALGAE_INTAKE),
-                elevator.setElevatorHeight(
-                    () -> (FieldConstants.ReefConstants.algaeTarget.L2.height))));
+                elevator.setTarget(
+                    () ->
+                        ElevatorSetpoint.getSetpointFromAlgaeTarget(
+                            FieldConstants.ReefConstants.algaeTarget.L2))));
 
     layout
         .L3
@@ -347,20 +364,30 @@ public class Superstructure {
         .onTrue(
             Commands.parallel(
                 this.setState(state.ALGAE_INTAKE),
-                elevator.setElevatorHeight(
-                    () -> (FieldConstants.ReefConstants.algaeTarget.L3.height))));
+                elevator
+                    .setTarget(
+                        () ->
+                            ElevatorSetpoint.getSetpointFromAlgaeTarget(
+                                FieldConstants.ReefConstants.algaeTarget.L3))
+                    .until(elevator::atSetpoint)));
 
     layout
         .L2
         .and(stateMap.get(state.ALGAE_INTAKE))
         .onTrue(
-            elevator.setElevatorHeight(() -> FieldConstants.ReefConstants.algaeTarget.L2.height));
+            elevator.setTarget(
+                () ->
+                    ElevatorSetpoint.getSetpointFromAlgaeTarget(
+                        FieldConstants.ReefConstants.algaeTarget.L2)));
 
     layout
         .L3
         .and(stateMap.get(state.ALGAE_INTAKE))
         .onTrue(
-            elevator.setElevatorHeight(() -> FieldConstants.ReefConstants.algaeTarget.L3.height));
+            elevator.setTarget(
+                () ->
+                    ElevatorSetpoint.getSetpointFromAlgaeTarget(
+                        FieldConstants.ReefConstants.algaeTarget.L3)));
 
     stateMap
         .get(state.ALGAE_INTAKE)
@@ -394,8 +421,8 @@ public class Superstructure {
         .whileTrue(this.setState(state.ALGAE_READY))
         .onTrue(
             elevator
-                .setElevatorHeight(ReefConstants.coralTarget.L1.height)
-                .until(elevator::nearSetpoint));
+                .setTarget(() -> (ElevatorSetpoint.getSetpointFromCoralTarget(coralTarget.L1)))
+                .andThen(elevator.setExtension()));
 
     layout
         .scoreRequest
@@ -404,8 +431,8 @@ public class Superstructure {
         .onTrue(
             Commands.sequence(
                 elevator
-                    .setElevatorHeight(() -> (BargeConstants.elevatorSetpoint))
-                    .until(elevator::nearSetpoint),
+                    .setTarget(() -> ElevatorSetpoint.getSetpointFromCoralTarget(coralTarget.L4))
+                    .andThen(elevator.setExtension()),
                 Commands.parallel(
                         gripper.setVoltage(() -> (GripperConstants.net)),
                         gripper.setDetected(false))
@@ -417,7 +444,9 @@ public class Superstructure {
         .whileTrue(
             Commands.parallel(
                 this.rumbleCommand(layout.driveController, 0.25, 1.0),
-                elevator.setElevatorHeight(coralTarget.L1).until(elevator::nearSetpoint)));
+                elevator
+                    .setTarget(() -> ElevatorSetpoint.getSetpointFromCoralTarget(coralTarget.L1))
+                    .andThen(elevator.setExtension())));
 
     // Climb
     layout
@@ -444,7 +473,7 @@ public class Superstructure {
     // Sim State Triggers
     stateMap
         .get(state.CORAL_INTAKE)
-        .and(elevator::nearSetpoint)
+        .and(elevator::atSetpoint)
         .and(Robot::isSimulation)
         .and(
             () ->
@@ -480,7 +509,7 @@ public class Superstructure {
                 outtake.setVoltage(() -> 0.0).withTimeout(0.1),
                 hopper.setVoltage(0.0).withTimeout(0.1),
                 gripper.setVoltage(() -> 0.0).withTimeout(0.1),
-                elevator.setElevatorHeight(0.0).until(elevator::nearSetpoint)));
+                elevator.setTarget(() -> ElevatorSetpoint.INTAKE).until(elevator::atSetpoint)));
 
     layout
         .cancelRequest
@@ -555,7 +584,7 @@ public class Superstructure {
     Logger.recordOutput("Superstructure/Layout/Dejam Coral", layout.dejamCoral.getAsBoolean());
 
     Logger.recordOutput("Superstructure/State", kCurrentState);
-    elevatorDisplay.setLength(elevator.getHeight());
+    elevatorDisplay.setLength(elevator.getSetpoint().height);
     Logger.recordOutput("Superstructure/Mechanism", mech);
 
     Logger.recordOutput("Auto Align/Waypoints", AutoAlign.waypointsLogged);

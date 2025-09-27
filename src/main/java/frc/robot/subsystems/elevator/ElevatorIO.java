@@ -8,44 +8,41 @@ import org.littletonrobotics.junction.AutoLog;
 
 /** Add your docs here. */
 public interface ElevatorIO {
+
   @AutoLog
-  public class elevatorData {
-    // Motor Data
-    public boolean connected = false;
-    public double motorTemperature = 0.0;
-    public double motorPosition = 0.0;
-    public double motorVelocity = 0.0;
-    public double motorAcceleration = 0.0;
-    public double motorVoltage = 0.0;
-    public double motorOutput = 0.0;
-    public double motorCurrent = 0.0;
-    public double motorSupplyCurrent = 0.0;
+  public static class ElevatorIOInputs {
+    public double targetHeight = 0.0;
+    public double position = 0.0;
 
-    public boolean followerConnected = false;
-    public double followerTemperature = 0.0;
-    public double followerVoltage = 0.0;
-    public double followerOutput = 0.0;
-    public double followerCurrent = 0.0;
-    public double followerSupplyCurrent = 0.0;
+    public double leftVolts = 0.0;
+    public double rightVolts = 0.0;
 
-    // Elevator Data
-    public double elevatorHeight = 0.0;
-    public double elevatorSetpoint = 0.0;
-    public double elevatorVelocity = 0.0;
-    public boolean nearSetpoint = false;
+    public double leftStatorCurrent = 0.0;
+    public double rightStatorCurrent = 0.0;
+
+    public double leftSupplyCurrent = 0.0;
+    public double rightSupplyCurrent = 0.0;
+
+    public double leftTemp = 0.0;
+    public double rightTemp = 0.0;
+
+    public double velocity = 0.0;
+
+    public boolean leftConnected = false;
+    public boolean rightConnected = false;
+
+    public boolean atSetpoint = false;
   }
 
-  public default void updateData(elevatorDataAutoLogged data) {}
+  public default void updateInputs(ElevatorIOInputs inputs) {}
 
-  public default void setHeight(double height) {}
+  public default void setVolts(double volts) {}
 
-  public default void setVoltage(double voltage) {}
+  public default void setControl(double position) {}
 
-  public default void runVelocity(double joystick) {}
+  public default void resetEncoder() {}
 
-  public default void resetEncoders() {}
-
-  public default double getHeight() {
+  public default double positionError() {
     return 0.0;
   }
 }

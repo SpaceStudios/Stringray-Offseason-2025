@@ -254,7 +254,7 @@ public class RobotContainer {
     autoChooser.addOption(
         "Drive SysId (Dynamic Reverse)", drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
 
-    autoChooser.addOption("Homing Sequence", elevator.homingSequence());
+    autoChooser.addOption("Homing Sequence", elevator.homeElevator());
     autoChooser.addOption(
         "aCtoG",
         AutoRoutines.followTrajectory(

@@ -4,105 +4,157 @@
 
 package frc.robot.subsystems.elevator;
 
-import edu.wpi.first.math.MathUtil;
+import static edu.wpi.first.units.Units.Amps;
+import static edu.wpi.first.units.Units.Meters;
+import static edu.wpi.first.units.Units.MetersPerSecond;
+import static edu.wpi.first.units.Units.Volts;
+import static frc.robot.subsystems.elevator.ElevatorConstants.*;
+
 import edu.wpi.first.math.filter.Debouncer;
-// import edu.wpi.first.math.filter.LinearFilter;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.util.FieldConstants.ReefConstants.coralTarget;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Mechanism;
 import java.util.function.DoubleSupplier;
+import java.util.function.Supplier;
+import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 public class Elevator extends SubsystemBase {
-  private final ElevatorIO io;
-  private final elevatorDataAutoLogged data = new elevatorDataAutoLogged();
-  // private final LinearFilter filter = LinearFilter.movingAverage(5);
-  // private double filterValue;
 
-  private final Debouncer homingDebouncer = new Debouncer(0.1);
-  public boolean homed = true;
-  /** Creates a new Elevator. */
+  private ElevatorIO io;
+  private ElevatorIOInputsAutoLogged inputs = new ElevatorIOInputsAutoLogged();
+
+  private boolean isHomed = false;
+  private Timer homingTimer = new Timer();
+  private Debouncer homingDebouncer = new Debouncer(0.5);
+  private SysIdRoutine routine;
+
+  @AutoLogOutput(key = "Elevator/Setpoint")
+  private ElevatorSetpoint setpoint = ElevatorSetpoint.INTAKE;
+
+  @AutoLogOutput(key = "Elevator/NextSetpoint")
+  private ElevatorSetpoint nextSetpoint = ElevatorSetpoint.INTAKE;
+
   public Elevator(ElevatorIO io) {
     this.io = io;
+
+    routine =
+        new SysIdRoutine(
+            new Config(null, Volts.of(4), null),
+            new Mechanism(
+                (volts) -> io.setVolts(volts.in(Volts)),
+                log -> {
+                  log.motor("left")
+                      .voltage(Volts.of(inputs.leftVolts))
+                      .current(Amps.of(inputs.leftSupplyCurrent))
+                      .linearPosition(Meters.of(inputs.position))
+                      .linearVelocity(MetersPerSecond.of(inputs.velocity));
+                },
+                this));
+  }
+
+  public void setVoltage(double volts) {
+    io.setVolts(volts);
+  }
+
+  public Command overideElevator(DoubleSupplier volts) {
+    return Commands.run(
+        () -> {
+          io.setVolts(volts.getAsDouble() * 12);
+        },
+        this);
+  }
+
+  /* Set Position to ... */
+  public void setPosition(double position) {
+    io.setControl(position);
+  }
+
+  /* Reset Encoder with a position value of 0 */
+  public Command resetEncoder() {
+    return Commands.runOnce(
+            () -> {
+              io.resetEncoder();
+            },
+            this)
+        .ignoringDisable(true);
+  }
+
+  public void selectFutureTarget(ElevatorSetpoint setpoint) {
+    nextSetpoint = setpoint;
+  }
+
+  /* Set the Elevator Target enum, for set extension method to move the elevator */
+  public Command setTarget(Supplier<ElevatorSetpoint> height) {
+    return Commands.runOnce(() -> this.selectFutureTarget(height.get()));
+  }
+
+  // public Command setTarget(double height) {
+  //   return Commands.runOnce(() -> this.selectFutureTarget(height));
+  // }
+
+  public Command setExtension() {
+    return Commands.runOnce(() -> setpoint = nextSetpoint);
+  }
+
+  public Command homeElevator() {
+    return Commands.startRun(
+            () -> {
+              isHomed = false;
+              homingTimer.restart();
+              homingDebouncer.calculate(false);
+            },
+            () -> {
+              io.setVolts(-6);
+              isHomed = homingDebouncer.calculate(Math.abs(inputs.velocity) <= 0.1);
+            },
+            this)
+        .until(() -> isHomed)
+        .finallyDo(
+            () -> {
+              System.out.println("Elevator is Homed in " + homingTimer.get());
+              io.setVolts(0.0);
+              io.resetEncoder();
+              System.out.println(
+                  "Elevator was homed and encoder was reseted in " + homingTimer.get());
+            });
+  }
+
+  /*
+   * Should be able to retune elevator and get better constnats REMEMBER TO SET
+   * PID TO 0
+   */
+  public Command sysId() {
+    return Commands.sequence(
+        routine.dynamic(Direction.kForward),
+        routine.dynamic(Direction.kReverse),
+        routine.quasistatic(Direction.kForward),
+        routine.quasistatic(Direction.kReverse));
+  }
+
+  public ElevatorSetpoint getSetpoint() {
+    return setpoint;
+  }
+
+  public ElevatorSetpoint getNextExpectedSetpoint() {
+    return nextSetpoint;
+  }
+
+  public boolean atSetpoint() {
+    return inputs.atSetpoint;
   }
 
   @Override
   public void periodic() {
-    // This method will be called once per scheduler run
-    io.updateData(data);
-    data.nearSetpoint = nearSetpoint();
-    Logger.processInputs("Elevator", data);
-    // filterValue = filter.calculate(data.motorCurrent);
-  }
-
-  public Command setElevatorHeight(double height) {
-    return this.run(
-        () -> {
-          io.setHeight(height);
-        });
-  }
-
-  public Command setElevatorHeight(DoubleSupplier height) {
-    return this.run(
-        () -> {
-          io.setHeight(height.getAsDouble());
-        });
-  }
-
-  public Command setElevatorHeight(coralTarget height) {
-    return this.run(
-        () -> {
-          io.setHeight(height.height);
-        });
-  }
-
-  public Command runVelocity(DoubleSupplier axis) {
-    return this.run(
-        () -> {
-          io.runVelocity(axis.getAsDouble());
-        });
-  }
-
-  public double getHeight() {
-    return io.getHeight();
-  }
-
-  public double getSetpoint() {
-    return data.elevatorSetpoint;
-  }
-
-  public Command currentZeroElevator() {
-    return this.run(() -> {});
-  }
-
-  public Command setVoltage(DoubleSupplier voltage) {
-    return this.run(
-        () -> {
-          io.setVoltage(voltage.getAsDouble());
-        });
-  }
-
-  public Command homingSequence() {
-    return this.startRun(
-            () -> {
-              homed = false;
-              homingDebouncer.calculate(false);
-              System.out.println("Homing");
-            },
-            () -> {
-              io.setVoltage(1);
-              homed = homingDebouncer.calculate(Math.abs(data.elevatorVelocity) <= 0.2);
-            })
-        .until(() -> homed)
-        .andThen(
-            () -> {
-              io.setVoltage(0.0);
-              io.resetEncoders();
-              homed = true;
-            });
-  }
-
-  public boolean nearSetpoint() {
-    return MathUtil.isNear(data.elevatorSetpoint, data.elevatorHeight, 0.08);
+    Logger.processInputs("Elevator", inputs);
+    io.updateInputs(inputs);
+    Logger.recordOutput("Elevator/TargetHeight", inputs.targetHeight);
+    inputs.atSetpoint = Math.abs(inputs.targetHeight - inputs.position) <= tolerance;
+    this.setPosition(getSetpoint().height);
   }
 }

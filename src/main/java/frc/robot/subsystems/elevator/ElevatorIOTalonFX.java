@@ -4,10 +4,12 @@
 
 package frc.robot.subsystems.elevator;
 
-import static frc.robot.util.PhoenixUtil.tryUntilOk;
+import static frc.robot.subsystems.elevator.ElevatorConstants.*;
+import static frc.robot.util.PhoenixUtil.*;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
+import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
@@ -23,132 +25,106 @@ import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Temperature;
 import edu.wpi.first.units.measure.Voltage;
 
-/** Add your docs here. */
 public class ElevatorIOTalonFX implements ElevatorIO {
 
-  private final TalonFX leftTalon;
-  private final TalonFX rightTalon;
+  private final TalonFX left;
+  private final TalonFX right;
+
+  private final TalonFXConfiguration config;
 
   private final StatusSignal<Angle> position;
   private final StatusSignal<AngularVelocity> velocity;
   private final StatusSignal<Voltage> voltage;
-  private final StatusSignal<Current> supplyCurrent;
   private final StatusSignal<Current> statorCurrent;
+  private final StatusSignal<Current> supplyCurrent;
   private final StatusSignal<Temperature> temperature;
 
   private final StatusSignal<Voltage> followerVoltage;
-  private final StatusSignal<Current> followerSupplyCurrent;
   private final StatusSignal<Current> followerStatorCurrent;
+  private final StatusSignal<Current> followerSupplyCurrent;
   private final StatusSignal<Temperature> followerTemperature;
 
-  private final Debouncer leftConnectedDebouncer = new Debouncer(0.5);
-  private final Debouncer rightConnectedDebouncer = new Debouncer(0.5);
-
   private final VoltageOut voltageOut = new VoltageOut(0.0).withEnableFOC(false);
-  private final MotionMagicVoltage positionTorque = new MotionMagicVoltage(0.0);
+  private final MotionMagicVoltage positionTorque = new MotionMagicVoltage(0.0).withSlot(0);
+
+  private final Debouncer leftConnectedDebounce = new Debouncer(0.5);
+  private final Debouncer rightConnectedDebounce = new Debouncer(0.5);
 
   private double setpoint = 0.0;
 
   public ElevatorIOTalonFX() {
-    leftTalon = new TalonFX(11);
-    rightTalon = new TalonFX(10);
+    left = new TalonFX(11);
+    right = new TalonFX(10);
+    config = new TalonFXConfiguration();
 
-    rightTalon.setControl(new Follower(leftTalon.getDeviceID(), true));
+    right.setControl(new Follower(left.getDeviceID(), true));
 
-    final TalonFXConfiguration configuration = new TalonFXConfiguration();
+    config.Audio.AllowMusicDurDisable = false;
+    config.Audio.BeepOnBoot = true;
+    config.Audio.BeepOnConfig = true;
 
-    configuration.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+    config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
-    configuration.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+    config.ClosedLoopRamps.VoltageClosedLoopRampPeriod = rampRate;
 
-    configuration.Slot0.GravityType = GravityTypeValue.Elevator_Static;
-    configuration.Slot0.kP = ElevatorConstants.PID.kP[0];
-    configuration.Slot0.kP = ElevatorConstants.PID.kI[0];
-    configuration.Slot0.kP = ElevatorConstants.PID.kD[0];
-    configuration.Slot0.kG = ElevatorConstants.PID.kG[0];
-    configuration.Slot0.kS = ElevatorConstants.PID.kS[0];
-    configuration.Slot0.kV = ElevatorConstants.PID.kV;
-    configuration.Slot0.kA = ElevatorConstants.PID.kA;
+    config.MotionMagic.MotionMagicAcceleration = maxAcceleration;
+    config.MotionMagic.MotionMagicCruiseVelocity = maxVelocity;
+    config.MotionMagic.MotionMagicExpo_kA = kA.getAsDouble();
+    config.MotionMagic.MotionMagicExpo_kV = kV.getAsDouble();
 
-    configuration.Slot1.GravityType = GravityTypeValue.Elevator_Static;
-    configuration.Slot1.kP = ElevatorConstants.PID.kP[1];
-    configuration.Slot1.kI = ElevatorConstants.PID.kI[1];
-    configuration.Slot1.kD = ElevatorConstants.PID.kD[1];
-    configuration.Slot1.kG = ElevatorConstants.PID.kG[1];
-    configuration.Slot1.kS = ElevatorConstants.PID.kS[1];
-    configuration.Slot1.kV = ElevatorConstants.PID.kV;
-    configuration.Slot1.kA = ElevatorConstants.PID.kA;
+    config.Feedback.SensorToMechanismRatio = gearing / (2 * Math.PI * drumRadius);
 
-    configuration.Slot2.GravityType = GravityTypeValue.Elevator_Static;
-    configuration.Slot2.kP = ElevatorConstants.PID.kP[2];
-    configuration.Slot2.kI = ElevatorConstants.PID.kI[2];
-    configuration.Slot2.kD = ElevatorConstants.PID.kD[2];
-    configuration.Slot2.kG = ElevatorConstants.PID.kG[2];
-    configuration.Slot2.kS = ElevatorConstants.PID.kS[2];
-    configuration.Slot2.kV = ElevatorConstants.PID.kV;
-    configuration.Slot2.kA = ElevatorConstants.PID.kA;
+    config.CurrentLimits.StatorCurrentLimit = ElevatorConstants.statorCurrent;
+    config.CurrentLimits.StatorCurrentLimitEnable = true;
+    config.CurrentLimits.SupplyCurrentLimit = ElevatorConstants.supplyCurrent;
+    config.CurrentLimits.SupplyCurrentLimitEnable = true;
+    config.CurrentLimits.SupplyCurrentLowerLimit = supplyCurrentLow;
+    config.CurrentLimits.SupplyCurrentLowerTime = 0.0;
 
-    configuration.Feedback.SensorToMechanismRatio =
-        ElevatorConstants.gearing / (ElevatorConstants.drumRadius * Math.PI * 2);
+    config.Slot0.GravityType = GravityTypeValue.Elevator_Static;
+    config.Slot0.kP = kP.getAsDouble();
+    config.Slot0.kI = kI.getAsDouble();
+    config.Slot0.kD = kD.getAsDouble();
 
-    configuration.TorqueCurrent.PeakForwardTorqueCurrent =
-        ElevatorConstants.MotorConstants.maxCurrent;
-    configuration.TorqueCurrent.PeakReverseTorqueCurrent =
-        -ElevatorConstants.MotorConstants.maxCurrent;
+    config.Slot0.kV = kV.getAsDouble();
+    config.Slot0.kS = kS.getAsDouble();
+    config.Slot0.kA = kA.getAsDouble();
+    config.Slot0.kG = kG.getAsDouble();
 
-    configuration.CurrentLimits.StatorCurrentLimit = ElevatorConstants.MotorConstants.maxCurrent;
-    configuration.CurrentLimits.StatorCurrentLimitEnable = true;
+    config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
 
-    configuration.CurrentLimits.SupplyCurrentLimit = ElevatorConstants.MotorConstants.maxCurrent;
-    configuration.CurrentLimits.SupplyCurrentLimitEnable = true;
+    tryUntilOk(5, () -> left.getConfigurator().apply(config, 0.25));
 
-    configuration.CurrentLimits.SupplyCurrentLowerLimit =
-        ElevatorConstants.MotorConstants.maxCurrentLow;
-    configuration.CurrentLimits.SupplyCurrentLowerTime = 0.0;
-
-    configuration.ClosedLoopRamps.VoltageClosedLoopRampPeriod =
-        ElevatorConstants.MotorConstants.rampPeriod;
-
-    configuration.MotionMagic.MotionMagicAcceleration = ElevatorConstants.PID.maxAcceleration;
-    configuration.MotionMagic.MotionMagicCruiseVelocity = ElevatorConstants.PID.maxVelocity;
-
-    configuration.MotionMagic.MotionMagicExpo_kA = ElevatorConstants.PID.kMM_Expo_kA;
-    configuration.MotionMagic.MotionMagicExpo_kV = ElevatorConstants.PID.kMM_Expo_kV;
-
-    // Do not put any configuration below this
-    tryUntilOk(5, () -> leftTalon.getConfigurator().apply(configuration, 0.25));
-
-    position = leftTalon.getPosition();
-    velocity = leftTalon.getVelocity();
-    voltage = leftTalon.getMotorVoltage();
-    statorCurrent = leftTalon.getStatorCurrent();
-    supplyCurrent = leftTalon.getSupplyCurrent();
-    temperature = leftTalon.getDeviceTemp();
-
-    followerVoltage = rightTalon.getMotorVoltage();
-    followerStatorCurrent = rightTalon.getStatorCurrent();
-    followerSupplyCurrent = rightTalon.getStatorCurrent();
-    followerTemperature = rightTalon.getDeviceTemp();
+    position = left.getPosition();
+    velocity = left.getVelocity();
+    voltage = left.getMotorVoltage();
+    statorCurrent = left.getTorqueCurrent();
+    supplyCurrent = left.getSupplyCurrent();
+    temperature = left.getDeviceTemp();
+    followerVoltage = right.getMotorVoltage();
+    followerStatorCurrent = right.getTorqueCurrent();
+    followerSupplyCurrent = right.getSupplyCurrent();
+    followerTemperature = right.getDeviceTemp();
 
     BaseStatusSignal.setUpdateFrequencyForAll(
         50.0,
         position,
         velocity,
         voltage,
-        statorCurrent,
         supplyCurrent,
+        statorCurrent,
         temperature,
         followerVoltage,
-        followerStatorCurrent,
         followerSupplyCurrent,
+        followerStatorCurrent,
         followerTemperature);
 
-    leftTalon.optimizeBusUtilization();
-    rightTalon.optimizeBusUtilization();
+    left.optimizeBusUtilization();
+    right.optimizeBusUtilization();
   }
 
   @Override
-  public void updateData(elevatorDataAutoLogged data) {
+  public void updateInputs(ElevatorIOInputs inputs) {
     BaseStatusSignal.refreshAll(
         position,
         velocity,
@@ -157,71 +133,103 @@ public class ElevatorIOTalonFX implements ElevatorIO {
         supplyCurrent,
         temperature,
         followerVoltage,
-        followerStatorCurrent,
         followerSupplyCurrent,
+        followerStatorCurrent,
         followerTemperature);
 
-    data.elevatorHeight = position.getValueAsDouble();
-    data.elevatorVelocity = velocity.getValueAsDouble();
-    data.elevatorSetpoint = setpoint;
+    inputs.position = position.getValueAsDouble();
+    inputs.velocity = velocity.getValueAsDouble();
 
-    data.connected =
-        leftConnectedDebouncer.calculate(
+    inputs.leftStatorCurrent = statorCurrent.getValueAsDouble();
+    inputs.rightStatorCurrent = followerStatorCurrent.getValueAsDouble();
+
+    inputs.leftSupplyCurrent = supplyCurrent.getValueAsDouble();
+    inputs.rightSupplyCurrent = followerSupplyCurrent.getValueAsDouble();
+
+    inputs.leftVolts = voltage.getValueAsDouble();
+    inputs.rightVolts = followerVoltage.getValueAsDouble();
+
+    inputs.leftTemp = temperature.getValueAsDouble();
+    inputs.rightTemp = followerTemperature.getValueAsDouble();
+
+    inputs.targetHeight = setpoint;
+
+    inputs.leftConnected =
+        leftConnectedDebounce.calculate(
             BaseStatusSignal.isAllGood(voltage, statorCurrent, supplyCurrent, temperature));
-    data.followerConnected =
-        rightConnectedDebouncer.calculate(
+    inputs.rightConnected =
+        rightConnectedDebounce.calculate(
             BaseStatusSignal.isAllGood(
                 followerVoltage,
                 followerStatorCurrent,
                 followerSupplyCurrent,
                 followerTemperature));
 
-    data.motorPosition = position.getValueAsDouble();
-    data.motorVelocity = velocity.getValueAsDouble();
-    data.motorVoltage = voltage.getValueAsDouble();
-    data.motorOutput = leftTalon.get();
-    data.motorCurrent = statorCurrent.getValueAsDouble();
-    data.motorSupplyCurrent = supplyCurrent.getValueAsDouble();
-    data.motorTemperature = temperature.getValueAsDouble();
-
-    data.followerCurrent = followerStatorCurrent.getValueAsDouble();
-    data.followerSupplyCurrent = followerSupplyCurrent.getValueAsDouble();
-    data.followerOutput = rightTalon.get();
-    data.followerTemperature = followerTemperature.getValueAsDouble();
-    data.followerVoltage = followerVoltage.getValueAsDouble();
-
-    if (data.elevatorHeight < 0) {
-      resetEncoders();
+    // Setting up PID & FF Values
+    if (kP.hasChanged(hashCode())) {
+      resetPIDValues();
     }
-    if (data.elevatorHeight > 2) {
-      setHeight(0.0);
+
+    if (kI.hasChanged(hashCode())) {
+      resetPIDValues();
+    }
+
+    if (kD.hasChanged(hashCode())) {
+      resetPIDValues();
+    }
+
+    if (kV.hasChanged(hashCode())) {
+      resetFFValues();
+    }
+
+    if (kS.hasChanged(hashCode())) {
+      resetFFValues();
+    }
+
+    if (kA.hasChanged(hashCode())) {
+      resetFFValues();
+    }
+
+    if (kG.hasChanged(hashCode())) {
+      resetFFValues();
     }
   }
 
-  @Override
-  public void setHeight(final double height) {
-    setpoint = height;
-    leftTalon.setControl(positionTorque.withPosition(height));
+  private void resetPIDValues() {
+    Slot0Configs slot0Configs = new Slot0Configs();
+    slot0Configs.withKP(kP.getAsDouble());
+    slot0Configs.withKI(kI.getAsDouble());
+    slot0Configs.withKD(kD.getAsDouble());
+    left.getConfigurator().apply(slot0Configs, 0.25);
+  }
+
+  private void resetFFValues() {
+    Slot0Configs slot0Configs = new Slot0Configs();
+    slot0Configs.withKV(kV.getAsDouble());
+    slot0Configs.withKA(kA.getAsDouble());
+    slot0Configs.withKG(kG.getAsDouble());
+    slot0Configs.withKS(kS.getAsDouble());
+    left.getConfigurator().apply(slot0Configs, 0.25);
   }
 
   @Override
-  public void setVoltage(final double voltage) {
-    leftTalon.setControl(voltageOut.withOutput(voltage));
+  public void setControl(double position) {
+    setpoint = position;
+    left.setControl(positionTorque.withPosition(position));
   }
 
   @Override
-  public void runVelocity(final double joystick) {
-    leftTalon.setControl(voltageOut.withOutput(12 * joystick));
+  public void setVolts(double volts) {
+    left.setControl(voltageOut.withOutput(volts));
   }
 
   @Override
-  public void resetEncoders() {
-    leftTalon.setPosition(0.0);
-    rightTalon.setPosition(0.0);
+  public void resetEncoder() {
+    left.setPosition(0.0);
   }
 
   @Override
-  public double getHeight() {
-    return position.getValueAsDouble();
+  public double positionError() {
+    return left.getClosedLoopError().getValueAsDouble();
   }
 }
