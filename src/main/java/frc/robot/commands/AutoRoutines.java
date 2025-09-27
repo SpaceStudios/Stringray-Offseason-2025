@@ -16,6 +16,7 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Robot;
+import frc.robot.subsystems.autoAlign.AutoAlign;
 import frc.robot.subsystems.drive.Drive;
 import java.util.Map;
 import java.util.Optional;

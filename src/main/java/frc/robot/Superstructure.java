@@ -16,8 +16,8 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.PrintCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.robot.commands.AutoAlign;
-import frc.robot.commands.AutoAlign.IntakeLocation;
+import frc.robot.subsystems.autoAlign.AutoAlign;
+import frc.robot.subsystems.autoAlign.AutoAlign.IntakeLocation;
 import frc.robot.subsystems.climb.Climb;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.elevator.Elevator;
@@ -73,11 +73,6 @@ public class Superstructure {
 
   private final Command autoElevatorCommand;
 
-  private Pose2d[] testPath =
-      AutoAlign.generatePath1Waypoint(
-          () -> (FieldConstants.ReefConstants.leftBranches[1]),
-          () -> (FieldConstants.SourceConstants.sourcePoses[1]));
-
   public enum state {
     IDLE,
     CORAL_INTAKE,
@@ -96,7 +91,7 @@ public class Superstructure {
 
   private final LED led = new LED(Robot.isReal() ? new LEDIOCandle() : new LEDIO() {});
   private final Elevator elevator;
-
+  private final AutoAlign autoAlign;
   private final LoggedMechanism2d mech;
   public final LoggedMechanismLigament2d elevatorDisplay;
 
@@ -110,7 +105,8 @@ public class Superstructure {
       Hopper hopper,
       Gripper gripper,
       Climb climb,
-      ControllerLayout layout) {
+      ControllerLayout layout,
+      AutoAlign autoAlign) {
     for (state kState : state.values()) {
       stateMap.put(
           kState, new Trigger(() -> (kCurrentState == kState) && DriverStation.isEnabled()));
@@ -123,14 +119,15 @@ public class Superstructure {
                 .until(elevator::atSetpoint),
             Commands.parallel(
                 outtake
-                    .setVoltage(() -> (OuttakeConstants.voltageMap.get(elevator.getSetpoint())))
+                    .setVoltage(
+                        () -> (OuttakeConstants.voltageMap.get(elevator.getSetpoint().height)))
                     .until(() -> !(outtake.getDetected())),
                 outtake.setDetected(false)),
             this.setState(state.IDLE)));
 
     this.layout = layout;
     this.elevator = elevator;
-
+    this.autoAlign = autoAlign;
     // Setting Up Display
     mech = new LoggedMechanism2d(1, 1);
     elevatorDisplay = new LoggedMechanismLigament2d("ElevatorMechanism", 0, 85);
@@ -152,7 +149,8 @@ public class Superstructure {
         .and(stateMap.get(state.MANUAL_ELEVATOR))
         .onTrue(
             elevator
-                .setTarget(() -> (ElevatorSetpoint.getSetpointFromCoralTarget(coralTarget.L3)))
+                .setTarget(() -> (ElevatorSetpoint.getSetpointFromCoralTarget(coralTarget.L1)))
+                .andThen(elevator.setExtension())
                 .until(elevator::atSetpoint));
 
     layout
@@ -160,7 +158,8 @@ public class Superstructure {
         .and(stateMap.get(state.MANUAL_ELEVATOR))
         .onTrue(
             elevator
-                .setTarget(() -> (ElevatorSetpoint.getSetpointFromCoralTarget(coralTarget.L3)))
+                .setTarget(() -> (ElevatorSetpoint.getSetpointFromCoralTarget(coralTarget.L2)))
+                .andThen(elevator.setExtension())
                 .until(elevator::atSetpoint));
 
     layout
@@ -169,6 +168,7 @@ public class Superstructure {
         .onTrue(
             elevator
                 .setTarget(() -> (ElevatorSetpoint.getSetpointFromCoralTarget(coralTarget.L3)))
+                .andThen(elevator.setExtension())
                 .until(elevator::atSetpoint));
 
     // layout
@@ -180,23 +180,27 @@ public class Superstructure {
         .L4
         .and(stateMap.get(state.MANUAL_ELEVATOR))
         .onTrue(
-            elevator.setTarget(
-                () -> (ElevatorSetpoint.getSetpointFromCoralTarget(coralTarget.L4))));
+            elevator
+                .setTarget(() -> (ElevatorSetpoint.getSetpointFromCoralTarget(coralTarget.L4)))
+                .andThen(elevator.setExtension())
+                .until(elevator::atSetpoint));
 
     // Auto Align
     layout
         .autoAlignLeft
-        .or(layout.autoAlignRight)
         .and(stateMap.get(state.CORAL_READY).or(stateMap.get(state.CORAL_PRESCORE)))
         .whileTrue(
-            AutoAlign.alignToPose(
-                    () ->
-                        (layout.autoAlignLeft.getAsBoolean()
-                            ? AutoAlign.getBestLeftBranch(drive::getPose)
-                            : AutoAlign.getBestRightBranch(drive::getPose)),
-                    drive)
+            autoAlign
+                .visionAutoAlignLeft(drive, elevator)
                 .andThen(this.setState(state.CORAL_PRESCORE)));
 
+    layout
+        .autoAlignRight
+        .and(stateMap.get(state.CORAL_READY).or(stateMap.get(state.CORAL_PRESCORE)))
+        .whileTrue(
+            autoAlign
+                .visionAutoAlignRight(drive, elevator)
+                .andThen(this.setState(state.CORAL_PRESCORE)));
     // Coral State Triggers
     layout
         .intakeRequest
@@ -219,22 +223,14 @@ public class Superstructure {
     stateMap
         .get(state.CORAL_INTAKE)
         .and(layout.intakeRequest)
-        .whileTrue(AutoAlign.alignToPose(() -> (AutoAlign.getBestSource(drive.getPose())), drive));
+        .whileTrue(
+            autoAlign.driveToPreSelectedPose(drive, AutoAlign.getBestSource(drive.getPose())));
 
     stateMap
         .get(state.CORAL_INTAKE)
         .and(outtake::getDetected)
         .whileTrue(Commands.parallel(this.setState(state.CORAL_READY), new PrintCommand("Intaked")))
-        .onFalse(this.rumbleCommand(layout.driveController, 5.0, 1.0));
-
-    stateMap
-        .get(state.CORAL_READY)
-        .and(
-            () ->
-                (AutoAlign.isNear(AutoAlign.getBestLeftBranch(drive::getPose), drive.getPose())
-                    || AutoAlign.isNear(
-                        AutoAlign.getBestRightBranch(drive::getPose), drive.getPose())))
-        .onTrue(this.setState(state.CORAL_PRESCORE));
+        .onFalse(Superstructure.rumbleCommand(layout.driveController, 5.0, 1.0));
 
     stateMap.get(state.CORAL_READY).and(layout.scoreRequest).whileTrue(outtake.setVoltage(() -> 6));
 
@@ -281,7 +277,7 @@ public class Superstructure {
         .get(state.CORAL_READY)
         .whileTrue(
             Commands.parallel(
-                this.rumbleCommand(layout.driveController, 0.5, 1.0),
+                Superstructure.rumbleCommand(layout.driveController, 0.5, 1.0),
                 elevator
                     .setTarget(() -> ElevatorSetpoint.getSetpointFromCoralTarget(coralTarget.L1))
                     .until(elevator::atSetpoint)));
@@ -392,8 +388,7 @@ public class Superstructure {
     stateMap
         .get(state.ALGAE_INTAKE)
         .and(layout.intakeRequest)
-        .whileTrue(
-            AutoAlign.alignToPose(() -> (AutoAlign.getBestAlgaePose(drive::getPose)), drive));
+        .whileTrue(autoAlign.driveToAlgaePose(drive));
 
     stateMap
         .get(state.ALGAE_INTAKE)
@@ -443,7 +438,7 @@ public class Superstructure {
         .get(state.ALGAE_READY)
         .whileTrue(
             Commands.parallel(
-                this.rumbleCommand(layout.driveController, 0.25, 1.0),
+                Superstructure.rumbleCommand(layout.driveController, 0.25, 1.0),
                 elevator
                     .setTarget(() -> ElevatorSetpoint.getSetpointFromCoralTarget(coralTarget.L1))
                     .andThen(elevator.setExtension())));
@@ -458,7 +453,7 @@ public class Superstructure {
         .autoAlignCage
         .and(stateMap.get(state.CLIMB_READY))
         .and(() -> (Timer.getMatchTime() < 25))
-        .whileTrue(AutoAlign.alignToPose(() -> (AutoAlign.getBestCagePose(drive::getPose)), drive));
+        .whileTrue(autoAlign.driveToCage(drive));
 
     layout
         .scoreRequest
@@ -480,12 +475,6 @@ public class Superstructure {
                 (AutoAlign.isNearWaypoint(
                     AutoAlign.getBestSource(drive.getPose()), drive.getPose())))
         .onTrue(Commands.parallel(outtake.setDetected(true), new PrintCommand("Intaked")));
-
-    stateMap
-        .get(state.ALGAE_INTAKE)
-        .and(Robot::isSimulation)
-        .and(() -> (AutoAlign.isNear(AutoAlign.getBestAlgaePose(drive::getPose), drive.getPose())))
-        .onTrue(Commands.parallel(gripper.setDetected(true).until(gripper::getDetected)));
 
     simIntakeTrigger =
         stateMap
@@ -587,15 +576,14 @@ public class Superstructure {
     elevatorDisplay.setLength(elevator.getSetpoint().height);
     Logger.recordOutput("Superstructure/Mechanism", mech);
 
-    Logger.recordOutput("Auto Align/Waypoints", AutoAlign.waypointsLogged);
-    Logger.recordOutput("Auto Align/Generated Path", testPath);
     // Logger.recordOutput("Superstructure/Layout/Cancel Request",
     // layout.cancelRequest.getAsBoolean());
     // Logger.recordOutput("Superstructure/Layout/L1", layout.L1.getAsBoolean());
     // Logger.recordOutput("Superstructure/Layout/L1", layout.L1.getAsBoolean());
   }
 
-  public Command rumbleCommand(CommandXboxController controller, double seconds, double intensity) {
+  public static Command rumbleCommand(
+      CommandXboxController controller, double seconds, double intensity) {
     return Commands.run(
             () -> {
               controller.setRumble(RumbleType.kBothRumble, intensity);
