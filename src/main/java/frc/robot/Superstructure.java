@@ -447,7 +447,7 @@ public class Superstructure {
                 elevator
                     .setTarget(() -> ElevatorSetpoint.getSetpointFromCoralTarget(coralTarget.L1))
                     .andThen(elevator.setExtension())));
-
+                    
     // Climb
     layout
         .climbRequest
