@@ -4,8 +4,11 @@
 
 package frc.robot.commands;
 
+import java.util.function.Supplier;
+
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import frc.robot.Robot;
 import frc.robot.Superstructure;
 import frc.robot.Superstructure.state;
 import frc.robot.subsystems.drive.Drive;
@@ -24,22 +27,42 @@ public class Autos {
       Hopper hopper,
       Superstructure superstructure) {
     return Commands.sequence(
+            simInit(outtake, true),
             TrajectoryFollower.followTrajectory(TrajectoryFollower.loadTrajectory("aCtoG")),
-            elevator.setElevatorHeight(coralTarget.L4.height).until(elevator::nearSetpoint),
-            outtake.setVoltage(() -> (OuttakeConstants.L4)).until(() -> !(outtake.getDetected())),
-            elevator.setElevatorHeight(0.0).until(elevator::nearSetpoint),
-            Commands.parallel(
-                    TrajectoryFollower.followTrajectory(TrajectoryFollower.loadTrajectory("GtoS")),
-                    superstructure.setState(state.CORAL_INTAKE).withTimeout(0.15))
-                .until(outtake::getDetected),
+            scoreCoral(() -> (coralTarget.L4), elevator, outtake),
+            TrajectoryFollower.followTrajectory(TrajectoryFollower.loadTrajectory("GtoS")),
+            intakeCoral(superstructure, outtake, hopper),
             TrajectoryFollower.followTrajectory(TrajectoryFollower.loadTrajectory("StoC")),
-            elevator.setElevatorHeight(coralTarget.L4.height),
-            outtake.setVoltage(() -> (OuttakeConstants.L4)).until(() -> !(outtake.getDetected())))
+            scoreCoral(() -> (coralTarget.L4), elevator, outtake))
         .withTimeout(15);
   }
 
   public static Command testMultiPath() {
     return TrajectoryFollower.followTrajectory(TrajectoryFollower.loadTrajectory("aCtoG"))
         .andThen(TrajectoryFollower.followTrajectory(TrajectoryFollower.loadTrajectory("GtoS")));
+  }
+
+  public static Command scoreCoral(Supplier<coralTarget> targetSupplier, Elevator elevator, Outtake outtake) {
+    return Commands.sequence(
+      elevator.setElevatorHeight(() -> (targetSupplier.get().height)).until(elevator::nearSetpoint),
+      outtake.setVoltage(() -> (OuttakeConstants.voltageMap.get(targetSupplier.get().height))).until(() -> !(outtake.getDetected())),
+      elevator.setElevatorHeight(0.0).until(elevator::nearSetpoint)
+    );
+  }
+
+  public static Command intakeCoral(Superstructure superstructure, Outtake outtake, Hopper hopper) {
+    return Commands.parallel(
+      superstructure.setState(state.CORAL_INTAKE),
+      outtake.setVoltage(() -> (OuttakeConstants.intake)),
+      hopper.setVoltage(OuttakeConstants.intake)
+    ).until(outtake::getDetected);
+  }
+
+  public static Command simInit(Outtake outtake, boolean preload) {
+    return Commands.run(() -> {
+      if (Robot.isSimulation()) {
+        outtake.setDetected(preload);
+      }
+    }).until(() -> (outtake.getDetected() || Robot.isReal()));
   }
 }
