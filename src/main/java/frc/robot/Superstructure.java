@@ -14,6 +14,8 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.commands.DriveCommands;
+import frc.robot.commands.DriveCommands.IntakeLocation;
 import frc.robot.subsystems.climb.Climb;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.elevator.Elevator;
@@ -27,7 +29,7 @@ import frc.robot.subsystems.outtake.Outtake;
 import frc.robot.subsystems.outtake.OuttakeConstants;
 import frc.robot.util.FieldConstants;
 import frc.robot.util.FieldConstants.ReefConstants;
-import frc.robot.util.FieldConstants.ReefConstants.coralTarget;
+import frc.robot.util.FieldConstants.ReefConstants.CoralTarget;
 import java.util.HashMap;
 import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.AutoLogOutput;
@@ -62,7 +64,7 @@ public class Superstructure {
     public CommandXboxController operatorController;
   }
 
-  private coralTarget kCoralTarget = coralTarget.L4;
+  private CoralTarget kCoralTarget = CoralTarget.L4;
   private state kCurrentState = state.IDLE;
   private final Debouncer jamesWaitDebouncer = new Debouncer(0.5);
 
@@ -125,7 +127,6 @@ public class Superstructure {
     this.hopper = hopper;
     this.gripper = gripper;
     this.climb = climb;
-    this.autoAlign = autoAlign;
     // Setting Up Display
     mech = new LoggedMechanism2d(1, 1);
     elevatorDisplay = new LoggedMechanismLigament2d("ElevatorMechanism", 0, 85);
@@ -176,7 +177,7 @@ public class Superstructure {
         .intakeRequest
         .and(stateMap.get(state.MANUAL_ELEVATOR))
         .and(() -> !(outtake.getDetected()))
-        .and(() -> (AutoAlign.getBestIntake(drive) == IntakeLocation.SOURCE))
+        .and(() -> (DriveCommands.getBestIntake(drive) == IntakeLocation.SOURCE))
         .whileTrue(
             Commands.parallel(
                 hopper.setVoltage(OuttakeConstants.intake),
@@ -187,7 +188,7 @@ public class Superstructure {
         .intakeRequest
         .and(stateMap.get(state.MANUAL_ELEVATOR))
         .and(() -> !(gripper.getDetected()))
-        .and(() -> (AutoAlign.getBestIntake(drive) == IntakeLocation.REEF))
+        .and(() -> (DriveCommands.getBestIntake(drive) == IntakeLocation.REEF))
         .whileTrue(gripper.setVoltage(() -> (GripperConstants.intake)));
 
     // Manual Coral Score if it has coral
@@ -252,7 +253,7 @@ public class Superstructure {
         .and(outtake::getDetected)
         .onTrue(
             elevator
-                .setTarget(() -> (ReefConstants.coralTarget.L1.height))
+                .setTarget(() -> (ReefConstants.CoralTarget.L1.height))
                 .andThen(elevator.setExtension()));
 
     // L2 Setpoint
@@ -262,7 +263,7 @@ public class Superstructure {
         .and(outtake::getDetected)
         .onTrue(
             elevator
-                .setTarget(() -> (ReefConstants.coralTarget.L2.height))
+                .setTarget(() -> (ReefConstants.CoralTarget.L2.height))
                 .andThen(elevator.setExtension()));
     // L3 setpoint
     layout
@@ -271,7 +272,7 @@ public class Superstructure {
         .and(outtake::getDetected)
         .onTrue(
             elevator
-                .setTarget(() -> (ReefConstants.coralTarget.L3.height))
+                .setTarget(() -> (ReefConstants.CoralTarget.L3.height))
                 .andThen(elevator.setExtension()));
 
     // L4 setpoint
@@ -281,7 +282,7 @@ public class Superstructure {
         .and(outtake::getDetected)
         .onTrue(
             elevator
-                .setTarget(() -> (ReefConstants.coralTarget.L4.height))
+                .setTarget(() -> (ReefConstants.CoralTarget.L4.height))
                 .andThen(elevator.setExtension()));
   }
 
@@ -331,7 +332,7 @@ public class Superstructure {
             .ignoringDisable(true));
   }
 
-  public Command setCoralTarget(coralTarget target) {
+  public Command setCoralTarget(CoralTarget target) {
     return Commands.runOnce(
         () -> {
           this.kCoralTarget = target;

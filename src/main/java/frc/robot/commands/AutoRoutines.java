@@ -72,6 +72,7 @@ public class AutoRoutines {
             })
         .until(() -> (done));
   }
+
   private static boolean isRedAlliance() {
     return (DriverStation.getAlliance().orElse(Alliance.Blue).equals(Alliance.Red))
         && Robot.isReal();

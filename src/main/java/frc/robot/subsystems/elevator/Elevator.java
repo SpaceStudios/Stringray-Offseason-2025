@@ -35,10 +35,10 @@ public class Elevator extends SubsystemBase {
   private SysIdRoutine routine;
 
   @AutoLogOutput(key = "Elevator/Setpoint")
-  private double setpoint = 0.0;
+  private double setpoint = ElevatorSetpoint.INTAKE.height;
 
   @AutoLogOutput(key = "Elevator/NextSetpoint")
-  private double nextSetpoint = 0.0;
+  private double nextSetpoint = ElevatorSetpoint.INTAKE.height;
 
   public Elevator(ElevatorIO io) {
     this.io = io;
@@ -100,10 +100,6 @@ public class Elevator extends SubsystemBase {
           nextSetpoint = height.getAsDouble();
         });
   }
-
-  // public Command setTarget(double height) {
-  //   return Commands.runOnce(() -> this.selectFutureTarget(height));
-  // }
 
   public Command setExtension() {
     return Commands.runOnce(() -> setpoint = nextSetpoint);
