@@ -150,13 +150,17 @@ public class Superstructure {
     // Non State Stuff
     setNonStateBindings();
   }
-
+  
+  // A set of bindings for the Gripper subsystem and algae states (ALGAE_INTAKE, ALGAE_READY, ALGAE_PRESCORE)
   private void setAlgaeBindings() {}
 
+  // A set of bindings for the Outtake, and Hopper subsystems and coral states (CORAL_INTAKE, CORAL_READY, CORAL_PRESCORE)
   private void setCoralBindings() {}
 
+  // A set of bindings for the Climb subsystem and climb states (CLIMB_READY, CLIMB_PULL)
   private void setClimbBindings() {}
   
+  // Manual Elevator Bindings only runs Outtake, Gripper, Hopper, and Elevator. Only Runs during ELEVATOR_MANUAL state
   private void setManualBindings() {
 
     // Manual Coral Intake if near source
@@ -273,6 +277,7 @@ public class Superstructure {
         );
   }
 
+  // A set of bindings that isn't tied to a specific state.
   private void setNonStateBindings() {
     // Cancel Request and robot doesn't have an algae.
     layout
