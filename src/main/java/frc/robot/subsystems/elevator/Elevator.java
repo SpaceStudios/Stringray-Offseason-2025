@@ -35,10 +35,10 @@ public class Elevator extends SubsystemBase {
   private SysIdRoutine routine;
 
   @AutoLogOutput(key = "Elevator/Setpoint")
-  private ElevatorSetpoint setpoint = ElevatorSetpoint.INTAKE;
+  private double setpoint = 0.0;
 
   @AutoLogOutput(key = "Elevator/NextSetpoint")
-  private ElevatorSetpoint nextSetpoint = ElevatorSetpoint.INTAKE;
+  private double nextSetpoint = 0.0;
 
   public Elevator(ElevatorIO io) {
     this.io = io;
@@ -86,12 +86,18 @@ public class Elevator extends SubsystemBase {
   }
 
   public void selectFutureTarget(ElevatorSetpoint setpoint) {
-    nextSetpoint = setpoint;
+    nextSetpoint = setpoint.height;
   }
 
   /* Set the Elevator Target enum, for set extension method to move the elevator */
   public Command setTarget(Supplier<ElevatorSetpoint> height) {
     return Commands.runOnce(() -> this.selectFutureTarget(height.get()));
+  }
+
+  public Command setTarget(DoubleSupplier height) {
+    return Commands.runOnce(() -> {
+      nextSetpoint = height.getAsDouble();
+    });
   }
 
   // public Command setTarget(double height) {
@@ -137,11 +143,11 @@ public class Elevator extends SubsystemBase {
         routine.quasistatic(Direction.kReverse));
   }
 
-  public ElevatorSetpoint getSetpoint() {
+  public double getSetpoint() {
     return setpoint;
   }
 
-  public ElevatorSetpoint getNextExpectedSetpoint() {
+  public double getNextExpectedSetpoint() {
     return nextSetpoint;
   }
 
@@ -155,6 +161,6 @@ public class Elevator extends SubsystemBase {
     io.updateInputs(inputs);
     Logger.recordOutput("Elevator/TargetHeight", inputs.targetHeight);
     inputs.atSetpoint = Math.abs(inputs.targetHeight - inputs.position) <= tolerance;
-    this.setPosition(getSetpoint().height);
+    this.setPosition(getSetpoint());
   }
 }

@@ -89,7 +89,7 @@ public class AutoAlign extends SubsystemBase {
                       ? drive.getPose().nearest(leftPersPose)
                       : drive.getPose().nearest(rightPersPose);
 
-              if (elevator.getNextExpectedSetpoint() == ElevatorSetpoint.L4) {
+              if (elevator.getNextExpectedSetpoint() == ElevatorSetpoint.L4.height) {
                 Logger.recordOutput("AutoAlign/HasL4", true);
 
                 double backMeters = -Units.inchesToMeters(L4_BACK_DISTANCE); // negative = backwards
@@ -258,7 +258,7 @@ public class AutoAlign extends SubsystemBase {
     return Commands.startRun(
             () -> {
               Pose2d pose = drive.getPose().nearest(nearestReefPoseLeft);
-              if (elevator.getNextExpectedSetpoint() == ElevatorSetpoint.L4) {
+              if (elevator.getNextExpectedSetpoint() == ElevatorSetpoint.L4.height) {
                 Logger.recordOutput("AutoAlign/HasL4", true);
 
                 double backMeters = -Units.inchesToMeters(L4_BACK_DISTANCE); // negative = backwards
@@ -311,7 +311,7 @@ public class AutoAlign extends SubsystemBase {
     return Commands.startRun(
             () -> {
               Pose2d pose = drive.getPose().nearest(nearestReefPoseRight);
-              if (elevator.getNextExpectedSetpoint() == ElevatorSetpoint.L4) {
+              if (elevator.getNextExpectedSetpoint() == ElevatorSetpoint.L4.height) {
                 Logger.recordOutput("AutoAlign/HasL4", true);
 
                 double backMeters = -Units.inchesToMeters(L4_BACK_DISTANCE); // negative = backwards

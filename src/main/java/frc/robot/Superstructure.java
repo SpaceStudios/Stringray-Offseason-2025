@@ -32,6 +32,7 @@ import frc.robot.subsystems.outtake.Outtake;
 import frc.robot.subsystems.outtake.OuttakeConstants;
 import frc.robot.util.FieldConstants;
 import frc.robot.util.FieldConstants.BargeConstants;
+import frc.robot.util.FieldConstants.ReefConstants;
 import frc.robot.util.FieldConstants.ReefConstants.coralTarget;
 import java.util.HashMap;
 import java.util.function.DoubleSupplier;
@@ -71,14 +72,12 @@ public class Superstructure {
   private state kCurrentState = state.IDLE;
   private final Debouncer jamesWaitDebouncer = new Debouncer(0.5);
 
-  private final Command autoElevatorCommand;
-
   public enum state {
-    IDLE,
-    CORAL_INTAKE,
-    CORAL_READY,
-    CORAL_PRESCORE,
-    ALGAE_INTAKE,
+    IDLE, // Has Nothing and no Subsystems are preforming anything
+    CORAL_INTAKE, // Going to intake coral, Hopper and Outake always runs
+    CORAL_READY, // Has Coral
+    CORAL_PRESCORE, // Has Coral and is in scoring location
+    ALGAE_INTAKE, // Intaking Algae, should only be triggered when near the reef and desired level is pressed
     ALGAE_READY,
     ALGAE_PRESCORE,
     CLIMB_READY,
@@ -112,19 +111,6 @@ public class Superstructure {
           kState, new Trigger(() -> (kCurrentState == kState) && DriverStation.isEnabled()));
     }
 
-    this.autoElevatorCommand =
-        (Commands.sequence(
-            elevator
-                .setTarget(() -> (ElevatorSetpoint.getSetpointFromCoralTarget(kCoralTarget)))
-                .until(elevator::atSetpoint),
-            Commands.parallel(
-                outtake
-                    .setVoltage(
-                        () -> (OuttakeConstants.voltageMap.get(elevator.getSetpoint().height)))
-                    .until(() -> !(outtake.getDetected())),
-                outtake.setDetected(false)),
-            this.setState(state.IDLE)));
-
     this.layout = layout;
     this.elevator = elevator;
     this.autoAlign = autoAlign;
@@ -134,410 +120,130 @@ public class Superstructure {
     mech.getRoot("ElevatorRoot", Units.inchesToMeters(24 - 3), Units.inchesToMeters(4.087))
         .append(elevatorDisplay);
 
-    // Setting Up Controls
-    layout.L1.and(layout.manualElevator.negate()).onTrue(this.setCoralTarget(coralTarget.L1));
+    // State Machine
 
-    layout.L2.and(layout.manualElevator.negate()).onTrue(this.setCoralTarget(coralTarget.L2));
 
-    layout.L3.and(layout.manualElevator.negate()).onTrue(this.setCoralTarget(coralTarget.L3));
 
-    layout.L4.and(layout.manualElevator.negate()).onTrue(this.setCoralTarget(coralTarget.L4));
 
-    // Manual Elevator Setpoints
-    layout
-        .L1
-        .and(stateMap.get(state.MANUAL_ELEVATOR))
-        .onTrue(
-            elevator
-                .setTarget(() -> (ElevatorSetpoint.getSetpointFromCoralTarget(coralTarget.L1)))
-                .andThen(elevator.setExtension())
-                .until(elevator::atSetpoint));
-
-    layout
-        .L2
-        .and(stateMap.get(state.MANUAL_ELEVATOR))
-        .onTrue(
-            elevator
-                .setTarget(() -> (ElevatorSetpoint.getSetpointFromCoralTarget(coralTarget.L2)))
-                .andThen(elevator.setExtension())
-                .until(elevator::atSetpoint));
-
-    layout
-        .L3
-        .and(stateMap.get(state.MANUAL_ELEVATOR))
-        .onTrue(
-            elevator
-                .setTarget(() -> (ElevatorSetpoint.getSetpointFromCoralTarget(coralTarget.L3)))
-                .andThen(elevator.setExtension())
-                .until(elevator::atSetpoint));
-
-    // layout
-    //     .L4
-    //     .and(stateMap.get(state.MANUAL_ELEVATOR))
-    //     .onTrue(elevator.setElevatorHeight(coralTarget.L4.height).until(elevator::nearSetpoint));
-
-    layout
-        .L4
-        .and(stateMap.get(state.MANUAL_ELEVATOR))
-        .onTrue(
-            elevator
-                .setTarget(() -> (ElevatorSetpoint.getSetpointFromCoralTarget(coralTarget.L4)))
-                .andThen(elevator.setExtension())
-                .until(elevator::atSetpoint));
-
-    // Auto Align
-    layout
-        .autoAlignLeft
-        .and(stateMap.get(state.CORAL_READY).or(stateMap.get(state.CORAL_PRESCORE)))
-        .whileTrue(
-            autoAlign
-                .visionAutoAlignLeft(drive, elevator)
-                .andThen(this.setState(state.CORAL_PRESCORE)));
-
-    layout
-        .autoAlignRight
-        .and(stateMap.get(state.CORAL_READY).or(stateMap.get(state.CORAL_PRESCORE)))
-        .whileTrue(
-            autoAlign
-                .visionAutoAlignRight(drive, elevator)
-                .andThen(this.setState(state.CORAL_PRESCORE)));
-    // Coral State Triggers
-    layout
-        .intakeRequest
-        .and(() -> (!outtake.getDetected()))
-        .and(() -> (!gripper.getDetected()))
-        .and(stateMap.get(state.ALGAE_INTAKE).negate())
-        .and(() -> (AutoAlign.getBestIntake(drive) == IntakeLocation.SOURCE))
-        .onTrue(
-            Commands.parallel(
-                setState(state.CORAL_INTAKE),
-                elevator.setTarget(() -> ElevatorSetpoint.INTAKE).until(elevator::atSetpoint)));
-
-    stateMap
-        .get(state.CORAL_INTAKE)
-        .whileTrue(
-            Commands.parallel(
-                hopper.setVoltage(OuttakeConstants.intake).until(outtake::getDetected),
-                outtake.setVoltage(() -> OuttakeConstants.intake).until(outtake::getDetected)));
-
-    stateMap
-        .get(state.CORAL_INTAKE)
-        .and(layout.intakeRequest)
-        .whileTrue(
-            autoAlign.driveToPreSelectedPose(drive, AutoAlign.getBestSource(drive.getPose())));
-
-    stateMap
-        .get(state.CORAL_INTAKE)
-        .and(outtake::getDetected)
-        .whileTrue(Commands.parallel(this.setState(state.CORAL_READY), new PrintCommand("Intaked")))
-        .onFalse(Superstructure.rumbleCommand(layout.driveController, 5.0, 1.0));
-
-    stateMap.get(state.CORAL_READY).and(layout.scoreRequest).whileTrue(outtake.setVoltage(() -> 6));
-
-    // Auto Scoring, Disabled for now
-    // stateMap
-    //     .get(state.CORAL_PRESCORE)
-    //     .and(
-    //         () ->
-    //
-    // (jamesWaitDebouncer.calculate(stateMap.get(state.CORAL_PRESCORE).getAsBoolean())))
-    //     .onTrue(Commands.parallel(new PrintCommand("You are too slow"), autoElevatorCommand));
-
-    // Manual Coral Scoring
-    layout
-        .scoreRequest
-        .and(stateMap.get(state.CORAL_PRESCORE))
-        .and(outtake::getDetected)
-        .and(() -> (kCoralTarget != coralTarget.L1))
-        .onTrue(autoElevatorCommand);
-
-    layout
-        .scoreRequest
-        .and(outtake::getDetected)
-        .and(() -> (AutoAlign.getBestIntake(drive) == IntakeLocation.REEF))
-        .and(() -> (kCoralTarget == coralTarget.L1))
-        .onTrue(
-            Commands.sequence(
-                elevator
-                    .setTarget(() -> ElevatorSetpoint.getSetpointFromCoralTarget(coralTarget.L1))
-                    .until(elevator::atSetpoint),
-                Commands.parallel(
-                        outtake.setVoltage(() -> (OuttakeConstants.L1)),
-                        elevator.overideElevator(() -> (0.5)))
-                    .until(() -> !(outtake.getDetected())),
-                elevator.setTarget(() -> ElevatorSetpoint.INTAKE)));
-
-    layout
-        .setPrescoreCoral
-        .and(stateMap.get(state.CORAL_READY))
-        .and(outtake::getDetected)
-        .onTrue(this.setState(state.CORAL_PRESCORE));
-
-    stateMap
-        .get(state.CORAL_READY)
-        .whileTrue(
-            Commands.parallel(
-                Superstructure.rumbleCommand(layout.driveController, 0.5, 1.0),
-                elevator
-                    .setTarget(() -> ElevatorSetpoint.getSetpointFromCoralTarget(coralTarget.L1))
-                    .until(elevator::atSetpoint)));
-
-    // Elevator goes to level when level has been selected and it is in the prescore.
-    layout
-        .L1
-        .and(stateMap.get(state.CORAL_PRESCORE))
-        .onTrue(
-            Commands.parallel(
-                elevator
-                    .setTarget(() -> ElevatorSetpoint.getSetpointFromCoralTarget(coralTarget.L1))
-                    .until(elevator::atSetpoint),
-                this.setCoralTarget(coralTarget.L1)));
-
-    layout
-        .L2
-        .and(stateMap.get(state.CORAL_PRESCORE))
-        .onTrue(
-            Commands.parallel(
-                elevator
-                    .setTarget(() -> ElevatorSetpoint.getSetpointFromCoralTarget(coralTarget.L2))
-                    .until(elevator::atSetpoint),
-                this.setCoralTarget(coralTarget.L2)));
-
-    layout
-        .L3
-        .and(stateMap.get(state.CORAL_PRESCORE))
-        .onTrue(
-            Commands.parallel(
-                elevator
-                    .setTarget(() -> ElevatorSetpoint.getSetpointFromCoralTarget(coralTarget.L3))
-                    .until(elevator::atSetpoint),
-                this.setCoralTarget(coralTarget.L3)));
-
-    layout
-        .L4
-        .and(stateMap.get(state.CORAL_PRESCORE))
-        .onTrue(
-            Commands.parallel(
-                elevator
-                    .setTarget(() -> ElevatorSetpoint.getSetpointFromCoralTarget(coralTarget.L4))
-                    .until(elevator::atSetpoint),
-                this.setCoralTarget(coralTarget.L4)));
-
-    // Algae
-
-    // stateMap
-    //     .get(state.ALGAE_INTAKE)
-    //     .and(elevator::nearSetpoint)
-    //     .and(() -> (elevator.getSetpoint() > 0))
-    //     .whileTrue(gripper.setVoltage(() -> (GripperConstants.intake)));
-
-    stateMap.get(state.ALGAE_INTAKE).whileTrue(gripper.setVoltage(() -> (GripperConstants.intake)));
-
-    layout
-        .intakeRequest
-        .and(() -> (AutoAlign.getBestIntake(drive) == IntakeLocation.REEF))
-        .and(stateMap.get(state.IDLE))
-        .onTrue(this.setState(state.ALGAE_INTAKE));
-
-    layout
-        .L2
-        .and(stateMap.get(state.IDLE))
-        .and(() -> (!outtake.getDetected()))
-        .and(() -> (AutoAlign.getBestIntake(drive) == IntakeLocation.REEF))
-        .onTrue(
-            Commands.parallel(
-                this.setState(state.ALGAE_INTAKE),
-                elevator.setTarget(
-                    () ->
-                        ElevatorSetpoint.getSetpointFromAlgaeTarget(
-                            FieldConstants.ReefConstants.algaeTarget.L2))));
-
-    layout
-        .L3
-        .and(stateMap.get(state.IDLE))
-        .and(() -> (!outtake.getDetected()))
-        .and(() -> (AutoAlign.getBestIntake(drive) == IntakeLocation.REEF))
-        .onTrue(
-            Commands.parallel(
-                this.setState(state.ALGAE_INTAKE),
-                elevator
-                    .setTarget(
-                        () ->
-                            ElevatorSetpoint.getSetpointFromAlgaeTarget(
-                                FieldConstants.ReefConstants.algaeTarget.L3))
-                    .until(elevator::atSetpoint)));
-
-    layout
-        .L2
-        .and(stateMap.get(state.ALGAE_INTAKE))
-        .onTrue(
-            elevator.setTarget(
-                () ->
-                    ElevatorSetpoint.getSetpointFromAlgaeTarget(
-                        FieldConstants.ReefConstants.algaeTarget.L2)));
-
-    layout
-        .L3
-        .and(stateMap.get(state.ALGAE_INTAKE))
-        .onTrue(
-            elevator.setTarget(
-                () ->
-                    ElevatorSetpoint.getSetpointFromAlgaeTarget(
-                        FieldConstants.ReefConstants.algaeTarget.L3)));
-
-    stateMap
-        .get(state.ALGAE_INTAKE)
-        .and(layout.intakeRequest)
-        .whileTrue(autoAlign.driveToAlgaePose(drive));
-
-    stateMap
-        .get(state.ALGAE_INTAKE)
-        .and(gripper::getDetected)
-        .whileTrue(this.setState(state.ALGAE_READY));
-
-    stateMap
-        .get(state.ALGAE_READY)
-        .and(() -> !(gripper.getDetected()))
-        .whileTrue(this.setState(state.IDLE));
-
-    stateMap
-        .get(state.ALGAE_PRESCORE)
-        .and(() -> !(gripper.getDetected()))
-        .whileTrue(this.setState(state.IDLE));
-
-    stateMap
-        .get(state.ALGAE_READY)
-        .and(() -> (BargeConstants.nearNet(drive::getPose)))
-        .whileTrue(this.setState(state.ALGAE_PRESCORE));
-
-    stateMap
-        .get(state.ALGAE_PRESCORE)
-        .and(() -> !(BargeConstants.nearNet(drive::getPose)))
-        .whileTrue(this.setState(state.ALGAE_READY))
-        .onTrue(
-            elevator
-                .setTarget(() -> (ElevatorSetpoint.getSetpointFromCoralTarget(coralTarget.L1)))
-                .andThen(elevator.setExtension()));
-
-    layout
-        .scoreRequest
-        .and(stateMap.get(state.ALGAE_PRESCORE))
-        .and(gripper::getDetected)
-        .onTrue(
-            Commands.sequence(
-                elevator
-                    .setTarget(() -> ElevatorSetpoint.getSetpointFromCoralTarget(coralTarget.L4))
-                    .andThen(elevator.setExtension()),
-                Commands.parallel(
-                        gripper.setVoltage(() -> (GripperConstants.net)),
-                        gripper.setDetected(false))
-                    .until(() -> !(gripper.getDetected())),
-                this.setState(state.IDLE)));
-
-    stateMap
-        .get(state.ALGAE_READY)
-        .whileTrue(
-            Commands.parallel(
-                Superstructure.rumbleCommand(layout.driveController, 0.25, 1.0),
-                elevator
-                    .setTarget(() -> ElevatorSetpoint.getSetpointFromCoralTarget(coralTarget.L1))
-                    .andThen(elevator.setExtension())));
-                    
-    // Climb
-    layout
-        .climbRequest
-        .and(() -> (Timer.getMatchTime() == -1))
-        .whileTrue(Commands.parallel(this.setState(state.CLIMB_READY), climb.extend()));
-
-    layout
-        .autoAlignCage
-        .and(stateMap.get(state.CLIMB_READY))
-        .and(() -> (Timer.getMatchTime() < 25))
-        .whileTrue(autoAlign.driveToCage(drive));
-
-    layout
-        .scoreRequest
-        .and(stateMap.get(state.CLIMB_PULL))
-        .and(() -> (Timer.getMatchTime() < 25))
-        .whileTrue(climb.retract());
-
-    // Idle State Triggers
-    stateMap.get(state.IDLE).and(outtake::getDetected).whileTrue(this.setState(state.CORAL_READY));
-    stateMap.get(state.IDLE).and(gripper::getDetected).whileTrue(this.setState(state.ALGAE_READY));
-
-    // Sim State Triggers
-    stateMap
-        .get(state.CORAL_INTAKE)
-        .and(elevator::atSetpoint)
-        .and(Robot::isSimulation)
-        .and(
-            () ->
-                (AutoAlign.isNearWaypoint(
-                    AutoAlign.getBestSource(drive.getPose()), drive.getPose())))
-        .onTrue(Commands.parallel(outtake.setDetected(true), new PrintCommand("Intaked")));
-
-    simIntakeTrigger =
-        stateMap
-            .get(state.CORAL_INTAKE)
-            .and(Robot::isSimulation)
-            .and(
-                () ->
-                    (AutoAlign.isNearWaypoint(
-                        AutoAlign.getBestSource(drive.getPose()), drive.getPose())));
-
-    simIntakeTrigger.onTrue(outtake.setDetected(true).until(outtake::getDetected));
-
-    // Non State Stuff
-    layout
-        .cancelRequest
-        .and(() -> !(gripper.getDetected()))
-        .and(() -> !(outtake.getDetected()))
-        .onTrue(
-            Commands.parallel(
-                this.setState(state.IDLE),
-                outtake.setVoltage(() -> 0.0).withTimeout(0.1),
-                hopper.setVoltage(0.0).withTimeout(0.1),
-                gripper.setVoltage(() -> 0.0).withTimeout(0.1),
-                elevator.setTarget(() -> ElevatorSetpoint.INTAKE).until(elevator::atSetpoint)));
-
-    layout
-        .cancelRequest
-        .and(outtake::getDetected)
-        .onTrue(
-            Commands.parallel(
-                this.setState(state.CORAL_READY),
-                outtake.setVoltage(() -> 0.0).withTimeout(0.1),
-                hopper.setVoltage(0.0).withTimeout(0.1),
-                gripper.setVoltage(() -> 0.0).withTimeout(0.1)));
-
-    layout
-        .cancelRequest
-        .and(gripper::getDetected)
-        .onTrue(
-            Commands.parallel(
-                this.setState(state.ALGAE_READY),
-                outtake.setVoltage(() -> 0.0).withTimeout(0.1),
-                hopper.setVoltage(0.0).withTimeout(0.1),
-                gripper.setVoltage(() -> 0.0).withTimeout(0.1)));
-
+    // Why can I control the entire robot using on a single controller and sensor readings?
+    // Manual Elevator Stuff
     layout
         .manualElevator
         .whileTrue(this.setState(state.MANUAL_ELEVATOR))
         .onFalse(this.setState(state.IDLE));
 
-    layout.resetGyro.onTrue(
-        Commands.runOnce(
-            () -> {
-              drive.setPose(new Pose2d(drive.getPose().getTranslation(), Rotation2d.kZero));
-            }));
-
-    layout.revFunnel.whileTrue(hopper.setVoltage(-OuttakeConstants.intake));
-
-    layout.dejamCoral.whileTrue(
-        Commands.parallel(
+    // Manual Coral Intake if near source
+    layout
+        .intakeRequest
+        .and(stateMap.get(state.MANUAL_ELEVATOR))
+        .and(() -> !(outtake.getDetected()))
+        .and(() -> (AutoAlign.getBestIntake(drive) == IntakeLocation.SOURCE))
+        .whileTrue(Commands.parallel(
             hopper.setVoltage(OuttakeConstants.intake),
-            outtake.setVoltage(() -> (OuttakeConstants.intake)),
-            gripper.setVoltage(() -> (GripperConstants.net))));
+            outtake.setVoltage(() -> (OuttakeConstants.intake))
+        ));
+
+    // Manual Algae Intake if near Reef
+    layout
+        .intakeRequest
+        .and(stateMap.get(state.MANUAL_ELEVATOR))
+        .and(() -> !(gripper.getDetected()))
+        .and(() -> (AutoAlign.getBestIntake(drive) == IntakeLocation.REEF))
+        .whileTrue(gripper.setVoltage(() -> (GripperConstants.intake)));
+    
+    // Manual Coral Score if it has coral
+    layout
+        .scoreRequest
+        .and(stateMap.get(state.MANUAL_ELEVATOR))
+        .and(outtake::getDetected)
+        .whileTrue(outtake.setVoltage(() -> (5.0)));
+
+    // Manual Algae Score if it has algae
+    layout
+        .scoreRequest
+        .and(stateMap.get(state.MANUAL_ELEVATOR))
+        .and(gripper::getDetected)
+        .whileTrue(gripper.setVoltage(() -> (GripperConstants.net)));
+    
+    // Setting Setpoints
+    // Set L1 to 0 if it doesn't have coral
+    layout
+        .L1
+        .and(stateMap.get(state.MANUAL_ELEVATOR))
+        .and(() -> !(outtake.getDetected()))
+        .onTrue(
+            elevator.setTarget(() -> (0.0)).andThen(elevator.setExtension()));
+
+    // Algae L2 Setpoint
+    layout
+        .L2
+        .and(stateMap.get(state.MANUAL_ELEVATOR))
+        .and(() -> !(gripper.getDetected()))
+        .and(() -> !(outtake.getDetected()))
+        .onTrue(
+            elevator.setTarget(() -> (FieldConstants.ReefConstants.algaeTarget.L2.height))
+            .andThen(elevator.setExtension())
+        );
+
+    // Algae L3 Setpoint
+    layout
+        .L3
+        .and(stateMap.get(state.MANUAL_ELEVATOR))
+        .and(() -> !(gripper.getDetected()))
+        .and(() -> !(outtake.getDetected()))
+        .onTrue(
+            elevator.setTarget(() -> (FieldConstants.ReefConstants.algaeTarget.L3.height))
+            .andThen(elevator.setExtension())
+        );
+
+    // Algae Net Setpoint
+    layout
+        .L4
+        .and(stateMap.get(state.MANUAL_ELEVATOR))
+        .and(gripper::getDetected)
+        .onTrue(
+            elevator.setTarget(() -> (FieldConstants.BargeConstants.elevatorSetpoint))
+            .andThen(elevator.setExtension()));
+    
+    // Coral Setpoints
+    // L1 Setpoint
+    layout
+        .L1
+        .and(stateMap.get(state.MANUAL_ELEVATOR))
+        .and(outtake::getDetected)
+        .onTrue(
+            elevator.setTarget(() -> (ReefConstants.coralTarget.L1.height))
+            .andThen(elevator.setExtension())
+        );
+
+    // L2 Setpoint
+    layout
+        .L2
+        .and(stateMap.get(state.MANUAL_ELEVATOR))
+        .and(outtake::getDetected)
+        .onTrue(
+            elevator.setTarget(() -> (ReefConstants.coralTarget.L2.height))
+            .andThen(elevator.setExtension())
+        );
+    // L3 setpoint
+    layout
+        .L3
+        .and(stateMap.get(state.MANUAL_ELEVATOR))
+        .and(outtake::getDetected)
+        .onTrue(
+            elevator.setTarget(() -> (ReefConstants.coralTarget.L3.height))
+            .andThen(elevator.setExtension())
+        );
+    
+    // L4 setpoint
+    layout
+        .L4
+        .and(stateMap.get(state.MANUAL_ELEVATOR))
+        .and(outtake::getDetected)
+        .onTrue(
+            elevator.setTarget(() -> (ReefConstants.coralTarget.L4.height))
+            .andThen(elevator.setExtension())
+        );
   }
 
   public Command setCoralTarget(coralTarget target) {
@@ -573,7 +279,7 @@ public class Superstructure {
     Logger.recordOutput("Superstructure/Layout/Dejam Coral", layout.dejamCoral.getAsBoolean());
 
     Logger.recordOutput("Superstructure/State", kCurrentState);
-    elevatorDisplay.setLength(elevator.getSetpoint().height);
+    elevatorDisplay.setLength(elevator.getSetpoint());
     Logger.recordOutput("Superstructure/Mechanism", mech);
 
     // Logger.recordOutput("Superstructure/Layout/Cancel Request",
