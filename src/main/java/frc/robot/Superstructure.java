@@ -74,12 +74,12 @@ public class Superstructure {
 
   public enum state {
     IDLE, // Has Nothing and no Subsystems are preforming anything
-    CORAL_INTAKE, // Going to intake coral, Hopper and Outake always runs
-    CORAL_READY, // Has Coral
-    CORAL_PRESCORE, // Has Coral and is in scoring location
-    ALGAE_INTAKE, // Intaking Algae, should only be triggered when near the reef and desired level is pressed
-    ALGAE_READY,
-    ALGAE_PRESCORE,
+    CORAL_INTAKE, // Going to intake coral, Hopper and Outake always runs. If it has a coral then go to CORAL_READY. This is triggered when Driver runs intake request
+    CORAL_READY, // Has Coral. If it is near a scoring Location go to CORAL_PRESCORE, but if it doesn't have coral go to IDLE
+    CORAL_PRESCORE, // Has Coral and is in scoring location, Goes to idle if it doesn't have a coral. If it leaves the reef then go to CORAL_READY
+    ALGAE_INTAKE, // Intaking Algae, should only be triggered when near the reef and desired level is pressed. This is triggered when driver hits L2 or L3 without a coral and algae, and robot is near the reef. Goes to ALGAE_READY when it gets an ALGAE
+    ALGAE_READY, // Has Algae. If it loses an algae go to IDLE, but if it is in the net zone then go to ALGAE_PRESCORE 
+    ALGAE_PRESCORE, // Has Algae and is in Netzone. If it loses the ALGAE go to IDLE. If it leaves Netzone go to ALGAE_READY
     CLIMB_READY,
     CLIMB_PULL,
     MANUAL_ELEVATOR
@@ -89,8 +89,17 @@ public class Superstructure {
   private final ControllerLayout layout;
 
   private final LED led = new LED(Robot.isReal() ? new LEDIOCandle() : new LEDIO() {});
+
+  // Subsystems
+  private final Drive drive;
   private final Elevator elevator;
+  private final Outtake outtake;
+  private final Hopper hopper;
+  private final Gripper gripper;
+  private final Climb climb;
   private final AutoAlign autoAlign;
+
+
   private final LoggedMechanism2d mech;
   public final LoggedMechanismLigament2d elevatorDisplay;
 
@@ -112,7 +121,12 @@ public class Superstructure {
     }
 
     this.layout = layout;
+    this.drive = drive;
     this.elevator = elevator;
+    this.outtake = outtake;
+    this.hopper = hopper;
+    this.gripper = gripper;
+    this.climb = climb;
     this.autoAlign = autoAlign;
     // Setting Up Display
     mech = new LoggedMechanism2d(1, 1);
@@ -128,6 +142,13 @@ public class Superstructure {
         .manualElevator
         .whileTrue(this.setState(state.MANUAL_ELEVATOR))
         .onFalse(this.setState(state.IDLE));
+
+    setManualBindings();
+
+    // Cancel
+  }
+
+  private void setManualBindings() {
 
     // Manual Coral Intake if near source
     layout
