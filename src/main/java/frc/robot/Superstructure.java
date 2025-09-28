@@ -154,6 +154,8 @@ public class Superstructure {
   private void setAlgaeBindings() {}
 
   private void setCoralBindings() {}
+
+  private void setClimbBindings() {}
   
   private void setManualBindings() {
 
