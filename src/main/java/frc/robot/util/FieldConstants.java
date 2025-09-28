@@ -29,7 +29,7 @@ public class FieldConstants {
   public static final double safeDistance = Units.inchesToMeters(17);
 
   public static class ReefConstants {
-    public enum coralTarget {
+    public enum CoralTarget {
       L1(0.58),
       L2(0.79),
       L3(1.18),
@@ -37,7 +37,7 @@ public class FieldConstants {
 
       public double height;
 
-      private coralTarget(double height) {
+      private CoralTarget(double height) {
         this.height = height;
       }
     }
@@ -104,6 +104,23 @@ public class FieldConstants {
               new Transform2d(
                   new Translation2d(safeDistance, widthBetweenPegs / 2.0), Rotation2d.k180deg))
         };
+
+    private static final List<Pose2d> tagList = List.of(aprilTags);
+    private static final List<Pose2d> leftBranchList = List.of(leftBranches);
+    private static final List<Pose2d> rightBranchList = List.of(rightBranches);
+
+    public static Pose2d getBestBranch(Supplier<Pose2d> poseSupplier, boolean left) {
+        Pose2d nearestTag = poseSupplier.get().nearest(tagList);
+        if (nearestTag == aprilTags[3] || nearestTag == aprilTags[4] || nearestTag == aprilTags[5]) {
+            left = !left;
+        }
+        if (left) {
+            return poseSupplier.get().nearest(leftBranchList);
+        } else {
+            return poseSupplier.get().nearest(rightBranchList);
+        }
+    }
+
     public static final Pose2d[] algaeLocations =
         new Pose2d[] {
           aprilTags[0].transformBy(
@@ -194,6 +211,12 @@ public class FieldConstants {
   }
 
   private static Pose2d endPose = new Pose2d(fieldLength, fieldWidth, Rotation2d.kZero);
+
+  public static boolean inTolerance(Pose2d pose1, Pose2d pose2, double translationTolerance, double orientationTolerance) {
+    return MathUtil.isNear(pose1.getX(), pose2.getX(), translationTolerance) && 
+    MathUtil.isNear(pose1.getY(), pose2.getY(), translationTolerance) && 
+    MathUtil.isNear(pose1.getRotation().getRadians(), pose2.getRotation().getRadians(), orientationTolerance);
+  }
 
   public static void Log() {
     Logger.recordOutput("Field Constants/End Point", endPose);
