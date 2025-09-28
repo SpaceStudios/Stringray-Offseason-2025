@@ -13,10 +13,6 @@
 
 package frc.robot;
 
-import cheesy.lib.subsystems.vision.Vision;
-import cheesy.lib.subsystems.vision.VisionIO;
-import cheesy.lib.subsystems.vision.VisionIOPhotonVision;
-import cheesy.lib.subsystems.vision.VisionIOPhotonVisionSim;
 import choreo.auto.AutoFactory;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
@@ -66,6 +62,10 @@ import frc.robot.subsystems.outtake.OuttakeIO;
 import frc.robot.subsystems.outtake.OuttakeIOSim;
 import frc.robot.subsystems.outtake.OuttakeIOTalonFX;
 import frc.robot.subsystems.proximity.ProximityIOCanAndColor;
+import frc.robot.subsystems.vision.Vision;
+import frc.robot.subsystems.vision.VisionIO;
+import frc.robot.subsystems.vision.VisionIOPhotonVision;
+import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
 import frc.robot.util.FieldConstants;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;

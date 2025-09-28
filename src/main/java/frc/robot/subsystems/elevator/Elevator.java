@@ -95,9 +95,10 @@ public class Elevator extends SubsystemBase {
   }
 
   public Command setTarget(DoubleSupplier height) {
-    return Commands.runOnce(() -> {
-      nextSetpoint = height.getAsDouble();
-    });
+    return Commands.runOnce(
+        () -> {
+          nextSetpoint = height.getAsDouble();
+        });
   }
 
   // public Command setTarget(double height) {
