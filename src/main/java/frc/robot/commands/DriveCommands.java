@@ -29,12 +29,14 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.subsystems.drive.Drive;
+import frc.robot.util.AllianceFlipUtil;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
+import org.littletonrobotics.junction.Logger;
 
 public class DriveCommands {
   private static final double DEADBAND = 0.1;
@@ -166,7 +168,6 @@ public class DriveCommands {
    * absolute rotation with a joystick.
    */
   public static Command autoAlign(Drive drive, Supplier<Pose2d> pose) {
-
     // Create PID controller
     ProfiledPIDController angleController =
         new ProfiledPIDController(
@@ -193,29 +194,25 @@ public class DriveCommands {
     // Construct command
     return Commands.run(
             () -> {
+              Pose2d flippedPose = AllianceFlipUtil.apply(pose.get());
+              Logger.recordOutput("Flipped Pose", flippedPose);
+
               // Get linear velocity
               Translation2d linearVelocity =
                   new Translation2d(
-                      xController.calculate(drive.getPose().getX(), pose.get().getX()),
-                      yController.calculate(drive.getPose().getY(), pose.get().getY()));
+                      xController.calculate(drive.getPose().getX(), flippedPose.getX()),
+                      yController.calculate(drive.getPose().getY(), flippedPose.getY()));
 
               // Calculate angular speed
               double omega =
                   angleController.calculate(
-                      drive.getRotation().getRadians(), pose.get().getRotation().getRadians());
+                      drive.getRotation().getRadians(), flippedPose.getRotation().getRadians());
 
               // Convert to field relative speeds & send command
               ChassisSpeeds speeds =
                   new ChassisSpeeds(linearVelocity.getX(), linearVelocity.getY(), omega);
-              boolean isFlipped =
-                  DriverStation.getAlliance().isPresent()
-                      && DriverStation.getAlliance().get() == Alliance.Red;
-              drive.runVelocity(
-                  ChassisSpeeds.fromFieldRelativeSpeeds(
-                      speeds,
-                      isFlipped
-                          ? drive.getRotation().plus(new Rotation2d(Math.PI))
-                          : drive.getRotation()));
+
+              drive.runVelocity(ChassisSpeeds.fromFieldRelativeSpeeds(speeds, drive.getRotation()));
             },
             drive)
 
