@@ -212,6 +212,12 @@ public class FieldConstants {
 
   private static Pose2d endPose = new Pose2d(fieldLength, fieldWidth, Rotation2d.kZero);
 
+  public static boolean inTolerance(Pose2d pose1, Pose2d pose2, double translationTolerance, double orientationTolerance) {
+    return MathUtil.isNear(pose1.getX(), pose2.getX(), translationTolerance) && 
+    MathUtil.isNear(pose1.getY(), pose2.getY(), translationTolerance) && 
+    MathUtil.isNear(pose1.getRotation().getRadians(), pose2.getRotation().getRadians(), orientationTolerance);
+  }
+
   public static void Log() {
     Logger.recordOutput("Field Constants/End Point", endPose);
     Logger.recordOutput("Field Constants/Reef/AprilTags", ReefConstants.aprilTags);

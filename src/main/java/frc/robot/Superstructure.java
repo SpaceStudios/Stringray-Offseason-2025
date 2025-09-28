@@ -234,7 +234,7 @@ public class Superstructure {
         .and(stateMap.get(state.CORAL_READY))
         .onTrue(
             elevator.setTarget(() -> (coralTarget.L4.height)));
-    
+
     layout
         .scoreRequest
         .and(stateMap.get(state.CORAL_PRESCORE));
