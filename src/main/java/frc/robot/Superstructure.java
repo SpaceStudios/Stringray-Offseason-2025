@@ -10,10 +10,8 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.PrintCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.subsystems.autoAlign.AutoAlign;
@@ -21,7 +19,6 @@ import frc.robot.subsystems.autoAlign.AutoAlign.IntakeLocation;
 import frc.robot.subsystems.climb.Climb;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.elevator.Elevator;
-import frc.robot.subsystems.elevator.ElevatorConstants.ElevatorSetpoint;
 import frc.robot.subsystems.gripper.Gripper;
 import frc.robot.subsystems.gripper.GripperConstants;
 import frc.robot.subsystems.hopper.Hopper;
@@ -31,7 +28,6 @@ import frc.robot.subsystems.led.LEDIOCandle;
 import frc.robot.subsystems.outtake.Outtake;
 import frc.robot.subsystems.outtake.OuttakeConstants;
 import frc.robot.util.FieldConstants;
-import frc.robot.util.FieldConstants.BargeConstants;
 import frc.robot.util.FieldConstants.ReefConstants;
 import frc.robot.util.FieldConstants.ReefConstants.coralTarget;
 import java.util.HashMap;
@@ -136,18 +132,29 @@ public class Superstructure {
 
     // State Machine
 
+    // Algae
+    setAlgaeBindings();
+
+    // Coral
+    setCoralBindings();
+
     // Why can I control the entire robot using on a single controller and sensor readings?
     // Manual Elevator Stuff
     layout
         .manualElevator
         .whileTrue(this.setState(state.MANUAL_ELEVATOR))
         .onFalse(this.setState(state.IDLE));
-
+    // Setting the bindings
     setManualBindings();
 
-    // Cancel
+    // Non State Stuff
+    setNonStateBindings();
   }
 
+  private void setAlgaeBindings() {}
+
+  private void setCoralBindings() {}
+  
   private void setManualBindings() {
 
     // Manual Coral Intake if near source
@@ -262,6 +269,57 @@ public class Superstructure {
             elevator.setTarget(() -> (ReefConstants.coralTarget.L4.height))
             .andThen(elevator.setExtension())
         );
+  }
+
+  private void setNonStateBindings() {
+    // Cancel Request and robot doesn't have an algae.
+    layout
+        .cancelRequest
+        .and(() -> !(gripper.getDetected()))
+        .onTrue(
+            Commands.parallel(
+                outtake.setVoltage(() -> 0.0),
+                hopper.setVoltage(0),
+                gripper.setVoltage(() -> 0.0),
+                elevator.setTarget(() -> 0.0).andThen(elevator.setExtension()),
+                this.setState(state.IDLE)
+            )
+        );
+
+    // Cancel Request but robot does have an algae.
+    layout
+        .cancelRequest
+        .and(gripper::getDetected)
+        .onTrue(Commands.parallel(
+            outtake.setVoltage(() -> 0.0),
+            hopper.setVoltage(0),
+            gripper.setVoltage(() -> 0.0),
+            this.setState(state.IDLE)
+        ));
+
+    // Reverse Funnel and Outtake
+    layout
+        .revFunnel
+        .whileTrue(
+            Commands.parallel(
+                hopper.setVoltage(-OuttakeConstants.intake),
+                outtake.setVoltage(() -> -(OuttakeConstants.intake))
+            ));
+
+    // Dejam Coral / Force Coral into shooter
+    layout
+        .dejamCoral
+        .whileTrue(
+            Commands.parallel(
+                hopper.setVoltage(OuttakeConstants.intake),
+                outtake.setVoltage(() -> (OuttakeConstants.intake))
+            ).until(outtake::getDetected));
+
+    // Reset Gyro to 0 Degrees when pressed
+    layout
+        .resetGyro
+        .onTrue(
+            Commands.runOnce(() -> drive.setPose(new Pose2d(drive.getPose().getTranslation(), Rotation2d.kZero)), drive).ignoringDisable(true));
   }
 
   public Command setCoralTarget(coralTarget target) {
