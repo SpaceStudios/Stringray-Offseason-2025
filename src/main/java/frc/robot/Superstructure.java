@@ -138,6 +138,9 @@ public class Superstructure {
     // Coral
     setCoralBindings();
 
+    // Climb
+    setClimbBindings();
+
     // Why can I control the entire robot using on a single controller and sensor readings?
     // Manual Elevator Stuff
     layout
