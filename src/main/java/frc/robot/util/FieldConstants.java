@@ -104,6 +104,23 @@ public class FieldConstants {
               new Transform2d(
                   new Translation2d(safeDistance, widthBetweenPegs / 2.0), Rotation2d.k180deg))
         };
+
+    private static final List<Pose2d> tagList = List.of(aprilTags);
+    private static final List<Pose2d> leftBranchList = List.of(leftBranches);
+    private static final List<Pose2d> rightBranchList = List.of(rightBranches);
+
+    public static Pose2d getBestBranch(Supplier<Pose2d> poseSupplier, boolean left) {
+        Pose2d nearestTag = poseSupplier.get().nearest(tagList);
+        if (nearestTag == aprilTags[3] || nearestTag == aprilTags[4] || nearestTag == aprilTags[5]) {
+            left = !left;
+        }
+        if (left) {
+            return poseSupplier.get().nearest(leftBranchList);
+        } else {
+            return poseSupplier.get().nearest(rightBranchList);
+        }
+    }
+
     public static final Pose2d[] algaeLocations =
         new Pose2d[] {
           aprilTags[0].transformBy(
