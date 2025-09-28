@@ -14,8 +14,6 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.robot.subsystems.autoAlign.AutoAlign;
-import frc.robot.subsystems.autoAlign.AutoAlign.IntakeLocation;
 import frc.robot.subsystems.climb.Climb;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.elevator.Elevator;
@@ -100,7 +98,6 @@ public class Superstructure {
   private final Hopper hopper;
   private final Gripper gripper;
   private final Climb climb;
-  private final AutoAlign autoAlign;
 
   private final LoggedMechanism2d mech;
   public final LoggedMechanismLigament2d elevatorDisplay;
@@ -115,8 +112,7 @@ public class Superstructure {
       Hopper hopper,
       Gripper gripper,
       Climb climb,
-      ControllerLayout layout,
-      AutoAlign autoAlign) {
+      ControllerLayout layout) {
     for (state kState : state.values()) {
       stateMap.put(
           kState, new Trigger(() -> (kCurrentState == kState) && DriverStation.isEnabled()));
