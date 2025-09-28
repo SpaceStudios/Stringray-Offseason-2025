@@ -29,7 +29,7 @@ public class FieldConstants {
   public static final double safeDistance = Units.inchesToMeters(17);
 
   public static class ReefConstants {
-    public enum coralTarget {
+    public enum CoralTarget {
       L1(0.58),
       L2(0.79),
       L3(1.18),
@@ -37,7 +37,7 @@ public class FieldConstants {
 
       public double height;
 
-      private coralTarget(double height) {
+      private CoralTarget(double height) {
         this.height = height;
       }
     }

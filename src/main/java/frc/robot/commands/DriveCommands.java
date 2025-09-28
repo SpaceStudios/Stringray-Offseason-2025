@@ -29,6 +29,7 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.subsystems.drive.Drive;
+import frc.robot.util.FieldConstants;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.LinkedList;
@@ -358,6 +359,22 @@ public class DriveCommands {
                               + formatter.format(Units.metersToInches(wheelRadius))
                               + " inches");
                     })));
+  }
+
+  public static IntakeLocation getBestIntake(Drive drive) {
+    Pose2d kPos = drive.getPose();
+    Pose2d closestAlgae = kPos.nearest(List.of(FieldConstants.ReefConstants.algaeLocations));
+    Pose2d closestCoral = kPos.nearest(List.of(FieldConstants.SourceConstants.sourcePoses));
+    if (kPos.relativeTo(closestAlgae).getTranslation().getNorm()
+        < kPos.relativeTo(closestCoral).getTranslation().getNorm()) {
+      return IntakeLocation.REEF;
+    }
+    return IntakeLocation.SOURCE;
+  }
+
+  public static enum IntakeLocation {
+    REEF,
+    SOURCE
   }
 
   private static class WheelRadiusCharacterizationState {

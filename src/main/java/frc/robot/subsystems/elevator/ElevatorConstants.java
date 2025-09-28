@@ -11,7 +11,7 @@ import static edu.wpi.first.units.Units.Pounds;
 
 import edu.wpi.first.math.system.plant.DCMotor;
 import frc.robot.util.FieldConstants.ReefConstants.algaeTarget;
-import frc.robot.util.FieldConstants.ReefConstants.coralTarget;
+import frc.robot.util.FieldConstants.ReefConstants.CoralTarget;
 import frc.robot.util.LoggedTunableNumber;
 
 public class ElevatorConstants {
@@ -40,7 +40,7 @@ public class ElevatorConstants {
       this.height = height;
     }
 
-    public static ElevatorSetpoint getSetpointFromCoralTarget(coralTarget target) {
+    public static ElevatorSetpoint getSetpointFromCoralTarget(CoralTarget target) {
       switch (target) {
         case L4:
           return ElevatorSetpoint.L4;

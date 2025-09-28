@@ -29,12 +29,6 @@ public class Autos {
         // scoreCoral(() -> (coralTarget.L4), elevator, outtake),
         AutoRoutines.runTrajectory("GtoS"));
   }
-
-  public static Command testMultiPath() {
-    return AutoRoutines.followTrajectory(AutoRoutines.loadTrajectory("aCtoG"))
-        .andThen(AutoRoutines.followTrajectory(AutoRoutines.loadTrajectory("GtoS")));
-  }
-
   // public static Command scoreCoral(
   //     Supplier<coralTarget> targetSupplier, Elevator elevator, Outtake outtake) {
   //   return Commands.sequence(

@@ -16,7 +16,6 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Robot;
-import frc.robot.subsystems.autoAlign.AutoAlign;
 import frc.robot.subsystems.drive.Drive;
 import java.util.Map;
 import java.util.Optional;
@@ -72,56 +71,6 @@ public class AutoRoutines {
               }
             })
         .until(() -> (done));
-  }
-
-  public static Command followTrajectory(Optional<Trajectory<SwerveSample>> trajectory) {
-    return driveSubsystem
-        .startRun(
-            () -> {
-              done = false;
-              timer.reset();
-              timer.start();
-            },
-            () -> {
-              if (trajectory.isPresent() && (driveSubsystem != null)) {
-                Optional<SwerveSample> sample =
-                    trajectory.get().sampleAt(timer.get(), isRedAlliance());
-                if (sample.isPresent()) {
-                  Pose2d pose = poseGetter.get();
-                  Logger.recordOutput("Autos/Sample Pose", sample.get().getPose());
-                  ChassisSpeeds desiredSpeeds =
-                      sample
-                          .get()
-                          .getChassisSpeeds()
-                          .plus(
-                              new ChassisSpeeds(
-                                  xController.calculate(pose.getX(), sample.get().getPose().getX()),
-                                  yController.calculate(pose.getY(), sample.get().getPose().getY()),
-                                  rotController.calculate(
-                                      pose.getRotation().getRadians(),
-                                      sample.get().getPose().getRotation().getRadians())));
-                  driveFunction.accept(
-                      ChassisSpeeds.fromFieldRelativeSpeeds(desiredSpeeds, pose.getRotation()));
-                } else {
-                  done = true;
-                }
-              } else {
-                done = true;
-              }
-            })
-        .until(
-            () ->
-                (done
-                    || AutoAlign.isNear(
-                        poseGetter.get(), trajectory.get().getFinalPose(isRedAlliance()).get())))
-        .finallyDo(
-            () -> {
-              xController.reset();
-              yController.reset();
-              rotController.reset();
-              driveSubsystem.stop();
-              timer.stop();
-            });
   }
 
   private static boolean isRedAlliance() {

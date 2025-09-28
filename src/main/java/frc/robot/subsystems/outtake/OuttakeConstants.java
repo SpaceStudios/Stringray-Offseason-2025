@@ -4,7 +4,7 @@
 
 package frc.robot.subsystems.outtake;
 
-import frc.robot.util.FieldConstants.ReefConstants.coralTarget;
+import frc.robot.util.FieldConstants.ReefConstants.CoralTarget;
 import java.util.Map;
 
 /** Add your docs here. */
@@ -19,13 +19,13 @@ public class OuttakeConstants {
       Map.of(
           0.0,
           0.0,
-          coralTarget.L1.height,
+          CoralTarget.L1.height,
           L1,
-          coralTarget.L2.height,
+          CoralTarget.L2.height,
           L2,
-          coralTarget.L3.height,
+          CoralTarget.L3.height,
           L3,
-          coralTarget.L4.height,
+          CoralTarget.L4.height,
           L4);
 
   public static class MotorLimits {
