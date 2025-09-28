@@ -17,6 +17,7 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.commands.DriveCommands;
 import frc.robot.commands.DriveCommands.IntakeLocation;
 import frc.robot.subsystems.climb.Climb;
+import frc.robot.subsystems.climb.ClimbConstants;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.gripper.Gripper;
@@ -65,10 +66,10 @@ public class Superstructure {
   }
 
   private CoralTarget kCoralTarget = CoralTarget.L4;
-  private state kCurrentState = state.IDLE;
+  private State kCurrentState = State.IDLE;
   private final Debouncer jamesWaitDebouncer = new Debouncer(0.5);
 
-  public enum state {
+  public enum State {
     IDLE, // Has Nothing and no Subsystems are preforming anything
     CORAL_INTAKE, // Going to intake coral, Hopper and Outake always runs. If it has a coral then go
     // to CORAL_READY. This is triggered when Driver runs intake request
@@ -88,7 +89,7 @@ public class Superstructure {
     MANUAL_ELEVATOR
   }
 
-  private final HashMap<state, Trigger> stateMap = new HashMap<state, Trigger>();
+  private final HashMap<State, Trigger> stateMap = new HashMap<State, Trigger>();
   private final ControllerLayout layout;
 
   private final LED led = new LED(Robot.isReal() ? new LEDIOCandle() : new LEDIO() {});
@@ -115,7 +116,7 @@ public class Superstructure {
       Gripper gripper,
       Climb climb,
       ControllerLayout layout) {
-    for (state kState : state.values()) {
+    for (State kState : State.values()) {
       stateMap.put(
           kState, new Trigger(() -> (kCurrentState == kState) && DriverStation.isEnabled()));
     }
@@ -148,8 +149,8 @@ public class Superstructure {
     // Manual Elevator Stuff
     layout
         .manualElevator
-        .whileTrue(this.setState(state.MANUAL_ELEVATOR))
-        .onFalse(this.setState(state.IDLE));
+        .whileTrue(this.setState(State.MANUAL_ELEVATOR))
+        .onFalse(this.setState(State.IDLE));
     // Setting the bindings
     setManualBindings();
 
@@ -166,16 +167,25 @@ public class Superstructure {
   private void setCoralBindings() {}
 
   // A set of bindings for the Climb subsystem and climb states (CLIMB_READY, CLIMB_PULL)
-  private void setClimbBindings() {}
+  private void setClimbBindings() {
+    layout.climbRequest.onTrue(
+        Commands.parallel(climb.setPosition(ClimbConstants.ready), setState(State.CLIMB_READY)));
+
+    layout
+        .scoreRequest
+        .and(stateMap.get(State.CLIMB_READY))
+        .onTrue(
+            Commands.parallel(
+                climb.setPosition(ClimbConstants.climbed), setState(State.CLIMB_PULL)));
+  }
 
   // Manual Elevator Bindings only runs Outtake, Gripper, Hopper, and Elevator. Only Runs during
   // ELEVATOR_MANUAL state
   private void setManualBindings() {
-
     // Manual Coral Intake if near source
     layout
         .intakeRequest
-        .and(stateMap.get(state.MANUAL_ELEVATOR))
+        .and(stateMap.get(State.MANUAL_ELEVATOR))
         .and(() -> !(outtake.getDetected()))
         .and(() -> (DriveCommands.getBestIntake(drive) == IntakeLocation.SOURCE))
         .whileTrue(
@@ -186,7 +196,7 @@ public class Superstructure {
     // Manual Algae Intake if near Reef
     layout
         .intakeRequest
-        .and(stateMap.get(state.MANUAL_ELEVATOR))
+        .and(stateMap.get(State.MANUAL_ELEVATOR))
         .and(() -> !(gripper.getDetected()))
         .and(() -> (DriveCommands.getBestIntake(drive) == IntakeLocation.REEF))
         .whileTrue(gripper.setVoltage(() -> (GripperConstants.intake)));
@@ -194,14 +204,14 @@ public class Superstructure {
     // Manual Coral Score if it has coral
     layout
         .scoreRequest
-        .and(stateMap.get(state.MANUAL_ELEVATOR))
+        .and(stateMap.get(State.MANUAL_ELEVATOR))
         .and(outtake::getDetected)
         .whileTrue(outtake.setVoltage(() -> (5.0)));
 
     // Manual Algae Score if it has algae
     layout
         .scoreRequest
-        .and(stateMap.get(state.MANUAL_ELEVATOR))
+        .and(stateMap.get(State.MANUAL_ELEVATOR))
         .and(gripper::getDetected)
         .whileTrue(gripper.setVoltage(() -> (GripperConstants.net)));
 
@@ -209,14 +219,14 @@ public class Superstructure {
     // Set L1 to 0 if it doesn't have coral
     layout
         .L1
-        .and(stateMap.get(state.MANUAL_ELEVATOR))
+        .and(stateMap.get(State.MANUAL_ELEVATOR))
         .and(() -> !(outtake.getDetected()))
         .onTrue(elevator.setTarget(() -> (0.0)).andThen(elevator.setExtension()));
 
     // Algae L2 Setpoint
     layout
         .L2
-        .and(stateMap.get(state.MANUAL_ELEVATOR))
+        .and(stateMap.get(State.MANUAL_ELEVATOR))
         .and(() -> !(gripper.getDetected()))
         .and(() -> !(outtake.getDetected()))
         .onTrue(
@@ -227,7 +237,7 @@ public class Superstructure {
     // Algae L3 Setpoint
     layout
         .L3
-        .and(stateMap.get(state.MANUAL_ELEVATOR))
+        .and(stateMap.get(State.MANUAL_ELEVATOR))
         .and(() -> !(gripper.getDetected()))
         .and(() -> !(outtake.getDetected()))
         .onTrue(
@@ -238,7 +248,7 @@ public class Superstructure {
     // Algae Net Setpoint
     layout
         .L4
-        .and(stateMap.get(state.MANUAL_ELEVATOR))
+        .and(stateMap.get(State.MANUAL_ELEVATOR))
         .and(gripper::getDetected)
         .onTrue(
             elevator
@@ -249,7 +259,7 @@ public class Superstructure {
     // L1 Setpoint
     layout
         .L1
-        .and(stateMap.get(state.MANUAL_ELEVATOR))
+        .and(stateMap.get(State.MANUAL_ELEVATOR))
         .and(outtake::getDetected)
         .onTrue(
             elevator
@@ -259,7 +269,7 @@ public class Superstructure {
     // L2 Setpoint
     layout
         .L2
-        .and(stateMap.get(state.MANUAL_ELEVATOR))
+        .and(stateMap.get(State.MANUAL_ELEVATOR))
         .and(outtake::getDetected)
         .onTrue(
             elevator
@@ -268,7 +278,7 @@ public class Superstructure {
     // L3 setpoint
     layout
         .L3
-        .and(stateMap.get(state.MANUAL_ELEVATOR))
+        .and(stateMap.get(State.MANUAL_ELEVATOR))
         .and(outtake::getDetected)
         .onTrue(
             elevator
@@ -278,7 +288,7 @@ public class Superstructure {
     // L4 setpoint
     layout
         .L4
-        .and(stateMap.get(state.MANUAL_ELEVATOR))
+        .and(stateMap.get(State.MANUAL_ELEVATOR))
         .and(outtake::getDetected)
         .onTrue(
             elevator
@@ -298,7 +308,7 @@ public class Superstructure {
                 hopper.setVoltage(0),
                 gripper.setVoltage(() -> 0.0),
                 elevator.setTarget(() -> 0.0).andThen(elevator.setExtension()),
-                this.setState(state.IDLE)));
+                this.setState(State.IDLE)));
 
     // Cancel Request but robot does have an algae.
     layout
@@ -309,7 +319,7 @@ public class Superstructure {
                 outtake.setVoltage(() -> 0.0),
                 hopper.setVoltage(0),
                 gripper.setVoltage(() -> 0.0),
-                this.setState(state.IDLE)));
+                this.setState(State.IDLE)));
 
     // Reverse Funnel and Outtake
     layout.revFunnel.whileTrue(
@@ -339,7 +349,7 @@ public class Superstructure {
         });
   }
 
-  public Command setState(state newState) {
+  public Command setState(State newState) {
     return Commands.runOnce(
             () -> {
               if (kCurrentState != newState) {

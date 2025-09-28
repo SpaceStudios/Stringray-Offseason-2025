@@ -7,11 +7,11 @@ package frc.robot.subsystems.led;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Superstructure.state;
+import frc.robot.Superstructure.State;
 
 public class LED extends SubsystemBase {
   private final LEDIO io;
-  private state currentState = state.IDLE;
+  private State currentState = State.IDLE;
   /** Creates a new LED. */
   public LED(LEDIO io) {
     this.io = io;
@@ -26,7 +26,7 @@ public class LED extends SubsystemBase {
     }
   }
 
-  public Command setState(state kState) {
+  public Command setState(State kState) {
     return this.run(
         () -> {
           this.currentState = kState;

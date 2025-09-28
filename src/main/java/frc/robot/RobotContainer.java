@@ -278,7 +278,7 @@ public class RobotContainer {
         DriveCommands.joystickDrive(
             drive, () -> driver.getLeftY(), () -> driver.getLeftX(), () -> -driver.getRightX()));
 
-    driver.leftBumper().whileTrue(DriveCommands.autoAlign(drive, ()-> new Pose2d()));
+    driver.leftBumper().whileTrue(DriveCommands.autoAlign(drive, () -> new Pose2d()));
 
     // // Lock to 0 when A button is held
     // controller
