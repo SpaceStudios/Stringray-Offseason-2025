@@ -10,8 +10,8 @@ import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Pounds;
 
 import edu.wpi.first.math.system.plant.DCMotor;
-import frc.robot.util.FieldConstants.ReefConstants.algaeTarget;
 import frc.robot.util.FieldConstants.ReefConstants.CoralTarget;
+import frc.robot.util.FieldConstants.ReefConstants.algaeTarget;
 import frc.robot.util.LoggedTunableNumber;
 
 public class ElevatorConstants {

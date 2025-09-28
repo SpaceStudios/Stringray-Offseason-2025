@@ -329,7 +329,7 @@ public class Drive extends SubsystemBase {
   public Consumer<SwerveSample> driveController() {
     final PIDController xController = new PIDController(10.0, 0.0, 0.0);
     final PIDController yController = new PIDController(10.0, 0.0, 0.0);
-    final PIDController rotController = new PIDController(7.5, 0.0, 0.0);
+    final PIDController rotController = new PIDController(5.0, 0.0, 0.0);
     rotController.enableContinuousInput(-Math.PI, Math.PI);
     return (sample) -> {
       final Pose2d pose = getPose();

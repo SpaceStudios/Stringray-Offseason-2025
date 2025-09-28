@@ -14,6 +14,8 @@ import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.hopper.Hopper;
 import frc.robot.subsystems.outtake.Outtake;
 import frc.robot.subsystems.outtake.OuttakeConstants;
+import frc.robot.util.FieldConstants.ReefConstants.CoralTarget;
+import java.util.function.Supplier;
 
 /** Some Preset Autos */
 public class Autos {
@@ -26,7 +28,7 @@ public class Autos {
     return Commands.sequence(
         simInit(outtake, true),
         AutoRoutines.runTrajectory("aCtoG"),
-        // scoreCoral(() -> (coralTarget.L4), elevator, outtake),
+        scoreCoral(() -> (CoralTarget.L4), elevator, outtake),
         AutoRoutines.runTrajectory("GtoS"));
   }
   // public static Command scoreCoral(
@@ -40,6 +42,19 @@ public class Autos {
   //           .until(() -> !(outtake.getDetected()))));
   //       // elevator.setElevatorHeight(0.0).until(elevator::nearSetpoint));
   // }
+
+  public static Command scoreCoral(
+      Supplier<CoralTarget> targetSupplier, Elevator elevator, Outtake outtake) {
+    return Commands.sequence(
+        elevator.setTarget(() -> (CoralTarget.L4.height)),
+        elevator.setExtension(),
+        Commands.waitUntil(elevator::atSetpoint),
+        outtake
+            .setVoltage(() -> (OuttakeConstants.voltageMap.get(elevator.getSetpoint())))
+            .until(() -> !(outtake.getDetected())),
+        elevator.setTarget(() -> 0.0),
+        elevator.setExtension());
+  }
 
   public static Command intakeCoral(Superstructure superstructure, Outtake outtake, Hopper hopper) {
     return Commands.parallel(
