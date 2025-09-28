@@ -8,7 +8,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.Robot;
 import frc.robot.Superstructure;
-import frc.robot.Superstructure.state;
+import frc.robot.Superstructure.State;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.hopper.Hopper;
@@ -58,7 +58,7 @@ public class Autos {
 
   public static Command intakeCoral(Superstructure superstructure, Outtake outtake, Hopper hopper) {
     return Commands.parallel(
-            superstructure.setState(state.CORAL_INTAKE),
+            superstructure.setState(State.CORAL_INTAKE),
             outtake.setVoltage(() -> (OuttakeConstants.intake)),
             hopper.setVoltage(OuttakeConstants.intake))
         .until(outtake::getDetected);

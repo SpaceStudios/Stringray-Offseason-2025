@@ -10,7 +10,7 @@ import com.ctre.phoenix.led.StrobeAnimation;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.util.Color;
-import frc.robot.Superstructure.state;
+import frc.robot.Superstructure.State;
 import java.util.Map;
 
 /** Add your docs here. */
@@ -18,9 +18,9 @@ public class LEDConstants {
   private static final int length = 308;
   private static final Alliance kAlliance =
       DriverStation.getAlliance().isPresent() ? DriverStation.getAlliance().get() : Alliance.Red;
-  public static final Map<state, Animation> animMap =
+  public static final Map<State, Animation> animMap =
       Map.of(
-          state.IDLE,
+          State.IDLE,
           new SingleFadeAnimation(
               convertColorToInt(Color.kGold)[0],
               convertColorToInt(Color.kGold)[1],
@@ -28,7 +28,7 @@ public class LEDConstants {
               255,
               0.5,
               length),
-          state.CORAL_INTAKE,
+          State.CORAL_INTAKE,
           new StrobeAnimation(
               convertColorToInt(Color.kWhite)[0],
               convertColorToInt(Color.kWhite)[1],
@@ -36,9 +36,9 @@ public class LEDConstants {
               255,
               0.5,
               length),
-          state.CORAL_READY,
+          State.CORAL_READY,
           new SingleFadeAnimation(255, 255, 255, 255, 0.5, length),
-          state.CORAL_PRESCORE,
+          State.CORAL_PRESCORE,
           new StrobeAnimation(
               convertColorToInt(Color.kLimeGreen)[0],
               convertColorToInt(Color.kLimeGreen)[1],
@@ -46,7 +46,7 @@ public class LEDConstants {
               255,
               0.5,
               length),
-          state.ALGAE_INTAKE,
+          State.ALGAE_INTAKE,
           new StrobeAnimation(
               convertColorToInt(Color.kTeal)[0],
               convertColorToInt(Color.kTeal)[1],
@@ -54,7 +54,7 @@ public class LEDConstants {
               255,
               0.5,
               length),
-          state.ALGAE_READY,
+          State.ALGAE_READY,
           new SingleFadeAnimation(
               convertColorToInt(Color.kTeal)[0],
               convertColorToInt(Color.kTeal)[1],
@@ -62,7 +62,7 @@ public class LEDConstants {
               255,
               0.5,
               length),
-          state.ALGAE_PRESCORE,
+          State.ALGAE_PRESCORE,
           new StrobeAnimation(
               convertColorToInt(Color.kPurple)[0],
               convertColorToInt(Color.kPurple)[1],
@@ -70,7 +70,7 @@ public class LEDConstants {
               255,
               0.5,
               length),
-          state.MANUAL_ELEVATOR,
+          State.MANUAL_ELEVATOR,
           new StrobeAnimation(
               convertColorToInt(Color.kBlue)[0],
               convertColorToInt(Color.kBlue)[1],
@@ -78,7 +78,7 @@ public class LEDConstants {
               255,
               0.5,
               length),
-          state.CLIMB_READY,
+          State.CLIMB_READY,
           new StrobeAnimation(
               convertColorToInt(Color.kTeal)[0],
               convertColorToInt(Color.kTeal)[1],
@@ -86,7 +86,7 @@ public class LEDConstants {
               255,
               0.5,
               length),
-          state.CLIMB_PULL,
+          State.CLIMB_PULL,
           new StrobeAnimation(
               convertColorToInt(Color.kTeal)[0],
               convertColorToInt(Color.kTeal)[1],

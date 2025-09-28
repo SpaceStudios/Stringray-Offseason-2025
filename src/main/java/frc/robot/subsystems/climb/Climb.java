@@ -1,38 +1,75 @@
-// Copyright (c) FIRST and other WPILib contributors.
-// Open Source Software; you can modify and/or share it under the terms of
-// the WPILib BSD license file in the root directory of this project.
-
 package frc.robot.subsystems.climb;
 
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.PrintCommand;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import java.util.function.BooleanSupplier;
+import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 public class Climb extends SubsystemBase {
-  private final ClimbDataAutoLogged data = new ClimbDataAutoLogged();
   private final ClimbIO io;
-  /** Creates a new Climb. */
+  private final ClimbIOInputsAutoLogged inputs = new ClimbIOInputsAutoLogged();
+
+  private final Alert climbDisconnected =
+      new Alert("Climb motor disconnected!", Alert.AlertType.kWarning);
+
+  private BooleanSupplier coastOverride = () -> false;
+
+  @AutoLogOutput(key = "Climb/BrakeModeEnabled")
+  private boolean brakeModeEnabled = true;
+
   public Climb(ClimbIO io) {
     this.io = io;
+    io.resetEncoder();
+    io.setBrakeMode(true);
   }
 
   @Override
   public void periodic() {
-    // This method will be called once per scheduler run
-    io.getData(data);
-    Logger.processInputs("Climb", data);
+    io.updateInputs(inputs);
+    Logger.processInputs("Climb", inputs);
+
+    climbDisconnected.set(!inputs.motorConnected);
+
+    // Stop when disabled
+    if (DriverStation.isDisabled()) {
+      io.setVoltage(0);
+    }
+
+    boolean coast = coastOverride.getAsBoolean() && DriverStation.isDisabled();
+    setBrakeMode(!coast);
+    Logger.recordOutput("Climb/CoastOverride", !coast);
   }
 
-  public Command extend() {
-    return setAngle(ClimbConstants.Setpoints.extended);
+  public Command setPosition(Rotation2d position) {
+    return this.run(
+        () -> {
+          inputs.targetPositionRad = position.getRadians();
+          io.setPosition(position);
+        });
   }
 
-  public Command retract() {
-    return setAngle(ClimbConstants.Setpoints.score);
+  public Command resetEncoder() {
+    return Commands.runOnce(() -> io.resetEncoder()).ignoringDisable(true);
   }
 
-  private Command setAngle(double angle) {
-    return new PrintCommand("Climb Angle: " + angle);
+  public Command setBrakeMode(boolean enabled) {
+    return Commands.runOnce(() -> io.setBrakeMode(brakeModeEnabled));
+  }
+
+  public void setCoastOverride(BooleanSupplier coastOverride) {
+    this.coastOverride = coastOverride;
+  }
+
+  public double getPositionRad() {
+    return inputs.motorPositionRad;
+  }
+
+  public double getTargetPositionRad() {
+    return inputs.targetPositionRad;
   }
 }
