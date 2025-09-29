@@ -165,11 +165,7 @@ public class Superstructure {
   // CORAL_READY, CORAL_PRESCORE)
   private void setCoralBindings() {
 
-    layout
-        .intakeRequest
-        .and(stateMap.get(State.IDLE))
-        .onTrue(
-            this.setState(State.CORAL_INTAKE));
+    layout.intakeRequest.and(stateMap.get(State.IDLE)).onTrue(this.setState(State.CORAL_INTAKE));
 
     // Always run intake when in coral intake state
     stateMap
@@ -177,75 +173,174 @@ public class Superstructure {
         .whileTrue(
             Commands.parallel(
                 hopper.setVoltage(OuttakeConstants.intake),
-                outtake.setVoltage(() -> (OuttakeConstants.intake))
-            ));
-    
+                outtake.setVoltage(() -> (OuttakeConstants.intake))));
+
     // Switch to Coral Ready when it is in the intake state and has coral.
     stateMap
         .get(State.CORAL_INTAKE)
         .and(outtake::getDetected)
         .onTrue(this.setState(State.CORAL_READY));
-    
+
     // Rumble when it has coral and is in teleop.
     stateMap
         .get(State.CORAL_READY)
         .and(DriverStation::isTeleop)
         .onTrue(
-            rumbleCommand(layout.driveController, 0.5, 0.5));
+            Commands.parallel(
+                rumbleCommand(layout.driveController, 0.5, 0.5),
+                elevator.setTarget(() -> (kCoralTarget.height))));
 
     // Auto Align
     layout
         .autoAlignLeft
         .or(layout.autoAlignRight)
         .and(stateMap.get(State.CORAL_READY).or(stateMap.get(State.CORAL_PRESCORE)))
-        .whileTrue(DriveCommands.autoAlign(drive, () -> (ReefConstants.getBestBranch(drive::getPose, layout.autoAlignLeft.getAsBoolean())))); // Add Auto Align Command Here
+        .whileTrue(
+            DriveCommands.autoAlign(
+                drive,
+                () ->
+                    (ReefConstants.getBestBranch(
+                        drive::getPose,
+                        layout.autoAlignLeft.getAsBoolean())))); // Add Auto Align Command Here
 
     layout
         .scoreRequest
         .and(stateMap.get(State.CORAL_READY))
-        .whileTrue(
-            outtake.setVoltage(() -> (OuttakeConstants.L1)));
+        .whileTrue(outtake.setVoltage(() -> (OuttakeConstants.L1)));
 
     layout
         .L1
         .and(stateMap.get(State.CORAL_READY))
         .onTrue(
-            elevator.setTarget(() -> (CoralTarget.L1.height)));
+            elevator
+                .setTarget(() -> (CoralTarget.L1.height))
+                .andThen(setCoralTarget(CoralTarget.L1)));
 
     layout
         .L2
         .and(stateMap.get(State.CORAL_READY))
         .onTrue(
-            elevator.setTarget(() -> (CoralTarget.L2.height)));
-        
+            elevator
+                .setTarget(() -> (CoralTarget.L2.height))
+                .andThen(setCoralTarget(CoralTarget.L2)));
+
     layout
         .L3
         .and(stateMap.get(State.CORAL_READY))
         .onTrue(
-            elevator.setTarget(() -> (CoralTarget.L3.height)));
+            elevator
+                .setTarget(() -> (CoralTarget.L3.height))
+                .andThen(setCoralTarget(CoralTarget.L3)));
 
     layout
         .L4
         .and(stateMap.get(State.CORAL_READY))
         .onTrue(
-            elevator.setTarget(() -> (CoralTarget.L4.height)));
+            elevator
+                .setTarget(() -> (CoralTarget.L4.height))
+                .andThen(setCoralTarget(CoralTarget.L4)));
+
+    stateMap
+        .get(State.CORAL_READY)
+        .and(
+            () ->
+                (FieldConstants.inTolerance(
+                        ReefConstants.getBestBranch(drive::getPose, true),
+                        drive.getPose(),
+                        0.1,
+                        0.05))
+                    || FieldConstants.inTolerance(
+                        ReefConstants.getBestBranch(drive::getPose, false),
+                        drive.getPose(),
+                        0.1,
+                        0.05))
+        .onTrue(this.setState(State.CORAL_PRESCORE));
+
+    stateMap
+        .get(State.CORAL_PRESCORE)
+        .and(
+            () ->
+                !(FieldConstants.inTolerance(
+                        ReefConstants.getBestBranch(drive::getPose, true),
+                        drive.getPose(),
+                        0.1,
+                        0.05))
+                    || FieldConstants.inTolerance(
+                        ReefConstants.getBestBranch(drive::getPose, false),
+                        drive.getPose(),
+                        0.1,
+                        0.05))
+        .onTrue(this.setState(State.CORAL_READY));
 
     layout
         .scoreRequest
-        .and(stateMap.get(State.CORAL_PRESCORE));
+        .and(stateMap.get(State.CORAL_PRESCORE))
+        .and(() -> (kCoralTarget != CoralTarget.L1))
+        .onTrue(
+            Commands.sequence(
+                elevator.setExtension(),
+                Commands.waitUntil(elevator::atSetpoint),
+                outtake
+                    .setVoltage(() -> (OuttakeConstants.voltageMap.get(elevator.getSetpoint())))
+                    .until(() -> !(outtake.getDetected()))));
+
+    layout
+        .L1
+        .and(stateMap.get(State.CORAL_PRESCORE))
+        .onTrue(
+            Commands.sequence(
+                elevator.setTarget(() -> (CoralTarget.L1.height)),
+                elevator.setExtension(),
+                this.setCoralTarget(CoralTarget.L1)));
+
+    layout
+        .L2
+        .and(stateMap.get(State.CORAL_PRESCORE))
+        .onTrue(
+            Commands.sequence(
+                elevator.setTarget(() -> (CoralTarget.L2.height)),
+                elevator.setExtension(),
+                this.setCoralTarget(CoralTarget.L2)));
+
+    layout
+        .L3
+        .and(stateMap.get(State.CORAL_PRESCORE))
+        .onTrue(
+            Commands.sequence(
+                elevator.setTarget(() -> (CoralTarget.L3.height)),
+                elevator.setExtension(),
+                this.setCoralTarget(CoralTarget.L3)));
+
+    layout
+        .L4
+        .and(stateMap.get(State.CORAL_PRESCORE))
+        .onTrue(
+            Commands.sequence(
+                elevator.setTarget(() -> (CoralTarget.L4.height)),
+                elevator.setExtension(),
+                this.setCoralTarget(CoralTarget.L4)));
+
+    stateMap
+        .get(State.CORAL_READY)
+        .and(() -> (outtake.getDetected()))
+        .onTrue(this.setState(State.IDLE));
+    stateMap
+        .get(State.CORAL_PRESCORE)
+        .and(() -> (outtake.getDetected()))
+        .onTrue(this.setState(State.IDLE));
   }
 
   // A set of bindings for the Climb subsystem and climb states (CLIMB_READY, CLIMB_PULL)
   private void setClimbBindings() {
     layout.climbRequest.onTrue(
-        Commands.parallel(climb.setPosition(ClimbConstants.ready), setState(State.CLIMB_READY)));
+        Commands.parallel(climb.setAngle(ClimbConstants.Setpoints.extended), setState(State.CLIMB_READY)));
 
     layout
         .scoreRequest
         .and(stateMap.get(State.CLIMB_READY))
         .onTrue(
             Commands.parallel(
-                climb.setPosition(ClimbConstants.climbed), setState(State.CLIMB_PULL)));
+                climb.setAngle(ClimbConstants.Setpoints.score), setState(State.CLIMB_PULL)));
   }
 
   // Manual Elevator Bindings only runs Outtake, Gripper, Hopper, and Elevator. Only Runs during
@@ -365,7 +460,7 @@ public class Superstructure {
                 .andThen(elevator.setExtension()));
   }
 
-  // A set of bindings that isn't tied to a specific state.
+  // A set of bindings that isn't tied to a specific State.
   private void setNonStateBindings() {
     // Cancel Request and robot doesn't have an algae.
     layout

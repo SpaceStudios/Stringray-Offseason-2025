@@ -25,7 +25,6 @@ import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.PrintCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
@@ -324,8 +323,8 @@ public class RobotContainer {
    */
   public Command getAutonomousCommand() {
     // return autoChooser.get();
-    return new PrintCommand("To be Removed");
-    // return Autos.DoubleL4(drive, elevator, outtake, hopper, superstructure);
+    // return new PrintCommand("To be Removed");
+    return Autos.DoubleL4(drive, elevator, outtake, hopper, superstructure);
     // return Autos.testMultiPath();
     // return TrajectoryFollower.followTrajectory(TrajectoryFollower.loadTrajectory("Test"));
     // return outtake.setDetected(true).andThen(autoChooser.get());
