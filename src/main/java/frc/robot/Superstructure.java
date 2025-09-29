@@ -166,11 +166,11 @@ public class Superstructure {
   // CORAL_READY, CORAL_PRESCORE)
   private void setCoralBindings() {
 
-    layout.intakeRequest.and(stateMap.get(state.IDLE)).onTrue(this.setState(state.CORAL_INTAKE));
+    layout.intakeRequest.and(stateMap.get(State.IDLE)).onTrue(this.setState(State.CORAL_INTAKE));
 
     // Always run intake when in coral intake state
     stateMap
-        .get(state.CORAL_INTAKE)
+        .get(State.CORAL_INTAKE)
         .whileTrue(
             Commands.parallel(
                 hopper.setVoltage(OuttakeConstants.intake),
@@ -178,13 +178,13 @@ public class Superstructure {
 
     // Switch to Coral Ready when it is in the intake state and has coral.
     stateMap
-        .get(state.CORAL_INTAKE)
+        .get(State.CORAL_INTAKE)
         .and(outtake::getDetected)
-        .onTrue(this.setState(state.CORAL_READY));
+        .onTrue(this.setState(State.CORAL_READY));
 
     // Rumble when it has coral and is in teleop.
     stateMap
-        .get(state.CORAL_READY)
+        .get(State.CORAL_READY)
         .and(DriverStation::isTeleop)
         .onTrue(
             Commands.parallel(
@@ -195,7 +195,7 @@ public class Superstructure {
     layout
         .autoAlignLeft
         .or(layout.autoAlignRight)
-        .and(stateMap.get(state.CORAL_READY).or(stateMap.get(state.CORAL_PRESCORE)))
+        .and(stateMap.get(State.CORAL_READY).or(stateMap.get(State.CORAL_PRESCORE)))
         .whileTrue(
             DriveCommands.autoAlign(
                 drive,
@@ -206,12 +206,12 @@ public class Superstructure {
 
     layout
         .scoreRequest
-        .and(stateMap.get(state.CORAL_READY))
+        .and(stateMap.get(State.CORAL_READY))
         .whileTrue(outtake.setVoltage(() -> (OuttakeConstants.L1)));
 
     layout
         .L1
-        .and(stateMap.get(state.CORAL_READY))
+        .and(stateMap.get(State.CORAL_READY))
         .onTrue(
             elevator
                 .setTarget(() -> (CoralTarget.L1.height))
@@ -219,7 +219,7 @@ public class Superstructure {
 
     layout
         .L2
-        .and(stateMap.get(state.CORAL_READY))
+        .and(stateMap.get(State.CORAL_READY))
         .onTrue(
             elevator
                 .setTarget(() -> (CoralTarget.L2.height))
@@ -227,7 +227,7 @@ public class Superstructure {
 
     layout
         .L3
-        .and(stateMap.get(state.CORAL_READY))
+        .and(stateMap.get(State.CORAL_READY))
         .onTrue(
             elevator
                 .setTarget(() -> (CoralTarget.L3.height))
@@ -235,14 +235,14 @@ public class Superstructure {
 
     layout
         .L4
-        .and(stateMap.get(state.CORAL_READY))
+        .and(stateMap.get(State.CORAL_READY))
         .onTrue(
             elevator
                 .setTarget(() -> (CoralTarget.L4.height))
                 .andThen(setCoralTarget(CoralTarget.L4)));
 
     stateMap
-        .get(state.CORAL_READY)
+        .get(State.CORAL_READY)
         .and(
             () ->
                 (FieldConstants.inTolerance(
@@ -255,10 +255,10 @@ public class Superstructure {
                         drive.getPose(),
                         0.1,
                         0.05))
-        .onTrue(this.setState(state.CORAL_PRESCORE));
+        .onTrue(this.setState(State.CORAL_PRESCORE));
 
     stateMap
-        .get(state.CORAL_PRESCORE)
+        .get(State.CORAL_PRESCORE)
         .and(
             () ->
                 !(FieldConstants.inTolerance(
@@ -271,11 +271,11 @@ public class Superstructure {
                         drive.getPose(),
                         0.1,
                         0.05))
-        .onTrue(this.setState(state.CORAL_READY));
+        .onTrue(this.setState(State.CORAL_READY));
 
     layout
         .scoreRequest
-        .and(stateMap.get(state.CORAL_PRESCORE))
+        .and(stateMap.get(State.CORAL_PRESCORE))
         .and(() -> (kCoralTarget != CoralTarget.L1))
         .onTrue(
             Commands.sequence(
@@ -287,7 +287,7 @@ public class Superstructure {
 
     layout
         .L1
-        .and(stateMap.get(state.CORAL_PRESCORE))
+        .and(stateMap.get(State.CORAL_PRESCORE))
         .onTrue(
             Commands.sequence(
                 elevator.setTarget(() -> (CoralTarget.L1.height)),
@@ -296,7 +296,7 @@ public class Superstructure {
 
     layout
         .L2
-        .and(stateMap.get(state.CORAL_PRESCORE))
+        .and(stateMap.get(State.CORAL_PRESCORE))
         .onTrue(
             Commands.sequence(
                 elevator.setTarget(() -> (CoralTarget.L2.height)),
@@ -305,7 +305,7 @@ public class Superstructure {
 
     layout
         .L3
-        .and(stateMap.get(state.CORAL_PRESCORE))
+        .and(stateMap.get(State.CORAL_PRESCORE))
         .onTrue(
             Commands.sequence(
                 elevator.setTarget(() -> (CoralTarget.L3.height)),
@@ -314,7 +314,7 @@ public class Superstructure {
 
     layout
         .L4
-        .and(stateMap.get(state.CORAL_PRESCORE))
+        .and(stateMap.get(State.CORAL_PRESCORE))
         .onTrue(
             Commands.sequence(
                 elevator.setTarget(() -> (CoralTarget.L4.height)),
@@ -322,26 +322,26 @@ public class Superstructure {
                 this.setCoralTarget(CoralTarget.L4)));
 
     stateMap
-        .get(state.CORAL_READY)
+        .get(State.CORAL_READY)
         .and(() -> (outtake.getDetected()))
-        .onTrue(this.setState(state.IDLE));
+        .onTrue(this.setState(State.IDLE));
     stateMap
-        .get(state.CORAL_PRESCORE)
+        .get(State.CORAL_PRESCORE)
         .and(() -> (outtake.getDetected()))
-        .onTrue(this.setState(state.IDLE));
+        .onTrue(this.setState(State.IDLE));
   }
 
   // A set of bindings for the Climb subsystem and climb states (CLIMB_READY, CLIMB_PULL)
   private void setClimbBindings() {
     layout.climbRequest.onTrue(
-        Commands.parallel(climb.setPosition(ClimbConstants.ready), setState(State.CLIMB_READY)));
+        Commands.parallel(climb.setAngle(ClimbConstants.Setpoints.extended), setState(State.CLIMB_READY)));
 
     layout
         .scoreRequest
         .and(stateMap.get(State.CLIMB_READY))
         .onTrue(
             Commands.parallel(
-                climb.setPosition(ClimbConstants.climbed), setState(State.CLIMB_PULL)));
+                climb.setAngle(ClimbConstants.Setpoints.score), setState(State.CLIMB_PULL)));
   }
 
   // Manual Elevator Bindings only runs Outtake, Gripper, Hopper, and Elevator. Only Runs during
@@ -461,7 +461,7 @@ public class Superstructure {
                 .andThen(elevator.setExtension()));
   }
 
-  // A set of bindings that isn't tied to a specific state.
+  // A set of bindings that isn't tied to a specific State.
   private void setNonStateBindings() {
     // Cancel Request and robot doesn't have an algae.
     layout
