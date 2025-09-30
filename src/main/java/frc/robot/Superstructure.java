@@ -334,7 +334,8 @@ public class Superstructure {
   // A set of bindings for the Climb subsystem and climb states (CLIMB_READY, CLIMB_PULL)
   private void setClimbBindings() {
     layout.climbRequest.onTrue(
-        Commands.parallel(climb.setAngle(ClimbConstants.Setpoints.extended), setState(State.CLIMB_READY)));
+        Commands.parallel(
+            climb.setAngle(ClimbConstants.Setpoints.extended), setState(State.CLIMB_READY)));
 
     layout
         .scoreRequest

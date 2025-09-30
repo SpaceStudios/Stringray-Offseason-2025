@@ -14,11 +14,22 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.drive.DifferentialDrive;
+
 import java.util.List;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
 
-/** Add your docs here. */
+/** Field Constants for the First Robotics Competition 2025 Game Reefscape
+ *<pre>
+ *_  _________________________  _
+ *  /         | | | |         \
+ * |     /\   | | | |   /\     |
+ * |    |  |  | |=| |  |  |    |
+ * |     \/   | | | |   \/     |
+ *_ \_________|_|_|_|_________/ _
+ </pre>
+*/
 public class FieldConstants {
   public static AprilTagFieldLayout fieldLayout =
       AprilTagFieldLayout.loadField(AprilTagFields.k2025ReefscapeAndyMark);

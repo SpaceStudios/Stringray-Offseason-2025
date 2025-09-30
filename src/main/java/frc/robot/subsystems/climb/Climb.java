@@ -5,7 +5,6 @@
 package frc.robot.subsystems.climb;
 
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.PrintCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import org.littletonrobotics.junction.Logger;
 
@@ -33,8 +32,9 @@ public class Climb extends SubsystemBase {
   }
 
   public Command setAngle(double angle) {
-    return this.runOnce(() -> {
-      io.setAngle(angle);
-    });
+    return this.runOnce(
+        () -> {
+          io.setAngle(angle);
+        });
   }
 }

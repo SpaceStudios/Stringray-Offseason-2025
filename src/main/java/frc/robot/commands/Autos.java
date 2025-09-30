@@ -31,6 +31,26 @@ public class Autos {
         scoreCoral(() -> (CoralTarget.L4), elevator, outtake),
         AutoRoutines.runTrajectory("GtoS"));
   }
+
+  public static Command k4L4(
+      Drive drive,
+      Elevator elevator,
+      Outtake outtake,
+      Hopper hopper,
+      Superstructure superstructure) {
+    return Commands.sequence(
+        simInit(outtake, true),
+        AutoRoutines.runTrajectory("aCtoG"),
+        scoreCoral(() -> (CoralTarget.L4), elevator, outtake),
+        AutoRoutines.runTrajectory("GtoS"),
+        superstructure.setState(State.CORAL_INTAKE),
+        Commands.waitUntil(outtake::getDetected),
+        AutoRoutines.runTrajectory("StoD"),
+        scoreCoral(() -> (CoralTarget.L4), elevator, outtake),
+        AutoRoutines.runTrajectory("DtoS"),
+        superstructure.setState(State.CORAL_INTAKE),
+        Commands.waitUntil(outtake::getDetected));
+  }
   // public static Command scoreCoral(
   //     Supplier<coralTarget> targetSupplier, Elevator elevator, Outtake outtake) {
   //   return Commands.sequence(
