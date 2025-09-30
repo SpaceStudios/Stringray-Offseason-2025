@@ -7,9 +7,9 @@ package frc.robot.subsystems.climb;
 /** Add your docs here. */
 public class ClimbConstants {
   public class PID {
-    public static final double[] kP = new double[] {150, 150, 150, 150};
-    public static final double[] kI = new double[] {0.0, 0.0, 0.0, 0.0};
-    public static final double[] kD = new double[] {0.0, 0.0, 0.0, 0.0};
+    public static final double kP = 150.0;
+    public static final double kI =  0.0;
+    public static final double kD = 0.0;
     public static final int slot = 0;
   }
 

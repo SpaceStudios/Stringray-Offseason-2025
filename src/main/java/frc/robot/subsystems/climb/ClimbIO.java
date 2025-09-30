@@ -10,14 +10,14 @@ import org.littletonrobotics.junction.AutoLog;
 public interface ClimbIO {
   @AutoLog
   public class ClimbData {
-    public boolean connected;
+    public boolean connected = false;
 
-    public double angle;
-
-    public double temperature;
-    public double statorCurrent;
-    public double supplyCurrent;
-    public double voltage;
+    public double angle = 0.0;
+    public double angleSetpoint = 0.0;
+    public double temperature = 0.0;
+    public double statorCurrent = 0.0;
+    public double supplyCurrent = 0.0;
+    public double voltage = 0.0;
   }
 
   public default void getData(ClimbDataAutoLogged data) {}

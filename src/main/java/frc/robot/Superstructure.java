@@ -82,9 +82,11 @@ public class Superstructure {
     // to ALGAE_PRESCORE
     ALGAE_PRESCORE, // Has Algae and is in Netzone. If it loses the ALGAE go to IDLE. If it leaves
     // Netzone go to ALGAE_READY
-    CLIMB_READY, // Robot is in Idle and Driver pov down is pressed Climb will move from IDLE to CLIMB_READY
+    CLIMB_READY, // Robot is in Idle and Driver pov down is pressed Climb will move from IDLE to
+    // CLIMB_READY
     // And climb will move to the right angle for it to be in contact with cage
-    CLIMB_PULL, // Robot is in CLIMB_READY and score request is selected than Climb arm will pull back -- CLIMB_READY TO CLIMB_PULL
+    CLIMB_PULL, // Robot is in CLIMB_READY and score request is selected than Climb arm will pull
+    // back -- CLIMB_READY TO CLIMB_PULL
     MANUAL_ELEVATOR // Driver has Manual Control over elevator
   }
 
@@ -333,7 +335,8 @@ public class Superstructure {
   // A set of bindings for the Climb subsystem and climb states (CLIMB_READY, CLIMB_PULL)
   private void setClimbBindings() {
     layout.climbRequest.onTrue(
-        Commands.parallel(climb.setAngle(ClimbConstants.Setpoints.extended), setState(State.CLIMB_READY)));
+        Commands.parallel(
+            climb.setAngle(ClimbConstants.Setpoints.extended), setState(State.CLIMB_READY)));
 
     layout
         .scoreRequest

@@ -34,17 +34,9 @@ public class ClimbIOTalonFX implements ClimbIO {
 
   public ClimbIOTalonFX() {
 
-    talonConfig.Slot0.kP = ClimbConstants.PID.kP[0];
-    talonConfig.Slot0.kI = ClimbConstants.PID.kI[0];
-    talonConfig.Slot0.kD = ClimbConstants.PID.kD[0];
-
-    talonConfig.Slot1.kP = ClimbConstants.PID.kP[1];
-    talonConfig.Slot1.kI = ClimbConstants.PID.kI[1];
-    talonConfig.Slot1.kD = ClimbConstants.PID.kD[1];
-
-    talonConfig.Slot2.kP = ClimbConstants.PID.kP[2];
-    talonConfig.Slot2.kI = ClimbConstants.PID.kI[2];
-    talonConfig.Slot2.kD = ClimbConstants.PID.kD[2];
+    talonConfig.Slot0.kP = ClimbConstants.PID.kP;
+    talonConfig.Slot0.kI = ClimbConstants.PID.kI;
+    talonConfig.Slot0.kD = ClimbConstants.PID.kD;
 
     talonConfig.CurrentLimits.StatorCurrentLimit = ClimbConstants.MotorLimits.statorLimit;
     talonConfig.CurrentLimits.StatorCurrentLimitEnable = true;
