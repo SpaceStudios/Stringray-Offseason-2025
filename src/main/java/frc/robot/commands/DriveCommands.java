@@ -211,12 +211,18 @@ public class DriveCommands {
 
               // Convert to field relative speeds & send command
               ChassisSpeeds speeds =
-                  new ChassisSpeeds(linearVelocity.getX(), linearVelocity.getY(), omega);
+                  new ChassisSpeeds(-linearVelocity.getX(), -linearVelocity.getY(), omega);
 
-              drive.runVelocity(
-                  ChassisSpeeds.fromFieldRelativeSpeeds(
-                      speeds,
-                      flippedPose.getRotation().plus(AllianceFlipUtil.apply(Rotation2d.kZero))));
+                  boolean isFlipped =
+                  DriverStation.getAlliance().isPresent()
+                      && DriverStation.getAlliance().get() == Alliance.Red;
+
+                  drive.runVelocity(
+                    ChassisSpeeds.fromFieldRelativeSpeeds(
+                        speeds,
+                        isFlipped
+                            ? drive.getRotation().plus(new Rotation2d(Math.PI))
+                            : drive.getRotation()));
             },
             drive)
 

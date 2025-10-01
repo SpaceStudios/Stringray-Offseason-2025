@@ -14,6 +14,7 @@
 package frc.robot;
 
 import choreo.auto.AutoFactory;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.util.Units;

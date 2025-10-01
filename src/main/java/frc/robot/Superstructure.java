@@ -4,7 +4,6 @@
 
 package frc.robot;
 
-import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
@@ -68,7 +67,6 @@ public class Superstructure {
 
   private CoralTarget kCoralTarget = CoralTarget.L4;
   private State kCurrentState = State.IDLE;
-  private final Debouncer jamesWaitDebouncer = new Debouncer(0.5);
 
   public enum State {
     IDLE, // Has Nothing and no Subsystems are preforming anything
@@ -85,9 +83,12 @@ public class Superstructure {
     // to ALGAE_PRESCORE
     ALGAE_PRESCORE, // Has Algae and is in Netzone. If it loses the ALGAE go to IDLE. If it leaves
     // Netzone go to ALGAE_READY
-    CLIMB_READY,
-    CLIMB_PULL,
-    MANUAL_ELEVATOR
+    CLIMB_READY, // Robot is in Idle and Driver pov down is pressed Climb will move from IDLE to
+    // CLIMB_READY
+    // And climb will move to the right angle for it to be in contact with cage
+    CLIMB_PULL, // Robot is in CLIMB_READY and score request is selected than Climb arm will pull
+    // back -- CLIMB_READY TO CLIMB_PULL
+    MANUAL_ELEVATOR // Driver has Manual Control over elevator
   }
 
   private final HashMap<State, Trigger> stateMap = new HashMap<State, Trigger>();
@@ -150,7 +151,7 @@ public class Superstructure {
     // Manual Elevator Stuff
     layout
         .manualElevator
-        .whileTrue(this.setState(State.MANUAL_ELEVATOR))
+        .onTrue(this.setState(State.MANUAL_ELEVATOR))
         .onFalse(this.setState(State.IDLE));
     // Setting the bindings
     setManualBindings();
@@ -626,11 +627,6 @@ public class Superstructure {
     Logger.recordOutput("Superstructure/State", kCurrentState);
     elevatorDisplay.setLength(elevator.getSetpoint());
     Logger.recordOutput("Superstructure/Mechanism", mech);
-
-    // Logger.recordOutput("Superstructure/Layout/Cancel Request",
-    // layout.cancelRequest.getAsBoolean());
-    // Logger.recordOutput("Superstructure/Layout/L1", layout.L1.getAsBoolean());
-    // Logger.recordOutput("Superstructure/Layout/L1", layout.L1.getAsBoolean());
   }
 
   public static Command rumbleCommand(
