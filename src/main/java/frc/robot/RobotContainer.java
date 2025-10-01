@@ -14,7 +14,6 @@
 package frc.robot;
 
 import choreo.auto.AutoFactory;
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.util.Units;
@@ -277,9 +276,7 @@ public class RobotContainer {
     // Default command, normal field-relative drive
     drive.setDefaultCommand(
         DriveCommands.joystickDrive(
-            drive, () -> -driver.getLeftY(), () -> -driver.getLeftX(), () -> -driver.getRightX()));
-
-    driver.leftBumper().whileTrue(DriveCommands.autoAlign(drive, () -> new Pose2d()));
+            drive, () -> driver.getLeftY(), () -> driver.getLeftX(), () -> -driver.getRightX()));
 
     // // Lock to 0 when A button is held
     // controller

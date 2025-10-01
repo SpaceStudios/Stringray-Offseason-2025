@@ -150,7 +150,7 @@ public class Superstructure {
     // Manual Elevator Stuff
     layout
         .manualElevator
-        .whileTrue(this.setState(State.MANUAL_ELEVATOR))
+        .onTrue(this.setState(State.MANUAL_ELEVATOR))
         .onFalse(this.setState(State.IDLE));
     // Setting the bindings
     setManualBindings();
@@ -228,7 +228,7 @@ public class Superstructure {
         .get(State.CORAL_INTAKE)
         .whileTrue(
             Commands.parallel(
-                hopper.setVoltage(OuttakeConstants.intake, outtake),
+                hopper.setVoltage(OuttakeConstants.intake),
                 outtake.setVoltage(() -> (OuttakeConstants.intake))));
 
     // Switch to Coral Ready when it is in the intake state and has coral.
@@ -378,7 +378,7 @@ public class Superstructure {
 
     stateMap
         .get(State.CORAL_READY)
-        .and(() -> (outtake.getDetected()))
+        .and(() -> !outtake.getDetected())
         .onTrue(this.setState(State.IDLE));
     stateMap
         .get(State.CORAL_PRESCORE)
@@ -411,7 +411,7 @@ public class Superstructure {
         .and(() -> (DriveCommands.getBestIntake(drive) == IntakeLocation.SOURCE))
         .whileTrue(
             Commands.parallel(
-                hopper.setVoltage(OuttakeConstants.intake, outtake),
+                hopper.setVoltage(OuttakeConstants.intake),
                 outtake.setVoltage(() -> (OuttakeConstants.intake))));
 
     // Manual Algae Intake if near Reef
@@ -531,7 +531,7 @@ public class Superstructure {
         .onTrue(
             Commands.parallel(
                 outtake.setVoltage(() -> 0.0),
-                hopper.setVoltage(0, outtake),
+                hopper.setVoltage(0),
                 gripper.setVoltage(() -> 0.0),
                 elevator
                     .setTarget(() -> 0.0)
@@ -545,20 +545,20 @@ public class Superstructure {
         .onTrue(
             Commands.parallel(
                 outtake.setVoltage(() -> 0.0),
-                hopper.setVoltage(0, outtake),
+                hopper.setVoltage(0),
                 gripper.setVoltage(() -> 0.0),
                 this.setState(State.IDLE)));
 
     // Reverse Funnel and Outtake
     layout.revFunnel.whileTrue(
         Commands.parallel(
-            hopper.setVoltage(-OuttakeConstants.intake, outtake),
+            hopper.setVoltage(-OuttakeConstants.intake),
             outtake.setVoltage(() -> -(OuttakeConstants.intake))));
 
     // Dejam Coral / Force Coral into shooter
     layout.dejamCoral.whileTrue(
         Commands.parallel(
-                hopper.setVoltage(OuttakeConstants.intake, outtake),
+                hopper.setVoltage(OuttakeConstants.intake),
                 outtake.setVoltage(() -> (OuttakeConstants.intake)))
             .until(outtake::getDetected));
 

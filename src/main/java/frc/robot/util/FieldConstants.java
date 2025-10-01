@@ -125,6 +125,21 @@ public class FieldConstants {
       if (nearestTag == aprilTags[3] || nearestTag == aprilTags[4] || nearestTag == aprilTags[5]) {
         left = !left;
       }
+
+      for (int i = 0; i < rightBranchList.size(); i++) {
+        Logger.recordOutput(
+            "AutoAlign/Right Branch Poses/Pose" + i, 
+            rightBranchList.get(i)
+        );
+      }
+      
+      for (int i = 0; i < leftBranchList.size(); i++) {
+        Logger.recordOutput(
+            "AutoAlign/Left Branch Poses/Pose" + i, 
+            leftBranchList.get(i)
+        );
+      }
+      
       Logger.recordOutput(
           "Field Constants/Nearest Left Branch", poseSupplier.get().nearest(leftBranchList));
       Logger.recordOutput(

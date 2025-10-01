@@ -32,6 +32,7 @@ public class Outtake extends SubsystemBase {
     return this.run(
             () -> {
               io.setVoltage(voltage.getAsDouble());
+              setDetectedFunction(true);
             })
         .finallyDo(
             () -> {
