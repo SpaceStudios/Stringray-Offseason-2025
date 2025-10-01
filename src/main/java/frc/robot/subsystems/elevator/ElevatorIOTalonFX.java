@@ -121,6 +121,8 @@ public class ElevatorIOTalonFX implements ElevatorIO {
 
     left.optimizeBusUtilization();
     right.optimizeBusUtilization();
+
+    left.setPosition(0.0);
   }
 
   @Override

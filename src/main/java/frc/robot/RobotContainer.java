@@ -131,7 +131,9 @@ public class RobotContainer {
                 drive::addVisionMeasurement,
                 FieldConstants.fieldLayout,
                 new VisionIOPhotonVision(
-                    "CamLeft", cameraTransforms[0], FieldConstants.fieldLayout));
+                    "CamLeft", cameraTransforms[1], FieldConstants.fieldLayout),
+                new VisionIOPhotonVision(
+                    "CamRight", cameraTransforms[0], FieldConstants.fieldLayout));
         break;
 
       case SIM:
@@ -153,9 +155,9 @@ public class RobotContainer {
                 drive::addVisionMeasurement,
                 FieldConstants.fieldLayout,
                 new VisionIOPhotonVisionSim(
-                    "Left Cam", cameraTransforms[0], drive::getPose, FieldConstants.fieldLayout),
+                    "Left Cam", cameraTransforms[1], drive::getPose, FieldConstants.fieldLayout),
                 new VisionIOPhotonVisionSim(
-                    "Right Cam", cameraTransforms[1], drive::getPose, FieldConstants.fieldLayout));
+                    "Right Cam", cameraTransforms[0], drive::getPose, FieldConstants.fieldLayout));
         break;
 
       default:
@@ -275,7 +277,7 @@ public class RobotContainer {
     // Default command, normal field-relative drive
     drive.setDefaultCommand(
         DriveCommands.joystickDrive(
-            drive, () -> driver.getLeftY(), () -> driver.getLeftX(), () -> -driver.getRightX()));
+            drive, () -> -driver.getLeftY(), () -> -driver.getLeftX(), () -> -driver.getRightX()));
 
     driver.leftBumper().whileTrue(DriveCommands.autoAlign(drive, () -> new Pose2d()));
 

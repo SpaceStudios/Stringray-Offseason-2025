@@ -195,7 +195,7 @@ public class DriveCommands {
     // Construct command
     return Commands.run(
             () -> {
-              Pose2d flippedPose = AllianceFlipUtil.apply(pose.get());
+              Pose2d flippedPose = pose.get();
               Logger.recordOutput("Flipped Pose", flippedPose);
 
               // Get linear velocity
@@ -213,7 +213,10 @@ public class DriveCommands {
               ChassisSpeeds speeds =
                   new ChassisSpeeds(linearVelocity.getX(), linearVelocity.getY(), omega);
 
-              drive.runVelocity(ChassisSpeeds.fromFieldRelativeSpeeds(speeds, drive.getRotation()));
+              drive.runVelocity(
+                  ChassisSpeeds.fromFieldRelativeSpeeds(
+                      speeds,
+                      flippedPose.getRotation().plus(AllianceFlipUtil.apply(Rotation2d.kZero))));
             },
             drive)
 
