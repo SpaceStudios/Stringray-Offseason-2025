@@ -60,7 +60,7 @@ public class Autos {
     return Commands.parallel(
             superstructure.setState(State.CORAL_INTAKE),
             outtake.setVoltage(() -> (OuttakeConstants.intake)),
-            hopper.setVoltage(OuttakeConstants.intake))
+            hopper.setVoltage(OuttakeConstants.intake, outtake))
         .until(outtake::getDetected);
   }
 

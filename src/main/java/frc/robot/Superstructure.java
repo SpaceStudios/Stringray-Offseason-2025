@@ -174,7 +174,7 @@ public class Superstructure {
         .get(State.CORAL_INTAKE)
         .whileTrue(
             Commands.parallel(
-                hopper.setVoltage(OuttakeConstants.intake),
+                hopper.setVoltage(OuttakeConstants.intake, outtake),
                 outtake.setVoltage(() -> (OuttakeConstants.intake))));
 
     // Switch to Coral Ready when it is in the intake state and has coral.
@@ -357,7 +357,7 @@ public class Superstructure {
         .and(() -> (DriveCommands.getBestIntake(drive) == IntakeLocation.SOURCE))
         .whileTrue(
             Commands.parallel(
-                hopper.setVoltage(OuttakeConstants.intake),
+                hopper.setVoltage(OuttakeConstants.intake, outtake),
                 outtake.setVoltage(() -> (OuttakeConstants.intake))));
 
     // Manual Algae Intake if near Reef
@@ -472,7 +472,7 @@ public class Superstructure {
         .onTrue(
             Commands.parallel(
                 outtake.setVoltage(() -> 0.0),
-                hopper.setVoltage(0),
+                hopper.setVoltage(0, outtake),
                 gripper.setVoltage(() -> 0.0),
                 elevator.setTarget(() -> 0.0).andThen(elevator.setExtension()),
                 this.setState(State.IDLE)));
@@ -484,20 +484,20 @@ public class Superstructure {
         .onTrue(
             Commands.parallel(
                 outtake.setVoltage(() -> 0.0),
-                hopper.setVoltage(0),
+                hopper.setVoltage(0, outtake),
                 gripper.setVoltage(() -> 0.0),
                 this.setState(State.IDLE)));
 
     // Reverse Funnel and Outtake
     layout.revFunnel.whileTrue(
         Commands.parallel(
-            hopper.setVoltage(-OuttakeConstants.intake),
+            hopper.setVoltage(-OuttakeConstants.intake, outtake),
             outtake.setVoltage(() -> -(OuttakeConstants.intake))));
 
     // Dejam Coral / Force Coral into shooter
     layout.dejamCoral.whileTrue(
         Commands.parallel(
-                hopper.setVoltage(OuttakeConstants.intake),
+                hopper.setVoltage(OuttakeConstants.intake, outtake),
                 outtake.setVoltage(() -> (OuttakeConstants.intake)))
             .until(outtake::getDetected));
 
@@ -544,11 +544,6 @@ public class Superstructure {
     Logger.recordOutput("Superstructure/State", kCurrentState);
     elevatorDisplay.setLength(elevator.getSetpoint());
     Logger.recordOutput("Superstructure/Mechanism", mech);
-
-    // Logger.recordOutput("Superstructure/Layout/Cancel Request",
-    // layout.cancelRequest.getAsBoolean());
-    // Logger.recordOutput("Superstructure/Layout/L1", layout.L1.getAsBoolean());
-    // Logger.recordOutput("Superstructure/Layout/L1", layout.L1.getAsBoolean());
   }
 
   public static Command rumbleCommand(
