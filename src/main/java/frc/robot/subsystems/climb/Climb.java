@@ -32,9 +32,8 @@ public class Climb extends SubsystemBase {
   }
 
   public Command setAngle(double angle) {
-    return this.run(
+    return this.runOnce(
         () -> {
-          data.angleSetpoint = angle;
           io.setAngle(angle);
         });
   }

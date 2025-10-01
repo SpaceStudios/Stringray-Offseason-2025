@@ -7,7 +7,7 @@ package frc.robot.subsystems.gripper;
 /** Add your docs here. */
 public class GripperConstants {
   public static final double net = 5.0;
-  public static final double intake = -5.0;
+  public static final double intake = -12.0;
 
   public class MotorConstants {
     public static final int supplyLimit = 60;

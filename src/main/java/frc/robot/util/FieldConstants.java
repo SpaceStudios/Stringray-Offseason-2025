@@ -18,7 +18,18 @@ import java.util.List;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
 
-/** Add your docs here. */
+/**
+ * Field Constants for the First Robotics Competition 2025 Game Reefscape
+ *
+ * <pre>
+ * _  _________________________  _
+ *   /         | | | |         \
+ *  |     /\   | | | |   /\     |
+ *  |    |  |  | |=| |  |  |    |
+ *  |     \/   | | | |   \/     |
+ * _ \_________|_|_|_|_________/ _
+ * </pre>
+ */
 public class FieldConstants {
   public static AprilTagFieldLayout fieldLayout =
       AprilTagFieldLayout.loadField(AprilTagFields.k2025ReefscapeAndyMark);
@@ -43,8 +54,8 @@ public class FieldConstants {
     }
 
     public enum algaeTarget {
-      L2(0.79),
-      L3(1.18);
+      L2(0.42),
+      L3(0.81);
 
       public double height;
 
@@ -114,6 +125,10 @@ public class FieldConstants {
       if (nearestTag == aprilTags[3] || nearestTag == aprilTags[4] || nearestTag == aprilTags[5]) {
         left = !left;
       }
+      Logger.recordOutput(
+          "Field Constants/Nearest Left Branch", poseSupplier.get().nearest(leftBranchList));
+      Logger.recordOutput(
+          "Field Constants/Nearest Right Branch", poseSupplier.get().nearest(rightBranchList));
       if (left) {
         return poseSupplier.get().nearest(leftBranchList);
       } else {

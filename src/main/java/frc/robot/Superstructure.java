@@ -161,7 +161,61 @@ public class Superstructure {
 
   // A set of bindings for the Gripper subsystem and algae states (ALGAE_INTAKE, ALGAE_READY,
   // ALGAE_PRESCORE)
-  private void setAlgaeBindings() {}
+  private void setAlgaeBindings() {
+    layout
+        .L2
+        .and(() -> !(outtake.getDetected()))
+        .and(() -> (DriveCommands.getBestIntake(drive) == IntakeLocation.REEF))
+        .onTrue(
+            Commands.parallel(
+                this.setState(State.ALGAE_INTAKE),
+                Commands.sequence(
+                    elevator.setTarget(() -> (FieldConstants.ReefConstants.algaeTarget.L2.height)),
+                    elevator.setExtension())));
+
+    layout
+        .L3
+        .and(() -> !(outtake.getDetected()))
+        .and(() -> (DriveCommands.getBestIntake(drive) == IntakeLocation.REEF))
+        .onTrue(
+            Commands.parallel(
+                this.setState(State.ALGAE_INTAKE),
+                Commands.sequence(
+                    elevator.setTarget(() -> (FieldConstants.ReefConstants.algaeTarget.L3.height)),
+                    elevator.setExtension())));
+
+    stateMap.get(State.ALGAE_INTAKE).whileTrue(gripper.setVoltage(() -> (GripperConstants.intake)));
+
+    stateMap
+        .get(State.ALGAE_INTAKE)
+        .and(gripper::getDetected)
+        .onTrue(this.setState(State.ALGAE_READY));
+
+    stateMap
+        .get(State.ALGAE_READY)
+        .and(() -> (FieldConstants.BargeConstants.nearNet(drive::getPose)))
+        .onTrue(this.setState(State.ALGAE_PRESCORE));
+
+    stateMap.get(State.ALGAE_READY).whileTrue(gripper.setVoltage(() -> GripperConstants.intake));
+
+    stateMap
+        .get(State.ALGAE_PRESCORE)
+        .and(() -> !(FieldConstants.BargeConstants.nearNet(drive::getPose)))
+        .onTrue(this.setState(State.ALGAE_READY));
+
+    layout
+        .L4
+        .and(stateMap.get(State.ALGAE_PRESCORE))
+        .onTrue(
+            Commands.sequence(
+                elevator.setTarget(() -> (FieldConstants.BargeConstants.elevatorSetpoint)),
+                elevator.setExtension()));
+
+    layout
+        .scoreRequest
+        .and(stateMap.get(State.ALGAE_PRESCORE))
+        .whileTrue(gripper.setVoltage(() -> (GripperConstants.net)));
+  }
 
   // A set of bindings for the Outtake, and Hopper subsystems and coral states (CORAL_INTAKE,
   // CORAL_READY, CORAL_PRESCORE)
@@ -189,7 +243,7 @@ public class Superstructure {
         .and(DriverStation::isTeleop)
         .onTrue(
             Commands.parallel(
-                rumbleCommand(layout.driveController, 0.5, 0.5),
+                rumbleCommand(layout.driveController, 0.5, 1.0),
                 elevator.setTarget(() -> (kCoralTarget.height))));
 
     // Auto Align
@@ -412,6 +466,11 @@ public class Superstructure {
                 .setTarget(() -> (FieldConstants.ReefConstants.algaeTarget.L3.height))
                 .andThen(elevator.setExtension()));
 
+    stateMap
+        .get(State.MANUAL_ELEVATOR)
+        .and(gripper::getDetected)
+        .whileTrue(gripper.setVoltage(() -> (GripperConstants.intake)));
+
     // Algae Net Setpoint
     layout
         .L4
@@ -474,7 +533,9 @@ public class Superstructure {
                 outtake.setVoltage(() -> 0.0),
                 hopper.setVoltage(0, outtake),
                 gripper.setVoltage(() -> 0.0),
-                elevator.setTarget(() -> 0.0).andThen(elevator.setExtension()),
+                elevator
+                    .setTarget(() -> 0.0)
+                    .andThen(elevator.setExtension().andThen(elevator.homeElevator())),
                 this.setState(State.IDLE)));
 
     // Cancel Request but robot does have an algae.
