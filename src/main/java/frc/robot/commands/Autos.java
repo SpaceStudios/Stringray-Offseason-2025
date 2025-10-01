@@ -51,6 +51,16 @@ public class Autos {
         superstructure.setState(State.CORAL_INTAKE),
         Commands.waitUntil(outtake::getDetected));
   }
+
+  public static Command runTestAuto() {
+    return Commands.sequence(
+      AutoRoutines.runTrajectory("aCtoG"),
+      AutoRoutines.runTrajectory("GtoS"),
+      AutoRoutines.runTrajectory("StoD"),
+      AutoRoutines.runTrajectory("DToS")
+    );
+  }
+
   // public static Command scoreCoral(
   //     Supplier<coralTarget> targetSupplier, Elevator elevator, Outtake outtake) {
   //   return Commands.sequence(
