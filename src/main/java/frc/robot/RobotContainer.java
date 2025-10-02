@@ -58,14 +58,15 @@ import frc.robot.subsystems.outtake.Outtake;
 import frc.robot.subsystems.outtake.OuttakeIO;
 import frc.robot.subsystems.outtake.OuttakeIOSim;
 import frc.robot.subsystems.outtake.OuttakeIOTalonFX;
+import frc.robot.subsystems.proximity.ProximityIO;
 import frc.robot.subsystems.proximity.ProximityIOCanAndColor;
+import frc.robot.subsystems.proximity.ProximityIOSim;
 import frc.robot.subsystems.vision.Vision;
+import frc.robot.subsystems.vision.VisionConstants;
 import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIOPhotonVision;
 import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
-import frc.robot.util.AutoAlignConstants;
 import frc.robot.util.FieldConstants;
-import frc.robot.util.PoseUtils;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
@@ -124,9 +125,9 @@ public class RobotContainer {
                 new ModuleIOTalonFX(TunerConstants.BackLeft),
                 new ModuleIOTalonFX(TunerConstants.BackRight));
         elevator = new Elevator(new ElevatorIOTalonFX());
-        outtake = new Outtake(new OuttakeIOTalonFX(new ProximityIOCanAndColor(21, 0.2)));
+        outtake = new Outtake(new OuttakeIOTalonFX(), new ProximityIOCanAndColor(21, 0.2));
         hopper = new Hopper(new HopperIOTalonFX());
-        gripper = new Gripper(new GripperIOTalonFX(new ProximityIOCanAndColor(41, 0.15)));
+        gripper = new Gripper(new GripperIOTalonFX(), new ProximityIOCanAndColor(41, 0.15));
         climb = new Climb(new ClimbIOTalonFX());
         vision =
             new Vision(
@@ -148,18 +149,18 @@ public class RobotContainer {
                 new ModuleIOSim(TunerConstants.BackLeft),
                 new ModuleIOSim(TunerConstants.BackRight));
         elevator = new Elevator(new ElevatorIOSim());
-        outtake = new Outtake(new OuttakeIOSim());
+        outtake = new Outtake(new OuttakeIOSim(), new ProximityIOSim("Outtake"));
         hopper = new Hopper(new HopperIOSim());
-        gripper = new Gripper(new GripperIOSim());
+        gripper = new Gripper(new GripperIOSim(), new ProximityIOSim("Gripper"));
         climb = new Climb(new ClimbIOSim());
         vision =
             new Vision(
                 drive::addVisionMeasurement,
                 FieldConstants.fieldLayout,
                 new VisionIOPhotonVisionSim(
-                    "Left Cam", cameraTransforms[1], drive::getPose, FieldConstants.getLayout()),
+                    "Left Cam", cameraTransforms[1], drive::getPose, VisionConstants.fieldLayout),
                 new VisionIOPhotonVisionSim(
-                    "Right Cam", cameraTransforms[0], drive::getPose, FieldConstants.getLayout()));
+                    "Right Cam", cameraTransforms[0], drive::getPose, VisionConstants.fieldLayout));
         break;
 
       default:
@@ -172,16 +173,14 @@ public class RobotContainer {
                 new ModuleIO() {},
                 new ModuleIO() {});
         elevator = new Elevator(new ElevatorIO() {});
-        outtake = new Outtake(new OuttakeIO() {});
+        outtake = new Outtake(new OuttakeIO() {}, new ProximityIO() {});
         hopper = new Hopper(new HopperIO() {});
-        gripper = new Gripper(new GripperIO() {});
+        gripper = new Gripper(new GripperIO() {}, new ProximityIO() {});
         climb = new Climb(new ClimbIO() {});
         vision =
             new Vision(drive::addVisionMeasurement, FieldConstants.fieldLayout, new VisionIO[] {});
         break;
     }
-
-    AutoAlignConstants.getAprilTagPoses();
 
     // Setting Trajectory Following
     AutoRoutines.poseGetter = drive::getPose;
@@ -289,13 +288,6 @@ public class RobotContainer {
     drive.setDefaultCommand(
         DriveCommands.joystickDrive(
             drive, () -> -driver.getLeftY(), () -> -driver.getLeftX(), () -> -driver.getRightX()));
-
-    operator
-        .x()
-        .onTrue(
-            PoseUtils.getOffsets(
-                () -> drive.getPose().nearest(AutoAlignConstants.offsetList),
-                () -> drive.getPose()));
   }
 
   public Command controllerRumble(double time, double strength) {

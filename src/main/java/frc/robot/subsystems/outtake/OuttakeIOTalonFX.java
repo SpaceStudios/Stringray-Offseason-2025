@@ -18,8 +18,6 @@ import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Temperature;
 import edu.wpi.first.units.measure.Voltage;
-import frc.robot.subsystems.proximity.ProximityDataAutoLogged;
-import frc.robot.subsystems.proximity.ProximityIO;
 
 /** Add your docs here. */
 public class OuttakeIOTalonFX implements OuttakeIO {
@@ -35,10 +33,7 @@ public class OuttakeIOTalonFX implements OuttakeIO {
   private final Debouncer connectedDebouncer = new Debouncer(0.5);
   private final Debouncer detectedDebouncer = new Debouncer(0.25, DebounceType.kBoth);
 
-  private final ProximityIO sensor;
-  private final ProximityDataAutoLogged sensorData = new ProximityDataAutoLogged();
-
-  public OuttakeIOTalonFX(ProximityIO sensor) {
+  public OuttakeIOTalonFX() {
     talon = new TalonFX(20); // TODO replace this with the actual outtake id;
 
     TalonFXConfiguration config = new TalonFXConfiguration();
@@ -64,13 +59,10 @@ public class OuttakeIOTalonFX implements OuttakeIO {
         50.0, voltage, temperature, statorCurrent, supplyCurrent);
 
     talon.optimizeBusUtilization();
-
-    this.sensor = sensor;
   }
 
   @Override
   public void getData(OuttakeDataAutoLogged data) {
-    sensor.getData(sensorData);
     data.connected = connectedDebouncer.calculate(talon.isConnected());
 
     BaseStatusSignal.refreshAll(voltage, temperature, statorCurrent, supplyCurrent);
@@ -78,8 +70,6 @@ public class OuttakeIOTalonFX implements OuttakeIO {
     data.temperature = temperature.getValueAsDouble();
     data.statorCurrent = statorCurrent.getValueAsDouble();
     data.supplyCurrent = supplyCurrent.getValueAsDouble();
-
-    data.detected = detectedDebouncer.calculate(sensorData.detected);
   }
 
   @Override

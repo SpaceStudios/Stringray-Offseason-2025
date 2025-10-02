@@ -94,7 +94,9 @@ public class Autos {
             outtake
                 .setVoltage(() -> (OuttakeConstants.voltageMap.get(elevator.getSetpoint())))
                 .until(() -> !(outtake.getDetected())),
-            Commands.waitSeconds(0.5).andThen(outtake.setDetected(false)).unless(Robot::isReal)),
+            Commands.waitSeconds(0.5)
+                .andThen(() -> outtake.setDetected(false))
+                .unless(Robot::isReal)),
         elevator.setTarget(() -> 0.0),
         elevator.setExtension());
   }
@@ -114,7 +116,9 @@ public class Autos {
     return Commands.parallel(
             hopper.setVoltage(OuttakeConstants.intake),
             outtake.setVoltage(() -> (OuttakeConstants.intake)),
-            Commands.waitSeconds(0.5).andThen(outtake.setDetected(true)).unless(Robot::isReal))
+            Commands.waitSeconds(0.5)
+                .andThen(() -> outtake.setDetected(true))
+                .unless(Robot::isReal))
         .until(outtake::getDetected);
   }
 
@@ -125,7 +129,7 @@ public class Autos {
                   AllianceFlipUtil.apply(
                       new Pose2d(7.25, FieldConstants.fieldWidth / 2, Rotation2d.k180deg)));
               if (Robot.isSimulation()) {
-                outtake.setDetectedFunction(preload);
+                outtake.setDetected(preload);
                 System.out.println(preload ? "Coral Preloaded" : "Coral Was Not Preloaded");
               }
             })

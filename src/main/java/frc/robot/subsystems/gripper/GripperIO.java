@@ -9,9 +9,7 @@ import org.littletonrobotics.junction.AutoLog;
 /** Add your docs here. */
 public interface GripperIO {
   @AutoLog
-  public class gripperData {
-    public boolean detected = false;
-
+  public class GripperData {
     public boolean connected = false;
     public double voltage = 0.0;
     public double temperature = 0.0;
@@ -19,10 +17,7 @@ public interface GripperIO {
     public double statorCurrent = 0.0;
   }
 
-  public default void getData(gripperDataAutoLogged data) {}
-  ;
+  public default void getData(GripperDataAutoLogged data) {}
 
   public default void setVoltage(double voltage) {}
-
-  public default void setDetected(boolean detected) {}
 }

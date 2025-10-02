@@ -5,8 +5,9 @@
 package frc.robot.subsystems.outtake;
 
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.subsystems.proximity.ProximityDataAutoLogged;
+import frc.robot.subsystems.proximity.ProximityIO;
 import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
@@ -15,45 +16,37 @@ public class Outtake extends SubsystemBase {
   /** Creates a new Outtake. */
   private final OuttakeIO io;
 
-  private final OuttakeDataAutoLogged data = new OuttakeDataAutoLogged();
+  private final ProximityIO proximityIO;
 
-  public Outtake(OuttakeIO io) {
+  private final OuttakeDataAutoLogged data = new OuttakeDataAutoLogged();
+  private final ProximityDataAutoLogged proximityData = new ProximityDataAutoLogged();
+
+  public Outtake(OuttakeIO io, ProximityIO proximityIO) {
     this.io = io;
+    this.proximityIO = proximityIO;
   }
 
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
     io.getData(data);
+    proximityIO.getData(proximityData);
     Logger.processInputs("Outtake", data);
   }
 
   public Command setVoltage(DoubleSupplier voltage) {
     return this.run(
-            () -> {
-              io.setVoltage(voltage.getAsDouble());
-              setDetectedFunction(true);
-            })
-        .finallyDo(
-            () -> {
-              io.setVoltage(0.0);
-            });
-  }
-
-  public Command setDetected(boolean detected) {
-    return Commands.runOnce(
         () -> {
-          System.out.println(detected);
-          io.setDetected(detected);
+          io.setVoltage(voltage.getAsDouble());
         });
-  }
-
-  public void setDetectedFunction(boolean detected) {
-    io.setDetected(detected);
   }
 
   @AutoLogOutput(key = "Outtake/Detected")
   public boolean getDetected() {
-    return data.detected;
+    return proximityData.detected;
+  }
+
+  public void setDetected(boolean detected) {
+    proximityIO.setDetected(detected);
   }
 }

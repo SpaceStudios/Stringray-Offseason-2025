@@ -20,12 +20,10 @@ import edu.wpi.first.units.measure.Temperature;
 import edu.wpi.first.units.measure.Voltage;
 import frc.robot.subsystems.gripper.GripperConstants.MotorConstants;
 import frc.robot.subsystems.proximity.ProximityDataAutoLogged;
-import frc.robot.subsystems.proximity.ProximityIO;
 
 /** Add your docs here. */
 public class GripperIOTalonFX implements GripperIO {
   private final TalonFX talon = new TalonFX(40);
-  private final ProximityIO sensor;
   private final ProximityDataAutoLogged proximityData = new ProximityDataAutoLogged();
   private final StatusSignal<Voltage> voltage;
   private final StatusSignal<Temperature> temperature;
@@ -35,9 +33,7 @@ public class GripperIOTalonFX implements GripperIO {
 
   private final VoltageOut voltageControl = new VoltageOut(0.0);
 
-  public GripperIOTalonFX(ProximityIO sensor) {
-    this.sensor = sensor;
-
+  public GripperIOTalonFX() {
     TalonFXConfiguration config = new TalonFXConfiguration();
     config.CurrentLimits.StatorCurrentLimit = MotorConstants.statorLimit;
     config.CurrentLimits.StatorCurrentLimitEnable = true;
@@ -70,13 +66,11 @@ public class GripperIOTalonFX implements GripperIO {
   }
 
   @Override
-  public void getData(gripperDataAutoLogged data) {
+  public void getData(GripperDataAutoLogged data) {
     StatusCode status =
         BaseStatusSignal.refreshAll(voltage, temperature, statorCurrent, supplyCurrent, velocity);
-    sensor.getData(proximityData);
 
     data.connected = status.isOK();
-    data.detected = proximityData.detected;
     data.statorCurrent = statorCurrent.getValueAsDouble();
     data.supplyCurrent = supplyCurrent.getValueAsDouble();
     data.voltage = voltage.getValueAsDouble();

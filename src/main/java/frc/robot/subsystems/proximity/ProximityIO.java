@@ -19,4 +19,6 @@ public interface ProximityIO {
   }
 
   public default void getData(ProximityDataAutoLogged data) {}
+
+  public default void setDetected(boolean detected) {}
 }

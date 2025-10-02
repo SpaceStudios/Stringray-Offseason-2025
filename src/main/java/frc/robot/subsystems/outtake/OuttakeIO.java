@@ -16,13 +16,9 @@ public interface OuttakeIO {
     public double temperature = 0.0;
     public double statorCurrent = 0.0;
     public double supplyCurrent = 0.0;
-
-    public boolean detected = false;
   }
 
   public default void getData(OuttakeDataAutoLogged data) {}
 
   public default void setVoltage(double voltage) {}
-
-  public default void setDetected(boolean detected) {}
 }
