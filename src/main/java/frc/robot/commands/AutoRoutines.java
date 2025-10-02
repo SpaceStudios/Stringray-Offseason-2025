@@ -53,7 +53,11 @@ public class AutoRoutines {
         DriveCommands.autoAlign(drive, () -> ReefConstants.getBestBranch(drive::getPose, true)),
         elevator.setTarget(() -> CoralTarget.L4.height),
         elevator.setExtension(),
-        outtake.setVoltage(() -> OuttakeConstants.L4));
+        Commands.waitUntil(elevator::atSetpoint),
+        outtake.setVoltage(() -> OuttakeConstants.L4),
+        Commands.waitUntil(() -> !outtake.getDetected()),
+        elevator.setTarget(() -> 0.0),
+        elevator.setExtension());
   }
 
   public static void setDataGetters(
