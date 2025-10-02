@@ -27,6 +27,7 @@ import frc.robot.subsystems.led.LEDIO;
 import frc.robot.subsystems.led.LEDIOCandle;
 import frc.robot.subsystems.outtake.Outtake;
 import frc.robot.subsystems.outtake.OuttakeConstants;
+import frc.robot.util.AllianceFlipUtil;
 import frc.robot.util.AutoAlignConstants;
 import frc.robot.util.FieldConstants;
 import frc.robot.util.FieldConstants.ReefConstants;
@@ -156,8 +157,6 @@ public class Superstructure {
     // Why can I control the entire robot using on a single controller and sensor
     // readings?
     // Manual Elevator Stuff
-    layout.manualElevator.onTrue(this.setState(State.MANUAL_ELEVATOR));
-    // .onFalse(this.setState(State.IDLE));
     // Setting the bindings
     setManualBindings();
 
@@ -320,18 +319,30 @@ public class Superstructure {
 
     stateMap
         .get(State.CORAL_READY)
-        .and(() -> AutoAlignConstants.inReefRange(drive, 2.67))
+        .and(
+            () ->
+                FieldConstants.inTolerance(
+                    drive::getPose,
+                    () -> (AllianceFlipUtil.apply(ReefConstants.middleReef)),
+                    3.5,
+                    Math.PI * 2))
         .onTrue(this.setState(State.CORAL_PRESCORE));
 
     stateMap
         .get(State.CORAL_PRESCORE)
-        .and(() -> !AutoAlignConstants.inReefRange(drive, 2.67))
+        .and(
+            () ->
+                !FieldConstants.inTolerance(
+                    drive::getPose,
+                    () -> (AllianceFlipUtil.apply(ReefConstants.middleReef)),
+                    3.5,
+                    Math.PI * 2))
         .onTrue(this.setState(State.CORAL_READY));
 
     layout
         .scoreRequest
         .and(stateMap.get(State.CORAL_PRESCORE))
-        // .and(() -> (kCoralTarget != CoralTarget.L1))
+        .and(() -> (kCoralTarget != CoralTarget.L1))
         .onTrue(
             Commands.sequence(
                 elevator.setExtension(),
@@ -342,6 +353,12 @@ public class Superstructure {
                     .until(() -> !(outtake.getDetected())),
                 elevator.setTarget(() -> (0.0)),
                 elevator.setExtension()));
+
+    layout
+        .scoreRequest
+        .and(stateMap.get(State.CORAL_PRESCORE))
+        .and(() -> (kCoralTarget == CoralTarget.L1))
+        .onTrue(Commands.parallel());
 
     layout
         .L1
@@ -389,14 +406,15 @@ public class Superstructure {
         .and(() -> !outtake.getDetected())
         .onTrue(this.setState(State.IDLE));
 
+    stateMap.get(State.IDLE).and(outtake::getDetected).onTrue(this.setState(State.CORAL_READY));
     // Sim States
     stateMap
         .get(State.CORAL_INTAKE)
         .and(
             () ->
                 (FieldConstants.inTolerance(
-                    SourceConstants.getNearestSource(drive::getPose),
-                    drive.getPose(),
+                    () -> (SourceConstants.getNearestSource(drive::getPose)),
+                    drive::getPose,
                     0.5,
                     Math.PI / 4.0)))
         .onTrue(outtake.setDetected(true));
@@ -421,6 +439,10 @@ public class Superstructure {
   // Only Runs during
   // ELEVATOR_MANUAL state
   private void setManualBindings() {
+    layout
+        .manualElevator
+        .whileTrue(this.setState(State.MANUAL_ELEVATOR))
+        .onFalse(this.setState(State.IDLE));
     // Manual Coral Intake if near source
     layout
         .intakeRequest
@@ -502,10 +524,11 @@ public class Superstructure {
     // Coral Auto Align
     layout
         .autoAlignLeft
+        .or(layout.autoAlignRight)
         .and(stateMap.get(State.MANUAL_ELEVATOR))
         .whileTrue(
             DriveCommands.autoAlign(
-                drive, () -> (FieldConstants.ReefConstants.getBestBranch(drive::getPose, true))));
+                drive, () -> (FieldConstants.ReefConstants.getBestBranch(drive::getPose, layout.autoAlignLeft.getAsBoolean()))));
 
     // Coral Setpoints
     // L1 Setpoint
