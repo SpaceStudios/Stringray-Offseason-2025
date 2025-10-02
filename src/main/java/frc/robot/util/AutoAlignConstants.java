@@ -55,11 +55,7 @@ public class AutoAlignConstants {
     // Defualt's to init with blue side so if it is red you need to change field
     // layout -- idk i
     // found this online and it works
-    if (alliance == Alliance.Blue) {
-      aprilTagLayout.setOrigin(AprilTagFieldLayout.OriginPosition.kBlueAllianceWallRightSide);
-    } else {
-      aprilTagLayout.setOrigin(AprilTagFieldLayout.OriginPosition.kRedAllianceWallRightSide);
-    }
+    // FieldConstants.getLayout();
 
     aprilPoses.clear();
     offsetList.clear();
@@ -69,8 +65,8 @@ public class AutoAlignConstants {
     if (alliance == Alliance.Red) {
 
       for (int i = 6; i < 12; i++) {
-        aprilPoses.put(i, aprilTagLayout.getTagPose(i).get().toPose2d());
-        offsetList.add(aprilTagLayout.getTagPose(i).get().toPose2d());
+        aprilPoses.put(i, FieldConstants.getLayout().getTagPose(i).get().toPose2d());
+        offsetList.add(FieldConstants.getLayout().getTagPose(i).get().toPose2d());
       }
 
       for (int i = 6; i < 9; i++) {
@@ -89,8 +85,8 @@ public class AutoAlignConstants {
     if (alliance == Alliance.Blue) {
 
       for (int i = 17; i < 23; i++) {
-        aprilPoses.put(i, aprilTagLayout.getTagPose(i).get().toPose2d());
-        offsetList.add(aprilTagLayout.getTagPose(i).get().toPose2d());
+        aprilPoses.put(i, FieldConstants.getLayout().getTagPose(i).get().toPose2d());
+        offsetList.add(FieldConstants.getLayout().getTagPose(i).get().toPose2d());
       }
 
       for (int i = 17; i < 20; i++) {

@@ -380,7 +380,6 @@ public class Superstructure {
 
     stateMap
         .get(State.CORAL_PRESCORE)
-        .and(() -> !(outtake.getDetected()))
         .and(() -> !outtake.getDetected())
         .onTrue(this.setState(State.IDLE));
 

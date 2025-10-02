@@ -40,8 +40,6 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
 import frc.robot.Constants.Mode;
 import frc.robot.generated.TunerConstants;
-import frc.robot.util.AllianceFlipUtil;
-import frc.robot.util.FieldConstants;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import org.littletonrobotics.junction.AutoLogOutput;
@@ -68,6 +66,10 @@ public class Drive extends SubsystemBase {
   private final Alert gyroDisconnectedAlert =
       new Alert("Disconnected gyro, using kinematics as fallback.", AlertType.kError);
 
+  private static final PIDController xController = new PIDController(10.0, 0, 0);
+  private static final PIDController yController = new PIDController(10.0, 0, 0);
+  private static final PIDController rotController = new PIDController(7.5, 0, 0);
+
   private SwerveDriveKinematics kinematics = new SwerveDriveKinematics(getModuleTranslations());
   private Rotation2d rawGyroRotation = new Rotation2d();
   private SwerveModulePosition[] lastModulePositions = // For delta tracking
@@ -78,12 +80,7 @@ public class Drive extends SubsystemBase {
         new SwerveModulePosition()
       };
   private SwerveDrivePoseEstimator poseEstimator =
-      new SwerveDrivePoseEstimator(
-          kinematics,
-          rawGyroRotation,
-          lastModulePositions,
-          AllianceFlipUtil.apply(
-              new Pose2d(7.25, FieldConstants.fieldWidth / 2, Rotation2d.k180deg)));
+      new SwerveDrivePoseEstimator(kinematics, rawGyroRotation, lastModulePositions, new Pose2d());
 
   public Drive(
       GyroIO gyroIO,
@@ -321,5 +318,21 @@ public class Drive extends SubsystemBase {
       new Translation2d(TunerConstants.BackLeft.LocationX, TunerConstants.BackLeft.LocationY),
       new Translation2d(TunerConstants.BackRight.LocationX, TunerConstants.BackRight.LocationY)
     };
+  }
+
+  public void followTrajectory(SwerveSample sample) {
+    // Get the current pose of the robot
+    Pose2d pose = getPose();
+
+    // Generate the next speeds for the robot
+    ChassisSpeeds speeds =
+        new ChassisSpeeds(
+            sample.vx + xController.calculate(pose.getX(), sample.x),
+            sample.vy + yController.calculate(pose.getY(), sample.y),
+            sample.omega
+                + rotController.calculate(pose.getRotation().getRadians(), sample.heading));
+
+    // Apply the generated speeds
+    runVelocity(speeds);
   }
 }
