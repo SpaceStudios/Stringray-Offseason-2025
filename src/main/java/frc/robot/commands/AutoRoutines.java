@@ -120,7 +120,7 @@ public class AutoRoutines {
 
   public static Consumer<SwerveSample> driveController(Drive drive) {
     rotController.enableContinuousInput(-Math.PI, Math.PI);
-    
+
     return (sample) -> {
       final Pose2d pose = drive.getPose();
       Logger.recordOutput("Autos/Sample Pose", sample.getPose());
