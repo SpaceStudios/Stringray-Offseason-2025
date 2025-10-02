@@ -122,7 +122,7 @@ public class AutoRoutines {
             });
   }
 
-  public Consumer<SwerveSample> driveController(Drive drive) {
+  public static Consumer<SwerveSample> driveController(Drive drive) {
     rotController.enableContinuousInput(-Math.PI, Math.PI);
 
     return (sample) -> {

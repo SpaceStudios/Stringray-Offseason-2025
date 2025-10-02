@@ -4,6 +4,8 @@
 
 package frc.robot.commands;
 
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.Robot;
@@ -14,8 +16,11 @@ import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.hopper.Hopper;
 import frc.robot.subsystems.outtake.Outtake;
 import frc.robot.subsystems.outtake.OuttakeConstants;
+import frc.robot.util.AllianceFlipUtil;
+import frc.robot.util.FieldConstants;
 import frc.robot.util.FieldConstants.ReefConstants.CoralTarget;
 import java.util.function.Supplier;
+import org.littletonrobotics.junction.Logger;
 
 /** Some Preset Autos */
 public class Autos {
@@ -26,7 +31,7 @@ public class Autos {
       Hopper hopper,
       Superstructure superstructure) {
     return Commands.sequence(
-        simInit(outtake, true),
+        simInit(drive, outtake, true),
         AutoRoutines.runTrajectory("aCtoG"),
         scoreCoral(() -> (CoralTarget.L4), elevator, outtake),
         AutoRoutines.runTrajectory("GtoS"));
@@ -39,17 +44,24 @@ public class Autos {
       Hopper hopper,
       Superstructure superstructure) {
     return Commands.sequence(
-        simInit(outtake, true),
+        simInit(drive, outtake, true),
         AutoRoutines.runTrajectory("aCtoG"),
         scoreCoral(() -> (CoralTarget.L4), elevator, outtake),
         AutoRoutines.runTrajectory("GtoS"),
-        superstructure.setState(State.CORAL_INTAKE),
-        Commands.waitUntil(outtake::getDetected),
+        intakeCoral(superstructure, outtake, hopper),
         AutoRoutines.runTrajectory("StoD"),
         scoreCoral(() -> (CoralTarget.L4), elevator, outtake),
-        AutoRoutines.runTrajectory("DtoS"),
-        superstructure.setState(State.CORAL_INTAKE),
-        Commands.waitUntil(outtake::getDetected));
+        AutoRoutines.runTrajectory("DtoS"));
+  }
+
+  public static Command logCommand(Superstructure superstructure) {
+    return Commands.run(
+        () -> {
+          Logger.recordOutput(
+              "Autos/Coral Ready", superstructure.kCurrentState == State.CORAL_READY);
+          Logger.recordOutput(
+              "Autos/Coral Intake", superstructure.kCurrentState == State.CORAL_INTAKE);
+        });
   }
 
   public static Command runTestAuto() {
@@ -75,27 +87,43 @@ public class Autos {
   public static Command scoreCoral(
       Supplier<CoralTarget> targetSupplier, Elevator elevator, Outtake outtake) {
     return Commands.sequence(
-        elevator.setTarget(() -> (CoralTarget.L4.height)),
+        elevator.setTarget(() -> (targetSupplier.get().height)),
         elevator.setExtension(),
         Commands.waitUntil(elevator::atSetpoint),
-        outtake
-            .setVoltage(() -> (OuttakeConstants.voltageMap.get(elevator.getSetpoint())))
-            .until(() -> !(outtake.getDetected())),
+        Commands.parallel(
+            outtake
+                .setVoltage(() -> (OuttakeConstants.voltageMap.get(elevator.getSetpoint())))
+                .until(() -> !(outtake.getDetected())),
+            Commands.waitSeconds(0.5).andThen(outtake.setDetected(false)).unless(Robot::isReal)),
         elevator.setTarget(() -> 0.0),
         elevator.setExtension());
   }
 
   public static Command intakeCoral(Superstructure superstructure, Outtake outtake, Hopper hopper) {
+    // return superstructure
+    //     .setState(State.CORAL_INTAKE)
+    //     .andThen(
+    //         Commands.run(
+    //             () -> {
+    //               Logger.recordOutput(
+    //                   "Autos/Coral Ready", superstructure.kCurrentState == State.CORAL_READY);
+    //               Logger.recordOutput(
+    //                   "Autos/Coral Intake", superstructure.kCurrentState == State.CORAL_INTAKE);
+    //             }));
+    // return logCommand(superstructure);
     return Commands.parallel(
-            superstructure.setState(State.CORAL_INTAKE),
+            hopper.setVoltage(OuttakeConstants.intake),
             outtake.setVoltage(() -> (OuttakeConstants.intake)),
-            hopper.setVoltage(OuttakeConstants.intake))
+            Commands.waitSeconds(0.5).andThen(outtake.setDetected(true)).unless(Robot::isReal))
         .until(outtake::getDetected);
   }
 
-  public static Command simInit(Outtake outtake, boolean preload) {
+  public static Command simInit(Drive drive, Outtake outtake, boolean preload) {
     return Commands.run(
             () -> {
+              drive.setPose(
+                  AllianceFlipUtil.apply(
+                      new Pose2d(7.25, FieldConstants.fieldWidth / 2, Rotation2d.k180deg)));
               if (Robot.isSimulation()) {
                 outtake.setDetectedFunction(preload);
                 System.out.println(preload ? "Coral Preloaded" : "Coral Was Not Preloaded");

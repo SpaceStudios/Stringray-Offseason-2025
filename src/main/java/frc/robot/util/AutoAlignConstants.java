@@ -21,8 +21,8 @@ import java.util.List;
 import org.littletonrobotics.junction.Logger;
 
 public class AutoAlignConstants {
-  public static AprilTagFieldLayout aprilTagLayout =
-      AprilTagFieldLayout.loadField(AprilTagFields.k2025ReefscapeAndyMark);
+  public static AprilTagFieldLayout aprilTagLayout = AprilTagFieldLayout
+      .loadField(AprilTagFields.k2025ReefscapeAndyMark);
 
   public static List<Pose2d> leftPersPose = new ArrayList<>();
   public static List<Pose2d> rightPersPose = new ArrayList<>();
@@ -35,16 +35,14 @@ public class AutoAlignConstants {
 
   public static double AUTOALIGN_BACKUP_X = 18.0;
   public static double AUTOALIGN_BACKUP_Y = 10.0;
-  public static Transform2d backwardsLeftTransform =
-      new Transform2d(
-          new Translation2d(
-              Units.inchesToMeters(AUTOALIGN_BACKUP_X), Units.inchesToMeters(AUTOALIGN_BACKUP_Y)),
-          Rotation2d.fromDegrees(-180));
-  public static Transform2d backwardsRightTransform =
-      new Transform2d(
-          new Translation2d(
-              Units.inchesToMeters(AUTOALIGN_BACKUP_X), -Units.inchesToMeters(AUTOALIGN_BACKUP_Y)),
-          Rotation2d.fromDegrees(-180));
+  public static Transform2d backwardsLeftTransform = new Transform2d(
+      new Translation2d(
+          Units.inchesToMeters(AUTOALIGN_BACKUP_X), Units.inchesToMeters(AUTOALIGN_BACKUP_Y)),
+      Rotation2d.fromDegrees(-180));
+  public static Transform2d backwardsRightTransform = new Transform2d(
+      new Translation2d(
+          Units.inchesToMeters(AUTOALIGN_BACKUP_X), -Units.inchesToMeters(AUTOALIGN_BACKUP_Y)),
+      Rotation2d.fromDegrees(-180));
 
   public static void getAprilTagPoses() {
 
@@ -111,10 +109,8 @@ public class AutoAlignConstants {
 
     Logger.recordOutput(
         "StateTracker/isInRange",
-        ReefConstants.middleReef.getTranslation().getDistance(drive.getPose().getTranslation())
-            <= threshold);
+        ReefConstants.middleReef.getTranslation().getDistance(drive.getPose().getTranslation()) <= threshold);
 
-    return ReefConstants.middleReef.getTranslation().getDistance(drive.getPose().getTranslation())
-        <= threshold;
+    return ReefConstants.middleReef.getTranslation().getDistance(drive.getPose().getTranslation()) <= threshold;
   }
 }
