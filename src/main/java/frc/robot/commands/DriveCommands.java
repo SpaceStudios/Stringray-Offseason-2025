@@ -170,7 +170,7 @@ public class DriveCommands {
    * absolute rotation with a joystick.
    */
   public static Command autoAlign(
-      Drive drive, Supplier<Pose2d> pose, CommandXboxController controller) {
+      Drive drive, Supplier<Pose2d> pose) {
     // Create PID controller
     ProfiledPIDController angleController =
         new ProfiledPIDController(
@@ -228,10 +228,7 @@ public class DriveCommands {
             })
         .until(() -> DriveCommands.isNear(pose.get(), drive.getPose()))
         .finallyDo(
-            () -> {
-              drive.stopWithX();
-              Superstructure.rumbleCommand(controller, 0.5, 1.0);
-            });
+            () -> drive.stopWithX());
   }
 
   public static boolean isNear(Pose2d target, Pose2d actual) {

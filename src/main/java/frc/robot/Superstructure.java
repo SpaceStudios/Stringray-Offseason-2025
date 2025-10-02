@@ -260,8 +260,7 @@ public class Superstructure {
                 drive,
                 () ->
                     (ReefConstants.getBestBranch(
-                        drive::getPose, layout.autoAlignLeft.getAsBoolean())),
-                layout.driveController)); // Add Auto Align Command Here
+                        drive::getPose, layout.autoAlignLeft.getAsBoolean())))); // Add Auto Align Command Here
 
     layout
         .autoAlignLeft
@@ -272,8 +271,7 @@ public class Superstructure {
                 drive,
                 () ->
                     (ReefConstants.getBestBranch(
-                        drive::getPose, layout.autoAlignLeft.getAsBoolean())),
-                layout.driveController)); // Add Auto Align Command Here
+                        drive::getPose, layout.autoAlignLeft.getAsBoolean())))); // Add Auto Align Command Here
 
     layout
         .scoreRequest
@@ -499,7 +497,7 @@ public class Superstructure {
         .and(stateMap.get(State.MANUAL_ELEVATOR))
         .whileTrue(
             DriveCommands.autoAlign(
-                drive, () -> (FieldConstants.ReefConstants.getBestBranch(drive::getPose, true)), layout.driveController));
+                drive, () -> (FieldConstants.ReefConstants.getBestBranch(drive::getPose, true))));
 
     // Coral Setpoints
     // L1 Setpoint
