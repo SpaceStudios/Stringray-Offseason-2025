@@ -217,13 +217,13 @@ public class Superstructure {
             Commands.sequence(
                 elevator.setTarget(() -> (FieldConstants.BargeConstants.elevatorSetpoint)),
                 elevator.setExtension(),
-                Commands.waitUntil(()-> elevator.atSetpoint()),
+                Commands.waitUntil(() -> elevator.atSetpoint()),
                 gripper.setVoltage(() -> GripperConstants.net)));
 
     stateMap
-    .get(State.ALGAE_PRESCORE)
-    .and(()-> !gripper.getDetected())
-    .onTrue(this.setState(State.IDLE));
+        .get(State.ALGAE_PRESCORE)
+        .and(() -> !gripper.getDetected())
+        .onTrue(this.setState(State.IDLE));
   }
 
   // A set of bindings for the Outtake, and Hopper subsystems and coral states
