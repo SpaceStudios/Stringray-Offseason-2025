@@ -27,6 +27,7 @@ import frc.robot.subsystems.led.LEDIO;
 import frc.robot.subsystems.led.LEDIOCandle;
 import frc.robot.subsystems.outtake.Outtake;
 import frc.robot.subsystems.outtake.OuttakeConstants;
+import frc.robot.util.AutoAlignConstants;
 import frc.robot.util.FieldConstants;
 import frc.robot.util.FieldConstants.ReefConstants;
 import frc.robot.util.FieldConstants.ReefConstants.CoralTarget;
@@ -70,7 +71,8 @@ public class Superstructure {
 
   public enum State {
     IDLE, // Has Nothing and no Subsystems are preforming anything
-    CORAL_INTAKE, // Going to intake coral, Hopper and Outake always runs. If it has a coral then go
+    CORAL_INTAKE, // Going to intake coral, Hopper and Outake always runs. If it has a coral then
+    // go
     // to CORAL_READY. This is triggered when Driver runs intake request
     CORAL_READY, // Has Coral. If it is near a scoring Location go to CORAL_PRESCORE, but if it
     // doesn't have coral go to IDLE
@@ -79,14 +81,16 @@ public class Superstructure {
     ALGAE_INTAKE, // Intaking Algae, should only be triggered when near the reef and desired level
     // is pressed. This is triggered when driver hits L2 or L3 without a coral and
     // algae, and robot is near the reef. Goes to ALGAE_READY when it gets an ALGAE
-    ALGAE_READY, // Has Algae. If it loses an algae go to IDLE, but if it is in the net zone then go
+    ALGAE_READY, // Has Algae. If it loses an algae go to IDLE, but if it is in the net zone then
+    // go
     // to ALGAE_PRESCORE
     ALGAE_PRESCORE, // Has Algae and is in Netzone. If it loses the ALGAE go to IDLE. If it leaves
     // Netzone go to ALGAE_READY
     CLIMB_READY, // Robot is in Idle and Driver pov down is pressed Climb will move from IDLE to
     // CLIMB_READY
     // And climb will move to the right angle for it to be in contact with cage
-    CLIMB_PULL, // Robot is in CLIMB_READY and score request is selected than Climb arm will pull
+    CLIMB_PULL, // Robot is in CLIMB_READY and score request is selected than Climb arm will
+    // pull
     // back -- CLIMB_READY TO CLIMB_PULL
     MANUAL_ELEVATOR // Driver has Manual Control over elevator
   }
@@ -147,12 +151,13 @@ public class Superstructure {
     // Climb
     setClimbBindings();
 
-    // Why can I control the entire robot using on a single controller and sensor readings?
+    // Why can I control the entire robot using on a single controller and sensor
+    // readings?
     // Manual Elevator Stuff
     layout
         .manualElevator
-        .onTrue(this.setState(State.MANUAL_ELEVATOR))
-        .onFalse(this.setState(State.IDLE));
+        .onTrue(this.setState(State.MANUAL_ELEVATOR));
+        // .onFalse(this.setState(State.IDLE));
     // Setting the bindings
     setManualBindings();
 
@@ -160,7 +165,8 @@ public class Superstructure {
     setNonStateBindings();
   }
 
-  // A set of bindings for the Gripper subsystem and algae states (ALGAE_INTAKE, ALGAE_READY,
+  // A set of bindings for the Gripper subsystem and algae states (ALGAE_INTAKE,
+  // ALGAE_READY,
   // ALGAE_PRESCORE)
   private void setAlgaeBindings() {
     layout
@@ -192,12 +198,12 @@ public class Superstructure {
         .and(gripper::getDetected)
         .onTrue(this.setState(State.ALGAE_READY));
 
+    stateMap.get(State.ALGAE_READY).onTrue(gripper.setVoltage(() -> GripperConstants.intake));
+
     stateMap
         .get(State.ALGAE_READY)
         .and(() -> (FieldConstants.BargeConstants.nearNet(drive::getPose)))
         .onTrue(this.setState(State.ALGAE_PRESCORE));
-
-    stateMap.get(State.ALGAE_READY).whileTrue(gripper.setVoltage(() -> GripperConstants.intake));
 
     stateMap
         .get(State.ALGAE_PRESCORE)
@@ -205,20 +211,17 @@ public class Superstructure {
         .onTrue(this.setState(State.ALGAE_READY));
 
     layout
-        .L4
+        .scoreRequest
         .and(stateMap.get(State.ALGAE_PRESCORE))
         .onTrue(
             Commands.sequence(
                 elevator.setTarget(() -> (FieldConstants.BargeConstants.elevatorSetpoint)),
-                elevator.setExtension()));
-
-    layout
-        .scoreRequest
-        .and(stateMap.get(State.ALGAE_PRESCORE))
-        .whileTrue(gripper.setVoltage(() -> (GripperConstants.net)));
+                elevator.setExtension(),
+                gripper.setVoltage(() -> GripperConstants.net)));
   }
 
-  // A set of bindings for the Outtake, and Hopper subsystems and coral states (CORAL_INTAKE,
+  // A set of bindings for the Outtake, and Hopper subsystems and coral states
+  // (CORAL_INTAKE,
   // CORAL_READY, CORAL_PRESCORE)
   private void setCoralBindings() {
 
@@ -251,7 +254,18 @@ public class Superstructure {
     layout
         .autoAlignLeft
         .or(layout.autoAlignRight)
-        .and(stateMap.get(State.CORAL_READY).or(stateMap.get(State.CORAL_PRESCORE)))
+        .and(stateMap.get(State.CORAL_READY))
+        .whileTrue(
+            DriveCommands.autoAlign(
+                drive,
+                () ->
+                    (ReefConstants.getBestBranch(
+                        drive::getPose, layout.autoAlignLeft.getAsBoolean())))); // Add Auto Align Command Here
+
+    layout
+        .autoAlignLeft
+        .or(layout.autoAlignRight)
+        .and(stateMap.get(State.CORAL_PRESCORE))
         .whileTrue(
             DriveCommands.autoAlign(
                 drive,
@@ -299,47 +313,28 @@ public class Superstructure {
 
     stateMap
         .get(State.CORAL_READY)
-        .and(
-            () ->
-                (FieldConstants.inTolerance(
-                        ReefConstants.getBestBranch(drive::getPose, true),
-                        drive.getPose(),
-                        0.1,
-                        0.05))
-                    || FieldConstants.inTolerance(
-                        ReefConstants.getBestBranch(drive::getPose, false),
-                        drive.getPose(),
-                        0.1,
-                        0.05))
+        .and(() -> AutoAlignConstants.inReefRange(drive, 2.67))
         .onTrue(this.setState(State.CORAL_PRESCORE));
 
     stateMap
         .get(State.CORAL_PRESCORE)
-        .and(
-            () ->
-                !(FieldConstants.inTolerance(
-                        ReefConstants.getBestBranch(drive::getPose, true),
-                        drive.getPose(),
-                        0.1,
-                        0.05))
-                    || FieldConstants.inTolerance(
-                        ReefConstants.getBestBranch(drive::getPose, false),
-                        drive.getPose(),
-                        0.1,
-                        0.05))
+        .and(() -> !AutoAlignConstants.inReefRange(drive, 2.67))
         .onTrue(this.setState(State.CORAL_READY));
 
     layout
         .scoreRequest
         .and(stateMap.get(State.CORAL_PRESCORE))
-        .and(() -> (kCoralTarget != CoralTarget.L1))
+        // .and(() -> (kCoralTarget != CoralTarget.L1))
         .onTrue(
             Commands.sequence(
                 elevator.setExtension(),
+                Commands.waitSeconds(0.1),
                 Commands.waitUntil(elevator::atSetpoint),
                 outtake
                     .setVoltage(() -> (OuttakeConstants.voltageMap.get(elevator.getSetpoint())))
-                    .until(() -> !(outtake.getDetected()))));
+                    .until(() -> !(outtake.getDetected())),
+                elevator.setTarget(()-> (0.0)),
+                elevator.setExtension()));
 
     layout
         .L1
@@ -385,6 +380,7 @@ public class Superstructure {
     stateMap
         .get(State.CORAL_PRESCORE)
         .and(() -> !(outtake.getDetected()))
+        .and(() -> !outtake.getDetected())
         .onTrue(this.setState(State.IDLE));
 
     // Sim States
@@ -400,7 +396,8 @@ public class Superstructure {
         .onTrue(outtake.setDetected(true));
   }
 
-  // A set of bindings for the Climb subsystem and climb states (CLIMB_READY, CLIMB_PULL)
+  // A set of bindings for the Climb subsystem and climb states (CLIMB_READY,
+  // CLIMB_PULL)
   private void setClimbBindings() {
     layout.climbRequest.onTrue(
         Commands.parallel(
@@ -414,7 +411,8 @@ public class Superstructure {
                 climb.setAngle(ClimbConstants.Setpoints.score), setState(State.CLIMB_PULL)));
   }
 
-  // Manual Elevator Bindings only runs Outtake, Gripper, Hopper, and Elevator. Only Runs during
+  // Manual Elevator Bindings only runs Outtake, Gripper, Hopper, and Elevator.
+  // Only Runs during
   // ELEVATOR_MANUAL state
   private void setManualBindings() {
     // Manual Coral Intake if near source
@@ -627,6 +625,7 @@ public class Superstructure {
     Logger.recordOutput("Superstructure/State", kCurrentState);
     elevatorDisplay.setLength(elevator.getSetpoint());
     Logger.recordOutput("Superstructure/Mechanism", mech);
+    AutoAlignConstants.inReefRange(drive, 2.67);
   }
 
   public static Command rumbleCommand(

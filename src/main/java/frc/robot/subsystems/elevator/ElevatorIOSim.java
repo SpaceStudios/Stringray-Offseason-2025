@@ -49,6 +49,7 @@ public class ElevatorIOSim implements ElevatorIO {
     inputs.leftVolts = volts;
     inputs.rightVolts = volts;
 
+
     inputs.leftSupplyCurrent = elevator.getCurrentDrawAmps();
     inputs.rightSupplyCurrent = elevator.getCurrentDrawAmps();
 
