@@ -122,11 +122,24 @@ public class FieldConstants {
     private static List<Pose2d> leftBranchList = List.of(leftBranches);
     private static List<Pose2d> rightBranchList = List.of(rightBranches);
 
-    private static double L4Offset = 0.25;
+    public static Pose2d getBestBranch(Supplier<Pose2d> poseSupplier, boolean left) {
+      flipConstants();
+      Pose2d nearestTag = poseSupplier.get().nearest(tagList);
+      if (nearestTag == aprilTags[3] || nearestTag == aprilTags[4] || nearestTag == aprilTags[5]) {
+        left = !left;
+      }
 
-    public static Pose2d getBestBranch(Supplier<Pose2d> poseSupplier, boolean left, boolean L4) {
-      Pose2d pose = getNearestFlipped(poseSupplier, left ? leftBranchList : rightBranchList);
-      return L4 ? pose.transformBy(new Transform2d(-L4Offset, 0.0, Rotation2d.kZero)) : pose;
+      Logger.recordOutput(
+          "Field Constants/Nearest Left Branch", poseSupplier.get().nearest(leftBranchList));
+      Logger.recordOutput(
+          "Field Constants/Nearest Right Branch", poseSupplier.get().nearest(rightBranchList));
+      if (left) {
+        System.out.println(left);
+        return poseSupplier.get().nearest(AutoAlignConstants.nearestReefPoseLeft);
+      } else {
+        System.out.println("false");
+        return poseSupplier.get().nearest(AutoAlignConstants.nearestReefPoseRight);
+      }
     }
 
     public static Pose2d[] algaeLocations =
