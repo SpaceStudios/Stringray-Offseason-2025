@@ -187,7 +187,7 @@ public class RobotContainer {
         new AutoFactory(
             drive::getPose,
             drive::setPose,
-            drive.driveController(),
+            AutoRoutines.driveController(drive),
             true,
             drive,
             (traj, edge) -> {
