@@ -312,11 +312,8 @@ public class RobotContainer {
    * @return the command to run in autonomous
    */
   public Command getAutonomousCommand() {
-    // return autoChooser.get();
-    // return new PrintCommand("To be Removed");
+    return routine.oneL4Coral(drive, outtake, hopper, elevator);
     // return Autos.DoubleL4(drive, elevator, outtake, hopper, superstructure);
-    return Autos.k4L4(drive, elevator, outtake, hopper, superstructure);
-    // return Autos.runTestAuto();
     // return Autos.testMultiPath();
     // return TrajectoryFollower.followTrajectory(TrajectoryFollower.loadTrajectory("Test"));
     // return outtake.setDetected(true).andThen(autoChooser.get());

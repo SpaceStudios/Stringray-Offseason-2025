@@ -17,6 +17,7 @@ import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants.DriveMotorArrangement;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants.SteerMotorArrangement;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Threads;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
@@ -115,6 +116,12 @@ public class Robot extends LoggedRobot {
   /** This function is called periodically during all modes. */
   @Override
   public void robotPeriodic() {
+    Logger.recordOutput("MacthInfo/Alliance", DriverStation.getAlliance().orElse(Alliance.Red));
+    Logger.recordOutput("MatchInfo/FMS Connected", DriverStation.isFMSAttached());
+    Logger.recordOutput("MatchInfo/MatchNumber", DriverStation.getMatchNumber());
+    Logger.recordOutput("MathInfo/Time", DriverStation.getMatchTime());
+    Logger.recordOutput("MathInfo/Event", DriverStation.getEventName());
+    DriverStation.refreshData();
     // Optionally switch the thread to high priority to improve loop
     // timing (see the template project documentation for details)
     Threads.setCurrentThreadPriority(true, 99);

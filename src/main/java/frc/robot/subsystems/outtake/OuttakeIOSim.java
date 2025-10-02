@@ -32,6 +32,8 @@ public class OuttakeIOSim implements OuttakeIO {
 
   @Override
   public void setDetected(boolean detected) {
+    System.out.println(detected);
     isDetected.set(detected);
   }
+
 }
