@@ -28,8 +28,6 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import frc.robot.Superstructure;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.util.FieldConstants;
 import java.text.DecimalFormat;
@@ -169,8 +167,7 @@ public class DriveCommands {
    * Possible use cases include snapping to an angle, aiming at a vision target, or controlling
    * absolute rotation with a joystick.
    */
-  public static Command autoAlign(
-      Drive drive, Supplier<Pose2d> pose) {
+  public static Command autoAlign(Drive drive, Supplier<Pose2d> pose) {
     // Create PID controller
     ProfiledPIDController angleController =
         new ProfiledPIDController(
@@ -227,8 +224,7 @@ public class DriveCommands {
               yController.reset(drive.getPose().getY());
             })
         .until(() -> DriveCommands.isNear(pose.get(), drive.getPose()))
-        .finallyDo(
-            () -> drive.stopWithX());
+        .finallyDo(() -> drive.stopWithX());
   }
 
   public static boolean isNear(Pose2d target, Pose2d actual) {

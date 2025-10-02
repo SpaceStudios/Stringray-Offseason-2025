@@ -15,7 +15,6 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.Robot;
 import frc.robot.subsystems.drive.Drive;
 import java.util.Map;
@@ -93,16 +92,20 @@ public class AutoRoutines {
   }
 
   public static Command runTrajectory(String path) {
-    return autoFactory.trajectoryCmd(path + ".traj").finallyDo(() -> {
-      driveSubsystem.stop();
-      xController.reset();
-      yController.reset();
-      rotController.reset();
-    });
+    return autoFactory
+        .trajectoryCmd(path + ".traj")
+        .finallyDo(
+            () -> {
+              driveSubsystem.stop();
+              xController.reset();
+              yController.reset();
+              rotController.reset();
+            });
   }
+
   public static Consumer<SwerveSample> driveController(Drive drive) {
     rotController.enableContinuousInput(-Math.PI, Math.PI);
-    
+
     return (sample) -> {
       final Pose2d pose = drive.getPose();
       Logger.recordOutput("Autos/Sample Pose", sample.getPose());

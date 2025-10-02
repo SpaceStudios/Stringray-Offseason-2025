@@ -10,7 +10,6 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
-import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -18,8 +17,6 @@ import edu.wpi.first.wpilibj.Timer;
 import java.util.List;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
-
-import com.ctre.phoenix.sensors.PigeonIMU;
 
 /**
  * Field Constants for the First Robotics Competition 2025 Game Reefscape
@@ -124,6 +121,7 @@ public class FieldConstants {
     private static List<Pose2d> rightBranchList = List.of(rightBranches);
 
     public static Pose2d getBestBranch(Supplier<Pose2d> poseSupplier, boolean left) {
+      flipConstants();
       Pose2d nearestTag = poseSupplier.get().nearest(tagList);
       if (nearestTag == aprilTags[3] || nearestTag == aprilTags[4] || nearestTag == aprilTags[5]) {
         left = !left;
@@ -257,7 +255,7 @@ public class FieldConstants {
 
   private static Pose2d[] flipPoses(Pose2d[] poseList) {
     Pose2d[] kPoses = new Pose2d[poseList.length];
-    for (int i=0; i<poseList.length; i++) {
+    for (int i = 0; i < poseList.length; i++) {
       kPoses[i] = AllianceFlipUtil.apply(poseList[i]);
     }
     return kPoses;
@@ -265,7 +263,7 @@ public class FieldConstants {
 
   private static Pose2d[] flipPosesWithTransform(Pose2d[] kPoses, Transform2d transform) {
     Pose2d[] kPoseArray = new Pose2d[kPoses.length];
-    for (int i=0; i<kPoses.length; i++) {
+    for (int i = 0; i < kPoses.length; i++) {
       kPoseArray[i] = AllianceFlipUtil.apply(kPoses[i]).transformBy(transform);
     }
     return kPoseArray;
@@ -274,34 +272,42 @@ public class FieldConstants {
   public static void flipConstants() {
     // Flip Reef
     // Flip Left Branches
-    ReefConstants.leftBranches = flipPosesWithTransform(ReefConstants.aprilTags, new Transform2d(
-      new Translation2d(safeDistance, widthBetweenPegs / -2.0), Rotation2d.k180deg));
+    ReefConstants.leftBranches =
+        flipPosesWithTransform(
+            ReefConstants.aprilTags,
+            new Transform2d(
+                new Translation2d(safeDistance, widthBetweenPegs / -2.0), Rotation2d.k180deg));
 
     // Flip Right Branches
-    ReefConstants.rightBranches = flipPosesWithTransform(ReefConstants.aprilTags, new Transform2d(
-      new Translation2d(safeDistance, widthBetweenPegs / 2.0), Rotation2d.k180deg));
-    
+    ReefConstants.rightBranches =
+        flipPosesWithTransform(
+            ReefConstants.aprilTags,
+            new Transform2d(
+                new Translation2d(safeDistance, widthBetweenPegs / 2.0), Rotation2d.k180deg));
+
     // Update Lists
     ReefConstants.leftBranchList = List.of(ReefConstants.leftBranches);
     ReefConstants.rightBranchList = List.of(ReefConstants.rightBranches);
 
     // Flip Algae Locations.
-    ReefConstants.algaeLocations = flipPosesWithTransform(ReefConstants.aprilTags, new Transform2d(new Translation2d(safeDistance, 0.0), Rotation2d.k180deg));
-
-    // Flip Tags
-    ReefConstants.aprilTags = flipPoses(FieldConstants.ReefConstants.aprilTags);
+    ReefConstants.algaeLocations =
+        flipPosesWithTransform(
+            ReefConstants.aprilTags,
+            new Transform2d(new Translation2d(safeDistance, 0.0), Rotation2d.k180deg));
 
     // Update Tag List
-    ReefConstants.tagList = List.of(ReefConstants.aprilTags);
+    ReefConstants.tagList = List.of(flipPoses(ReefConstants.aprilTags));
 
     // Flip Barge
-    BargeConstants.bargePoses = flipPosesWithTransform(BargeConstants.bargeTags, new Transform2d(safeDistance * 1.5, 0.0, Rotation2d.k180deg));
-    BargeConstants.bargeTags = flipPoses(BargeConstants.bargeTags);
-    BargeConstants.bargePoseList = List.of(BargeConstants.bargePoses);
+    BargeConstants.bargePoses =
+        flipPosesWithTransform(
+            BargeConstants.bargeTags, new Transform2d(safeDistance * 1.5, 0.0, Rotation2d.k180deg));
+    BargeConstants.bargePoseList = List.of(flipPoses(BargeConstants.bargePoses));
 
     // Flip Source
-    SourceConstants.sourcePoses = flipPosesWithTransform(SourceConstants.sourceTags, new Transform2d(safeDistance, 0.0, Rotation2d.kZero));
-    SourceConstants.sourceTags = flipPoses(SourceConstants.sourceTags);
+    SourceConstants.sourcePoses =
+        flipPosesWithTransform(
+            SourceConstants.sourceTags, new Transform2d(safeDistance, 0.0, Rotation2d.kZero));
     SourceConstants.sourceList = List.of(SourceConstants.sourcePoses);
   }
 

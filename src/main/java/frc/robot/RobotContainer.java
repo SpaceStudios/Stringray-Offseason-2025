@@ -14,7 +14,6 @@
 package frc.robot;
 
 import choreo.auto.AutoFactory;
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.util.Units;
@@ -67,7 +66,6 @@ import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
 import frc.robot.util.AutoAlignConstants;
 import frc.robot.util.FieldConstants;
 import frc.robot.util.PoseUtils;
-
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
@@ -284,13 +282,12 @@ public class RobotContainer {
         DriveCommands.joystickDrive(
             drive, () -> -driver.getLeftY(), () -> -driver.getLeftX(), () -> -driver.getRightX()));
 
-        operator
-            .x()
-            .onTrue(
-                PoseUtils.getOffsets(
-                    () -> drive.getPose().nearest(AutoAlignConstants.offsetList),
-                    () -> drive.getPose()));
-    
+    operator
+        .x()
+        .onTrue(
+            PoseUtils.getOffsets(
+                () -> drive.getPose().nearest(AutoAlignConstants.offsetList),
+                () -> drive.getPose()));
   }
 
   public Command controllerRumble(double time, double strength) {
@@ -314,7 +311,8 @@ public class RobotContainer {
     // return autoChooser.get();
     // return new PrintCommand("To be Removed");
     // return Autos.DoubleL4(drive, elevator, outtake, hopper, superstructure);
-    return Autos.runTestAuto();
+    return Autos.k4L4(drive, elevator, outtake, hopper, superstructure);
+    // return Autos.runTestAuto();
     // return Autos.testMultiPath();
     // return TrajectoryFollower.followTrajectory(TrajectoryFollower.loadTrajectory("Test"));
     // return outtake.setDetected(true).andThen(autoChooser.get());

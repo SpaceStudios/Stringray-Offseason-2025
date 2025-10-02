@@ -67,7 +67,9 @@ public class Superstructure {
   }
 
   private CoralTarget kCoralTarget = CoralTarget.L4;
-  private State kCurrentState = State.IDLE;
+
+  @AutoLogOutput(key = "Superstructure/Current State")
+  public State kCurrentState = State.IDLE;
 
   public enum State {
     IDLE, // Has Nothing and no Subsystems are preforming anything
@@ -154,10 +156,8 @@ public class Superstructure {
     // Why can I control the entire robot using on a single controller and sensor
     // readings?
     // Manual Elevator Stuff
-    layout
-        .manualElevator
-        .onTrue(this.setState(State.MANUAL_ELEVATOR));
-        // .onFalse(this.setState(State.IDLE));
+    layout.manualElevator.onTrue(this.setState(State.MANUAL_ELEVATOR));
+    // .onFalse(this.setState(State.IDLE));
     // Setting the bindings
     setManualBindings();
 
@@ -260,7 +260,8 @@ public class Superstructure {
                 drive,
                 () ->
                     (ReefConstants.getBestBranch(
-                        drive::getPose, layout.autoAlignLeft.getAsBoolean())))); // Add Auto Align Command Here
+                        drive::getPose,
+                        layout.autoAlignLeft.getAsBoolean())))); // Add Auto Align Command Here
 
     layout
         .autoAlignLeft
@@ -271,7 +272,8 @@ public class Superstructure {
                 drive,
                 () ->
                     (ReefConstants.getBestBranch(
-                        drive::getPose, layout.autoAlignLeft.getAsBoolean())))); // Add Auto Align Command Here
+                        drive::getPose,
+                        layout.autoAlignLeft.getAsBoolean())))); // Add Auto Align Command Here
 
     layout
         .scoreRequest
@@ -332,7 +334,7 @@ public class Superstructure {
                 outtake
                     .setVoltage(() -> (OuttakeConstants.voltageMap.get(elevator.getSetpoint())))
                     .until(() -> !(outtake.getDetected())),
-                elevator.setTarget(()-> (0.0)),
+                elevator.setTarget(() -> (0.0)),
                 elevator.setExtension()));
 
     layout
@@ -604,7 +606,8 @@ public class Superstructure {
               }
               this.kCurrentState = newState;
             })
-        .andThen(led.setState(newState).withTimeout(0.1));
+        .andThen(led.setState(newState).withTimeout(0.1).unless(Robot::isSimulation))
+        .ignoringDisable(true);
   }
 
   // Logging
@@ -621,7 +624,6 @@ public class Superstructure {
         "Superstructure/Layout/Auto Align Cage", layout.autoAlignCage.getAsBoolean());
     Logger.recordOutput("Superstructure/Layout/Dejam Coral", layout.dejamCoral.getAsBoolean());
 
-    Logger.recordOutput("Superstructure/State", kCurrentState);
     elevatorDisplay.setLength(elevator.getSetpoint());
     Logger.recordOutput("Superstructure/Mechanism", mech);
     AutoAlignConstants.inReefRange(drive, 2.67);
