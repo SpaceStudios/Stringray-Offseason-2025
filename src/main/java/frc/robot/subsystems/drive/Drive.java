@@ -15,7 +15,6 @@ package frc.robot.subsystems.drive;
 
 import static edu.wpi.first.units.Units.*;
 
-import choreo.trajectory.SwerveSample;
 import com.ctre.phoenix6.CANBus;
 import edu.wpi.first.hal.FRCNetComm.tInstances;
 import edu.wpi.first.hal.FRCNetComm.tResourceType;
@@ -322,19 +321,19 @@ public class Drive extends SubsystemBase {
     };
   }
 
-  public void followTrajectory(SwerveSample sample) {
-    // Get the current pose of the robot
-    Pose2d pose = getPose();
+  // public void followTrajectory(SwerveSample sample) {
+  //   // Get the current pose of the robot
+  //   Pose2d pose = getPose();
 
-    // Generate the next speeds for the robot
-    ChassisSpeeds speeds =
-        new ChassisSpeeds(
-            sample.vx + xController.calculate(pose.getX(), sample.x),
-            sample.vy + yController.calculate(pose.getY(), sample.y),
-            sample.omega
-                + rotController.calculate(pose.getRotation().getRadians(), sample.heading));
+  //   // Generate the next speeds for the robot
+  //   ChassisSpeeds speeds =
+  //       new ChassisSpeeds(
+  //           sample.vx + xController.calculate(pose.getX(), sample.x),
+  //           sample.vy + yController.calculate(pose.getY(), sample.y),
+  //           sample.omega
+  //               + rotController.calculate(pose.getRotation().getRadians(), sample.heading));
 
-    // Apply the generated speeds
-    runVelocity(speeds);
-  }
+  //   // Apply the generated speeds
+  //   runVelocity(speeds);
+  // }
 }
