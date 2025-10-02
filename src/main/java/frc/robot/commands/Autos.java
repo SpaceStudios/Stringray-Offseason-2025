@@ -54,11 +54,10 @@ public class Autos {
 
   public static Command runTestAuto() {
     return Commands.sequence(
-      AutoRoutines.runTrajectory("aCtoG"),
-      AutoRoutines.runTrajectory("GtoS"),
-      AutoRoutines.runTrajectory("StoD"),
-      AutoRoutines.runTrajectory("DToS")
-    );
+        AutoRoutines.runTrajectory("aCtoG"),
+        AutoRoutines.runTrajectory("GtoS"),
+        AutoRoutines.runTrajectory("StoD"),
+        AutoRoutines.runTrajectory("DToS"));
   }
 
   // public static Command scoreCoral(

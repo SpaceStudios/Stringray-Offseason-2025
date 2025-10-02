@@ -154,10 +154,8 @@ public class Superstructure {
     // Why can I control the entire robot using on a single controller and sensor
     // readings?
     // Manual Elevator Stuff
-    layout
-        .manualElevator
-        .onTrue(this.setState(State.MANUAL_ELEVATOR));
-        // .onFalse(this.setState(State.IDLE));
+    layout.manualElevator.onTrue(this.setState(State.MANUAL_ELEVATOR));
+    // .onFalse(this.setState(State.IDLE));
     // Setting the bindings
     setManualBindings();
 
@@ -260,7 +258,8 @@ public class Superstructure {
                 drive,
                 () ->
                     (ReefConstants.getBestBranch(
-                        drive::getPose, layout.autoAlignLeft.getAsBoolean())))); // Add Auto Align Command Here
+                        drive::getPose,
+                        layout.autoAlignLeft.getAsBoolean())))); // Add Auto Align Command Here
 
     layout
         .autoAlignLeft
@@ -271,7 +270,8 @@ public class Superstructure {
                 drive,
                 () ->
                     (ReefConstants.getBestBranch(
-                        drive::getPose, layout.autoAlignLeft.getAsBoolean())))); // Add Auto Align Command Here
+                        drive::getPose,
+                        layout.autoAlignLeft.getAsBoolean())))); // Add Auto Align Command Here
 
     layout
         .scoreRequest
@@ -332,7 +332,7 @@ public class Superstructure {
                 outtake
                     .setVoltage(() -> (OuttakeConstants.voltageMap.get(elevator.getSetpoint())))
                     .until(() -> !(outtake.getDetected())),
-                elevator.setTarget(()-> (0.0)),
+                elevator.setTarget(() -> (0.0)),
                 elevator.setExtension()));
 
     layout

@@ -5,6 +5,7 @@
 package frc.robot.util;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
+import edu.wpi.first.apriltag.AprilTagFieldLayout.OriginPosition;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -13,6 +14,7 @@ import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Timer;
 import java.util.List;
 import java.util.function.Supplier;
@@ -33,11 +35,21 @@ import org.littletonrobotics.junction.Logger;
 public class FieldConstants {
   public static AprilTagFieldLayout fieldLayout =
       AprilTagFieldLayout.loadField(AprilTagFields.k2025ReefscapeAndyMark);
+
   public static final double fieldLength = fieldLayout.getFieldLength();
   public static final double fieldWidth = fieldLayout.getFieldWidth();
   public static final double widthBetweenPegs =
-      0.328619; // Width Between Peg in meters ALWAYS go and check the field BEFORE COMPETITION
+      0.328619; // Width Between Peg in meters ALWAYS go and check the field
+  // BEFORE COMPETITION
   public static final double safeDistance = Units.inchesToMeters(17);
+
+  public static AprilTagFieldLayout getLayout() {
+    fieldLayout.setOrigin(
+        DriverStation.getAlliance().orElse(Alliance.Red) == Alliance.Red
+            ? OriginPosition.kRedAllianceWallRightSide
+            : OriginPosition.kBlueAllianceWallRightSide);
+    return fieldLayout;
+  }
 
   public static class ReefConstants {
     public enum CoralTarget {

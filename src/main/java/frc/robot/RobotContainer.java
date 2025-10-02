@@ -14,7 +14,6 @@
 package frc.robot;
 
 import choreo.auto.AutoFactory;
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.util.Units;
@@ -67,7 +66,6 @@ import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
 import frc.robot.util.AutoAlignConstants;
 import frc.robot.util.FieldConstants;
 import frc.robot.util.PoseUtils;
-
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
@@ -87,6 +85,7 @@ public class RobotContainer {
   private final Climb climb;
   private final Vision vision;
   public final Superstructure superstructure;
+  private final AutoRoutines routine;
   // Controller
   private final CommandXboxController driver = new CommandXboxController(0);
   private final CommandXboxController operator = new CommandXboxController(1);
@@ -158,9 +157,9 @@ public class RobotContainer {
                 drive::addVisionMeasurement,
                 FieldConstants.fieldLayout,
                 new VisionIOPhotonVisionSim(
-                    "Left Cam", cameraTransforms[1], drive::getPose, FieldConstants.fieldLayout),
+                    "Left Cam", cameraTransforms[1], drive::getPose, FieldConstants.getLayout()),
                 new VisionIOPhotonVisionSim(
-                    "Right Cam", cameraTransforms[0], drive::getPose, FieldConstants.fieldLayout));
+                    "Right Cam", cameraTransforms[0], drive::getPose, FieldConstants.getLayout()));
         break;
 
       default:
@@ -192,7 +191,7 @@ public class RobotContainer {
         new AutoFactory(
             drive::getPose,
             drive::setPose,
-            null,
+            drive::followTrajectory,
             true,
             drive,
             (traj, edge) -> {
@@ -202,6 +201,7 @@ public class RobotContainer {
                       ? traj.flipped().getPoses()
                       : traj.getPoses());
             });
+    routine = new AutoRoutines();
     // Setting Up Superstructure
     // Defining Axises
     simLayout.driveX = () -> driver.getLeftY();
@@ -266,7 +266,9 @@ public class RobotContainer {
         AutoRoutines.followTrajectory(
             AutoRoutines.loadTrajectory("aCtoG").get(), drive::getPose, drive::runVelocity, drive));
 
-    autoChooser.addDefaultOption(
+    autoChooser.addDefaultOption("One", routine.oneL4Coral(drive, outtake, hopper, elevator));
+
+    autoChooser.addOption(
         "Double L4", Autos.DoubleL4(drive, elevator, outtake, hopper, superstructure));
     // Configure the button bindings
     configureButtonBindings();
@@ -282,15 +284,14 @@ public class RobotContainer {
     // Default command, normal field-relative drive
     drive.setDefaultCommand(
         DriveCommands.joystickDrive(
-            drive, () -> -driver.getLeftY(), () -> -driver.getLeftX(), () -> -driver.getRightX()));
+            drive, () -> driver.getLeftY(), () -> driver.getLeftX(), () -> -driver.getRightX()));
 
-        operator
-            .x()
-            .onTrue(
-                PoseUtils.getOffsets(
-                    () -> drive.getPose().nearest(AutoAlignConstants.offsetList),
-                    () -> drive.getPose()));
-    
+    operator
+        .x()
+        .onTrue(
+            PoseUtils.getOffsets(
+                () -> drive.getPose().nearest(AutoAlignConstants.offsetList),
+                () -> drive.getPose()));
   }
 
   public Command controllerRumble(double time, double strength) {
@@ -314,7 +315,7 @@ public class RobotContainer {
     // return autoChooser.get();
     // return new PrintCommand("To be Removed");
     // return Autos.DoubleL4(drive, elevator, outtake, hopper, superstructure);
-    return Autos.runTestAuto();
+    return autoChooser.get();
     // return Autos.testMultiPath();
     // return TrajectoryFollower.followTrajectory(TrajectoryFollower.loadTrajectory("Test"));
     // return outtake.setDetected(true).andThen(autoChooser.get());
