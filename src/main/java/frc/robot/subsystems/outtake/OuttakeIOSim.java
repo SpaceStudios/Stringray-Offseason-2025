@@ -35,5 +35,4 @@ public class OuttakeIOSim implements OuttakeIO {
     System.out.println(detected);
     isDetected.set(detected);
   }
-
 }
