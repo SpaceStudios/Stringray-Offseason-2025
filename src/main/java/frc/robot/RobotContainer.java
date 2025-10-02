@@ -66,6 +66,8 @@ import frc.robot.subsystems.vision.VisionIOPhotonVision;
 import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
 import frc.robot.util.AutoAlignConstants;
 import frc.robot.util.FieldConstants;
+import frc.robot.util.PoseUtils;
+
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
@@ -190,7 +192,7 @@ public class RobotContainer {
         new AutoFactory(
             drive::getPose,
             drive::setPose,
-            drive.driveController(),
+            null,
             true,
             drive,
             (traj, edge) -> {
@@ -282,7 +284,7 @@ public class RobotContainer {
         DriveCommands.joystickDrive(
             drive, () -> -driver.getLeftY(), () -> -driver.getLeftX(), () -> -driver.getRightX()));
 
-        controller
+        operator
             .x()
             .onTrue(
                 PoseUtils.getOffsets(
