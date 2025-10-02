@@ -4,12 +4,9 @@
 
 package frc.robot.subsystems.gripper;
 
-import java.util.InputMismatchException;
-
-import org.littletonrobotics.junction.networktables.LoggedNetworkBoolean;
-
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.filter.Debouncer.DebounceType;
+import org.littletonrobotics.junction.networktables.LoggedNetworkBoolean;
 
 /** Add your docs here. */
 public class GripperIOSim implements GripperIO {
@@ -17,7 +14,8 @@ public class GripperIOSim implements GripperIO {
   private double voltage = 0.0;
 
   private final Debouncer voltageOutDebouncer = new Debouncer(0.5, DebounceType.kBoth);
-  private LoggedNetworkBoolean gripperDetected = new LoggedNetworkBoolean("/Tuning/GripperDetected", false);
+  private LoggedNetworkBoolean gripperDetected =
+      new LoggedNetworkBoolean("/Tuning/GripperDetected", false);
 
   public GripperIOSim() {}
 
@@ -27,7 +25,6 @@ public class GripperIOSim implements GripperIO {
 
     data.connected = true;
     data.voltage = voltage;
-    
   }
 
   @Override
