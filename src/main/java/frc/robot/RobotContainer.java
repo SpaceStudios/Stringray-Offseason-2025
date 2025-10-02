@@ -312,7 +312,7 @@ public class RobotContainer {
    * @return the command to run in autonomous
    */
   public Command getAutonomousCommand() {
-    return routine.oneL4Coral(drive, outtake, hopper, elevator);
+    return autoChooser.get();
     // return Autos.DoubleL4(drive, elevator, outtake, hopper, superstructure);
     // return Autos.testMultiPath();
     // return TrajectoryFollower.followTrajectory(TrajectoryFollower.loadTrajectory("Test"));

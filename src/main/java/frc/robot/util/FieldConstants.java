@@ -143,7 +143,7 @@ public class FieldConstants {
           "Field Constants/Nearest Left Branch", poseSupplier.get().nearest(leftBranchList));
       Logger.recordOutput(
           "Field Constants/Nearest Right Branch", poseSupplier.get().nearest(rightBranchList));
-      if (!left) {
+      if (left) {
         System.out.println(left);
         return poseSupplier.get().nearest(AutoAlignConstants.nearestReefPoseLeft);
       } else {
