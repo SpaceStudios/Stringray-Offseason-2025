@@ -28,8 +28,9 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import frc.robot.Superstructure;
 import frc.robot.subsystems.drive.Drive;
-import frc.robot.util.AllianceFlipUtil;
 import frc.robot.util.FieldConstants;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
@@ -168,7 +169,8 @@ public class DriveCommands {
    * Possible use cases include snapping to an angle, aiming at a vision target, or controlling
    * absolute rotation with a joystick.
    */
-  public static Command autoAlign(Drive drive, Supplier<Pose2d> pose) {
+  public static Command autoAlign(
+      Drive drive, Supplier<Pose2d> pose, CommandXboxController controller) {
     // Create PID controller
     ProfiledPIDController angleController =
         new ProfiledPIDController(
@@ -211,18 +213,9 @@ public class DriveCommands {
 
               // Convert to field relative speeds & send command
               ChassisSpeeds speeds =
-                  new ChassisSpeeds(-linearVelocity.getX(), -linearVelocity.getY(), omega);
+                  new ChassisSpeeds(linearVelocity.getX(), linearVelocity.getY(), omega);
 
-                  boolean isFlipped =
-                  DriverStation.getAlliance().isPresent()
-                      && DriverStation.getAlliance().get() == Alliance.Red;
-
-                  drive.runVelocity(
-                    ChassisSpeeds.fromFieldRelativeSpeeds(
-                        speeds,
-                        isFlipped
-                            ? drive.getRotation().plus(new Rotation2d(Math.PI))
-                            : drive.getRotation()));
+              drive.runVelocity(ChassisSpeeds.fromFieldRelativeSpeeds(speeds, drive.getRotation()));
             },
             drive)
 
@@ -232,7 +225,19 @@ public class DriveCommands {
               angleController.reset(drive.getRotation().getRadians());
               xController.reset(drive.getPose().getX());
               yController.reset(drive.getPose().getY());
+            })
+        .until(() -> DriveCommands.isNear(pose.get(), drive.getPose()))
+        .finallyDo(
+            () -> {
+              drive.stopWithX();
+              Superstructure.rumbleCommand(controller, 0.5, 1.0);
             });
+  }
+
+  public static boolean isNear(Pose2d target, Pose2d actual) {
+    return MathUtil.isNear(0, actual.relativeTo(target).getTranslation().getNorm(), 0.025)
+        && MathUtil.isNear(
+            target.getRotation().getRadians(), actual.getRotation().getRadians(), 0.025);
   }
 
   /**

@@ -126,28 +126,16 @@ public class FieldConstants {
         left = !left;
       }
 
-      for (int i = 0; i < rightBranchList.size(); i++) {
-        Logger.recordOutput(
-            "AutoAlign/Right Branch Poses/Pose" + i, 
-            rightBranchList.get(i)
-        );
-      }
-      
-      for (int i = 0; i < leftBranchList.size(); i++) {
-        Logger.recordOutput(
-            "AutoAlign/Left Branch Poses/Pose" + i, 
-            leftBranchList.get(i)
-        );
-      }
-      
       Logger.recordOutput(
           "Field Constants/Nearest Left Branch", poseSupplier.get().nearest(leftBranchList));
       Logger.recordOutput(
           "Field Constants/Nearest Right Branch", poseSupplier.get().nearest(rightBranchList));
-      if (left) {
-        return poseSupplier.get().nearest(leftBranchList);
+      if (!left) {
+        System.out.println(left);
+        return poseSupplier.get().nearest(AutoAlignConstants.nearestReefPoseLeft);
       } else {
-        return poseSupplier.get().nearest(rightBranchList);
+        System.out.println("false");
+        return poseSupplier.get().nearest(AutoAlignConstants.nearestReefPoseRight);
       }
     }
 
@@ -166,6 +154,8 @@ public class FieldConstants {
           aprilTags[5].transformBy(
               new Transform2d(new Translation2d(safeDistance, 0.0), Rotation2d.k180deg))
         };
+
+    public static final Pose2d middleReef = new Pose2d(4.47, 4.03, Rotation2d.k180deg);
   }
 
   public class SourceConstants {
