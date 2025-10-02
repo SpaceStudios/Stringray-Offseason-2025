@@ -41,6 +41,10 @@ public class FieldConstants {
   // BEFORE COMPETITION
   public static final double safeDistance = Units.inchesToMeters(17);
 
+  public static AprilTagFieldLayout getLayout() {
+    return fieldLayout;
+  }
+
   public static class ReefConstants {
     public enum CoralTarget {
       L1(0.58),
@@ -134,11 +138,9 @@ public class FieldConstants {
       Logger.recordOutput(
           "Field Constants/Nearest Right Branch", poseSupplier.get().nearest(rightBranchList));
       if (left) {
-        System.out.println(left);
-        return poseSupplier.get().nearest(AutoAlignConstants.nearestReefPoseLeft);
+        return poseSupplier.get().nearest(FieldConstants.ReefConstants.leftBranchList);
       } else {
-        System.out.println("false");
-        return poseSupplier.get().nearest(AutoAlignConstants.nearestReefPoseRight);
+        return poseSupplier.get().nearest(FieldConstants.ReefConstants.rightBranchList);
       }
     }
 
@@ -160,12 +162,9 @@ public class FieldConstants {
 
     public static final Pose2d middleReef = new Pose2d(4.47, 4.03, Rotation2d.k180deg);
 
-    public static Pose2d getReef() {
-      return AllianceFlipUtil.apply(middleReef);
-    }
-
     public static boolean nearReef(Supplier<Pose2d> poseSupplier) {
-      return getReef().getTranslation().getDistance(poseSupplier.get().getTranslation()) < 3.0;
+      return inTolerance(
+          poseSupplier, () -> (AllianceFlipUtil.apply(middleReef)), 3.5, 2 * Math.PI);
     }
   }
 

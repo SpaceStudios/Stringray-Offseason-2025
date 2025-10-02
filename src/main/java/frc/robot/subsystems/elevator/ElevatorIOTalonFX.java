@@ -83,7 +83,7 @@ public class ElevatorIOTalonFX implements ElevatorIO {
     config.CurrentLimits.SupplyCurrentLowerTime = 0.0;
 
     config.Slot0.GravityType = GravityTypeValue.Elevator_Static;
-    config.Slot0.kP = kP.getAsDouble();
+    config.Slot0.kP = 90.0;
     config.Slot0.kI = kI.getAsDouble();
     config.Slot0.kD = kD.getAsDouble();
 
@@ -96,7 +96,7 @@ public class ElevatorIOTalonFX implements ElevatorIO {
 
     tryUntilOk(5, () -> left.getConfigurator().apply(config, 0.25));
     tryUntilOk(5, () -> right.getConfigurator().apply(config, 0.25));
-
+    
     position = left.getPosition();
     velocity = left.getVelocity();
     voltage = left.getMotorVoltage();
