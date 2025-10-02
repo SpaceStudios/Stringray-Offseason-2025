@@ -96,7 +96,7 @@ public class ElevatorIOTalonFX implements ElevatorIO {
 
     tryUntilOk(5, () -> left.getConfigurator().apply(config, 0.25));
     tryUntilOk(5, () -> right.getConfigurator().apply(config, 0.25));
-    
+
     position = left.getPosition();
     velocity = left.getVelocity();
     voltage = left.getMotorVoltage();

@@ -6,7 +6,6 @@ package frc.robot.subsystems.gripper;
 
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.filter.Debouncer.DebounceType;
-import org.littletonrobotics.junction.networktables.LoggedNetworkBoolean;
 
 /** Add your docs here. */
 public class GripperIOSim implements GripperIO {
