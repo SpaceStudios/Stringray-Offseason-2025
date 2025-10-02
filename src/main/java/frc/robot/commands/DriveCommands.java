@@ -228,9 +228,7 @@ public class DriveCommands {
             })
         .until(() -> DriveCommands.isNear(pose.get(), drive.getPose()))
         .finallyDo(
-            () -> {
-              drive.stopWithX();
-            });
+            () -> drive.stopWithX());
   }
 
   public static boolean isNear(Pose2d target, Pose2d actual) {
