@@ -169,6 +169,12 @@ public class FieldConstants {
           sourceTags[0].transformBy(new Transform2d(safeDistance, 0.0, Rotation2d.kZero)),
           sourceTags[1].transformBy(new Transform2d(safeDistance, 0.0, Rotation2d.kZero))
         };
+
+    private static final List<Pose2d> sourceList = List.of(sourcePoses);
+
+    public static Pose2d getNearestSource(Supplier<Pose2d> poseSupplier) {
+      return getNearest(poseSupplier, sourceList);
+    }
   }
 
   public class BargeConstants {
@@ -240,6 +246,10 @@ public class FieldConstants {
             pose1.getRotation().getRadians(),
             pose2.getRotation().getRadians(),
             orientationTolerance);
+  }
+
+  public static Pose2d getNearest(Supplier<Pose2d> poseSupplier, List<Pose2d> poses) {
+    return poseSupplier.get().nearest(poses);
   }
 
   public static void Log() {

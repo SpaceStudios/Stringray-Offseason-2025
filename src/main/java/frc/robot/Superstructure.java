@@ -31,6 +31,7 @@ import frc.robot.util.AutoAlignConstants;
 import frc.robot.util.FieldConstants;
 import frc.robot.util.FieldConstants.ReefConstants;
 import frc.robot.util.FieldConstants.ReefConstants.CoralTarget;
+import frc.robot.util.FieldConstants.SourceConstants;
 import java.util.HashMap;
 import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.AutoLogOutput;
@@ -374,12 +375,25 @@ public class Superstructure {
 
     stateMap
         .get(State.CORAL_READY)
-        .and(() -> !outtake.getDetected())
+        .and(() -> !(outtake.getDetected()))
         .onTrue(this.setState(State.IDLE));
+
     stateMap
         .get(State.CORAL_PRESCORE)
         .and(() -> !outtake.getDetected())
         .onTrue(this.setState(State.IDLE));
+
+    // Sim States
+    stateMap
+        .get(State.CORAL_INTAKE)
+        .and(
+            () ->
+                (FieldConstants.inTolerance(
+                    SourceConstants.getNearestSource(drive::getPose),
+                    drive.getPose(),
+                    0.5,
+                    Math.PI / 4.0)))
+        .onTrue(outtake.setDetected(true));
   }
 
   // A set of bindings for the Climb subsystem and climb states (CLIMB_READY,
@@ -478,6 +492,14 @@ public class Superstructure {
             elevator
                 .setTarget(() -> (FieldConstants.BargeConstants.elevatorSetpoint))
                 .andThen(elevator.setExtension()));
+
+    // Coral Auto Align
+    layout
+        .autoAlignLeft
+        .and(stateMap.get(State.MANUAL_ELEVATOR))
+        .whileTrue(
+            DriveCommands.autoAlign(
+                drive, () -> (FieldConstants.ReefConstants.getBestBranch(drive::getPose, true))));
 
     // Coral Setpoints
     // L1 Setpoint

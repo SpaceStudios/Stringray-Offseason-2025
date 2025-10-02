@@ -14,6 +14,7 @@
 package frc.robot;
 
 import choreo.auto.AutoFactory;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.util.Units;
@@ -279,7 +280,7 @@ public class RobotContainer {
     // Default command, normal field-relative drive
     drive.setDefaultCommand(
         DriveCommands.joystickDrive(
-            drive, () -> driver.getLeftY(), () -> driver.getLeftX(), () -> -driver.getRightX()));
+            drive, () -> -driver.getLeftY(), () -> -driver.getLeftX(), () -> -driver.getRightX()));
 
         controller
             .x()
@@ -310,7 +311,8 @@ public class RobotContainer {
   public Command getAutonomousCommand() {
     // return autoChooser.get();
     // return new PrintCommand("To be Removed");
-    return Autos.DoubleL4(drive, elevator, outtake, hopper, superstructure);
+    // return Autos.DoubleL4(drive, elevator, outtake, hopper, superstructure);
+    return Autos.runTestAuto();
     // return Autos.testMultiPath();
     // return TrajectoryFollower.followTrajectory(TrajectoryFollower.loadTrajectory("Test"));
     // return outtake.setDetected(true).andThen(autoChooser.get());
