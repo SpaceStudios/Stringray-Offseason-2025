@@ -272,7 +272,6 @@ public class RobotContainer {
     autoChooser.addOption(
         "Double L4", Autos.DoubleL4(drive, elevator, outtake, hopper, superstructure));
 
-    AutoAlignConstants.getAprilTagPoses();
     // Configure the button bindings
     configureButtonBindings();
   }
