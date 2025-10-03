@@ -67,7 +67,7 @@ public class ElevatorConstants {
     }
   }
 
-  public static LoggedTunableNumber kP = new LoggedTunableNumber("Elevator/PID/kP", 90.0);
+  public static LoggedTunableNumber kP = new LoggedTunableNumber("Elevator/PID/kP", 38);
   public static LoggedTunableNumber kI = new LoggedTunableNumber("Elevator/PID/kI", 0.0);
   public static LoggedTunableNumber kD = new LoggedTunableNumber("Elevator/PID/kD", 4.5);
 
