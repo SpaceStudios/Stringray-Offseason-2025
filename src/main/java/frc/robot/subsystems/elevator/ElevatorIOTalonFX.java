@@ -46,6 +46,7 @@ public class ElevatorIOTalonFX implements ElevatorIO {
 
   private final VoltageOut voltageOut = new VoltageOut(0.0).withEnableFOC(false);
   private final MotionMagicVoltage positionTorque = new MotionMagicVoltage(0.0).withSlot(0);
+  private final Slot0Configs pidFFConfig = new Slot0Configs();
 
   private final Debouncer leftConnectedDebounce = new Debouncer(0.5);
   private final Debouncer rightConnectedDebounce = new Debouncer(0.5);
@@ -94,6 +95,7 @@ public class ElevatorIOTalonFX implements ElevatorIO {
     config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
 
     tryUntilOk(5, () -> left.getConfigurator().apply(config, 0.25));
+    tryUntilOk(5, () -> right.getConfigurator().apply(config, 0.25));
 
     position = left.getPosition();
     velocity = left.getVelocity();
@@ -169,15 +171,15 @@ public class ElevatorIOTalonFX implements ElevatorIO {
 
     // Setting up PID & FF Values
     if (kP.hasChanged(hashCode())) {
-      resetPIDValues();
+      resetFFValues();
     }
 
     if (kI.hasChanged(hashCode())) {
-      resetPIDValues();
+      resetFFValues();
     }
 
     if (kD.hasChanged(hashCode())) {
-      resetPIDValues();
+      resetFFValues();
     }
 
     if (kV.hasChanged(hashCode())) {
@@ -197,16 +199,11 @@ public class ElevatorIOTalonFX implements ElevatorIO {
     }
   }
 
-  private void resetPIDValues() {
+  private void resetFFValues() {
     Slot0Configs slot0Configs = new Slot0Configs();
     slot0Configs.withKP(kP.getAsDouble());
     slot0Configs.withKI(kI.getAsDouble());
     slot0Configs.withKD(kD.getAsDouble());
-    left.getConfigurator().apply(slot0Configs, 0.25);
-  }
-
-  private void resetFFValues() {
-    Slot0Configs slot0Configs = new Slot0Configs();
     slot0Configs.withKV(kV.getAsDouble());
     slot0Configs.withKA(kA.getAsDouble());
     slot0Configs.withKG(kG.getAsDouble());

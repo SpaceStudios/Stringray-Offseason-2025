@@ -5,7 +5,6 @@
 package frc.robot.util;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
-import edu.wpi.first.apriltag.AprilTagFieldLayout.OriginPosition;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -14,7 +13,6 @@ import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Timer;
 import java.util.List;
 import java.util.function.Supplier;
@@ -41,13 +39,9 @@ public class FieldConstants {
   public static final double widthBetweenPegs =
       0.328619; // Width Between Peg in meters ALWAYS go and check the field
   // BEFORE COMPETITION
-  public static final double safeDistance = Units.inchesToMeters(17);
+  public static final double safeDistance = Units.inchesToMeters(20);
 
   public static AprilTagFieldLayout getLayout() {
-    fieldLayout.setOrigin(
-        DriverStation.getAlliance().orElse(Alliance.Red) == Alliance.Red
-            ? OriginPosition.kRedAllianceWallRightSide
-            : OriginPosition.kBlueAllianceWallRightSide);
     return fieldLayout;
   }
 
@@ -56,7 +50,7 @@ public class FieldConstants {
       L1(0.58),
       L2(0.79),
       L3(1.18),
-      L4(1.78);
+      L4(1.72);
 
       public double height;
 
@@ -144,11 +138,9 @@ public class FieldConstants {
       Logger.recordOutput(
           "Field Constants/Nearest Right Branch", poseSupplier.get().nearest(rightBranchList));
       if (left) {
-        System.out.println(left);
-        return poseSupplier.get().nearest(AutoAlignConstants.nearestReefPoseLeft);
+        return poseSupplier.get().nearest(AutoAlignConstants.leftPersPose);
       } else {
-        System.out.println("false");
-        return poseSupplier.get().nearest(AutoAlignConstants.nearestReefPoseRight);
+        return poseSupplier.get().nearest(AutoAlignConstants.rightPersPose);
       }
     }
 
@@ -169,6 +161,11 @@ public class FieldConstants {
         };
 
     public static final Pose2d middleReef = new Pose2d(4.47, 4.03, Rotation2d.k180deg);
+
+    public static boolean nearReef(Supplier<Pose2d> poseSupplier) {
+      return inTolerance(
+          poseSupplier, () -> (AllianceFlipUtil.apply(middleReef)), 3.5, 2 * Math.PI);
+    }
   }
 
   public class SourceConstants {
@@ -252,12 +249,15 @@ public class FieldConstants {
   private static Pose2d endPose = new Pose2d(fieldLength, fieldWidth, Rotation2d.kZero);
 
   public static boolean inTolerance(
-      Pose2d pose1, Pose2d pose2, double translationTolerance, double orientationTolerance) {
-    return MathUtil.isNear(pose1.getX(), pose2.getX(), translationTolerance)
-        && MathUtil.isNear(pose1.getY(), pose2.getY(), translationTolerance)
+      Supplier<Pose2d> pose1,
+      Supplier<Pose2d> pose2,
+      double translationTolerance,
+      double orientationTolerance) {
+    return MathUtil.isNear(pose1.get().getX(), pose2.get().getX(), translationTolerance)
+        && MathUtil.isNear(pose1.get().getY(), pose2.get().getY(), translationTolerance)
         && MathUtil.isNear(
-            pose1.getRotation().getRadians(),
-            pose2.getRotation().getRadians(),
+            pose1.get().getRotation().getRadians(),
+            pose2.get().getRotation().getRadians(),
             orientationTolerance);
   }
 
@@ -333,6 +333,8 @@ public class FieldConstants {
     Logger.recordOutput("Field Constants/Source/Source Poses", SourceConstants.sourcePoses);
     Logger.recordOutput("Field Constants/Barge/Barge Tags", BargeConstants.bargeTags);
     Logger.recordOutput("Field Constants/Barge/Barge Poses", BargeConstants.bargePoses);
+    Logger.recordOutput(
+        "Field Constants/Reef/Middle", AllianceFlipUtil.apply(ReefConstants.middleReef));
     Logger.recordOutput("Field Constants/Barge/Cage Poses", BargeConstants.climbPoses);
     Logger.recordOutput("Field Constants/Current Match Time", Timer.getMatchTime());
     Logger.recordOutput(

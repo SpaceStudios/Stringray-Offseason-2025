@@ -113,7 +113,7 @@ public class Elevator extends SubsystemBase {
               homingDebouncer.calculate(false);
             },
             () -> {
-              io.setVolts(-6);
+              io.setVolts(-2);
               isHomed = homingDebouncer.calculate(Math.abs(inputs.velocity) <= 0.1);
             },
             this)
@@ -134,10 +134,10 @@ public class Elevator extends SubsystemBase {
    */
   public Command sysId() {
     return Commands.sequence(
-        routine.dynamic(Direction.kForward),
-        routine.dynamic(Direction.kReverse),
-        routine.quasistatic(Direction.kForward),
-        routine.quasistatic(Direction.kReverse));
+        routine.dynamic(Direction.kForward).until(() -> inputs.position > 1.7),
+        routine.dynamic(Direction.kReverse).until(() -> inputs.position < 0.1),
+        routine.quasistatic(Direction.kForward).until(() -> inputs.position > 1.7),
+        routine.quasistatic(Direction.kReverse).until(() -> inputs.position < 0.1));
   }
 
   public double getSetpoint() {

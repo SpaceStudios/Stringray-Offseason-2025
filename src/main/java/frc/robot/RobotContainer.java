@@ -266,10 +266,14 @@ public class RobotContainer {
         AutoRoutines.followTrajectory(
             AutoRoutines.loadTrajectory("aCtoG").get(), drive::getPose, drive::runVelocity, drive));
 
-    autoChooser.addDefaultOption("One", routine.oneL4Coral(drive, outtake, hopper, elevator));
+    autoChooser.addOption("One", routine.oneL4Coral(drive, outtake, hopper, elevator));
+
+    autoChooser.addDefaultOption("Sys ele", elevator.sysId());
 
     autoChooser.addOption(
         "Double L4", Autos.DoubleL4(drive, elevator, outtake, hopper, superstructure));
+
+    AutoAlignConstants.getAprilTagPoses();
     // Configure the button bindings
     configureButtonBindings();
   }
