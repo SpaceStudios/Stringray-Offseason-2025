@@ -46,7 +46,7 @@ public class FieldConstants {
       L1(0.58),
       L2(0.79),
       L3(1.18),
-      L4(1.72);
+      L4(1.73);
 
       public double height;
 
@@ -88,13 +88,13 @@ public class FieldConstants {
                   new Translation2d(safeDistance, widthBetweenPegs / -2.0), Rotation2d.k180deg)),
           aprilTags[3].transformBy(
               new Transform2d(
-                  new Translation2d(safeDistance, widthBetweenPegs / -2.0), Rotation2d.k180deg)),
+                  new Translation2d(safeDistance, widthBetweenPegs / 2.0), Rotation2d.k180deg)),
           aprilTags[4].transformBy(
               new Transform2d(
-                  new Translation2d(safeDistance, widthBetweenPegs / -2.0), Rotation2d.k180deg)),
+                  new Translation2d(safeDistance, widthBetweenPegs / 2.0), Rotation2d.k180deg)),
           aprilTags[5].transformBy(
               new Transform2d(
-                  new Translation2d(safeDistance, widthBetweenPegs / -2.0), Rotation2d.k180deg))
+                  new Translation2d(safeDistance, widthBetweenPegs / 2.0), Rotation2d.k180deg))
         };
     public static Pose2d[] rightBranches =
         new Pose2d[] {
@@ -109,13 +109,13 @@ public class FieldConstants {
                   new Translation2d(safeDistance, widthBetweenPegs / 2.0), Rotation2d.k180deg)),
           aprilTags[3].transformBy(
               new Transform2d(
-                  new Translation2d(safeDistance, widthBetweenPegs / 2.0), Rotation2d.k180deg)),
+                  new Translation2d(safeDistance, widthBetweenPegs / -2.0), Rotation2d.k180deg)),
           aprilTags[4].transformBy(
               new Transform2d(
-                  new Translation2d(safeDistance, widthBetweenPegs / 2.0), Rotation2d.k180deg)),
+                  new Translation2d(safeDistance, widthBetweenPegs / -2.0), Rotation2d.k180deg)),
           aprilTags[5].transformBy(
               new Transform2d(
-                  new Translation2d(safeDistance, widthBetweenPegs / 2.0), Rotation2d.k180deg))
+                  new Translation2d(safeDistance, widthBetweenPegs / -2.0), Rotation2d.k180deg))
         };
 
     private static List<Pose2d> tagList = List.of(aprilTags);

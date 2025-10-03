@@ -83,7 +83,7 @@ public class ElevatorIOTalonFX implements ElevatorIO {
     config.CurrentLimits.SupplyCurrentLowerTime = 0.0;
 
     config.Slot0.GravityType = GravityTypeValue.Elevator_Static;
-    config.Slot0.kP = 90.0;
+    config.Slot0.kP = kP.getAsDouble();
     config.Slot0.kI = kI.getAsDouble();
     config.Slot0.kD = kD.getAsDouble();
 
@@ -171,35 +171,35 @@ public class ElevatorIOTalonFX implements ElevatorIO {
 
     // Setting up PID & FF Values
     if (kP.hasChanged(hashCode())) {
-      resetFFValues();
+      resetValues();
     }
 
     if (kI.hasChanged(hashCode())) {
-      resetFFValues();
+      resetValues();
     }
 
     if (kD.hasChanged(hashCode())) {
-      resetFFValues();
+      resetValues();
     }
 
     if (kV.hasChanged(hashCode())) {
-      resetFFValues();
+      resetValues();
     }
 
     if (kS.hasChanged(hashCode())) {
-      resetFFValues();
+      resetValues();
     }
 
     if (kA.hasChanged(hashCode())) {
-      resetFFValues();
+      resetValues();
     }
 
     if (kG.hasChanged(hashCode())) {
-      resetFFValues();
+      resetValues();
     }
   }
 
-  private void resetFFValues() {
+  private void resetValues() {
     Slot0Configs slot0Configs = new Slot0Configs();
     slot0Configs.withKP(kP.getAsDouble());
     slot0Configs.withKI(kI.getAsDouble());
