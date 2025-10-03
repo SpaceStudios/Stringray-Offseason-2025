@@ -1,83 +1,118 @@
-// Copyright (c) FIRST and other WPILib contributors.
-// Open Source Software; you can modify and/or share it under the terms of
-// the WPILib BSD license file in the root directory of this project.
-
 package frc.robot.subsystems.climb;
-
-import static frc.robot.util.PhoenixUtil.tryUntilOk;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.controls.PositionVoltage;
+import com.ctre.phoenix6.controls.MotionMagicVoltage;
+import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+import edu.wpi.first.math.filter.Debouncer;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.units.Units;
 import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Temperature;
 import edu.wpi.first.units.measure.Voltage;
+import frc.robot.Constants;
 
-/** Add your docs here. */
 public class ClimbIOTalonFX implements ClimbIO {
-  private final TalonFX talon = new TalonFX(50);
+  private final TalonFX talon = new TalonFX(ClimbConstants.talon, "rio");
 
-  private final PositionVoltage positionControl = new PositionVoltage(0.0);
+  private final StatusSignal<AngularVelocity> motorVelocityRadPerSec = talon.getVelocity();
+  private final StatusSignal<Temperature> motorTempCelsius = talon.getDeviceTemp();
+  private final StatusSignal<Current> motorSupplyCurrentAmps = talon.getSupplyCurrent();
+  private final StatusSignal<Current> motorStatorCurrentAmps = talon.getStatorCurrent();
+  private final StatusSignal<Voltage> motorAppliedVolts = talon.getMotorVoltage();
+  private final StatusSignal<Angle> motorPositionRad = talon.getPosition();
 
-  private final StatusSignal<Temperature> temperature;
-  private final StatusSignal<Voltage> voltage;
-  private final StatusSignal<Current> supplyCurrent;
-  private final StatusSignal<Current> statorCurrent;
-  private final StatusSignal<Angle> position;
+  private final VoltageOut voltageOut = new VoltageOut(0.0);
+  private final MotionMagicVoltage motionMagic =
+      new MotionMagicVoltage(ClimbConstants.stow.getRadians());
 
-  private final TalonFXConfiguration talonConfig = new TalonFXConfiguration();
+  private final Debouncer connectedDebounce = new Debouncer(0.5);
+
+  private double targetPositionRad;
 
   public ClimbIOTalonFX() {
+    final TalonFXConfiguration config = new TalonFXConfiguration();
 
-    talonConfig.Slot0.kP = ClimbConstants.PID.kP;
-    talonConfig.Slot0.kI = ClimbConstants.PID.kI;
-    talonConfig.Slot0.kD = ClimbConstants.PID.kD;
+    config.Slot0.kP = ClimbConstants.kPTalon;
 
-    talonConfig.CurrentLimits.StatorCurrentLimit = ClimbConstants.MotorLimits.statorLimit;
-    talonConfig.CurrentLimits.StatorCurrentLimitEnable = true;
+    config.MotionMagic.MotionMagicCruiseVelocity = (6000 / 60) / ClimbConstants.gearing;
+    config.MotionMagic.MotionMagicAcceleration = (6000 / 60) / (ClimbConstants.gearing * 0.01);
 
-    talonConfig.CurrentLimits.SupplyCurrentLimit = ClimbConstants.MotorLimits.supplyLimit;
-    talonConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
+    config.Feedback.SensorToMechanismRatio = ClimbConstants.gearing;
 
-    talonConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-    talonConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+    config.CurrentLimits.StatorCurrentLimit = ClimbConstants.talonStatorCurrent;
+    config.CurrentLimits.StatorCurrentLimitEnable = false;
 
-    tryUntilOk(5, () -> (talon.getConfigurator().apply(talonConfig, 0.25)));
+    config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+    config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
 
-    temperature = talon.getDeviceTemp();
-    voltage = talon.getMotorVoltage();
-    supplyCurrent = talon.getSupplyCurrent();
-    statorCurrent = talon.getStatorCurrent();
-    position = talon.getPosition();
-
-    tryUntilOk(
-        5,
-        () ->
-            (BaseStatusSignal.setUpdateFrequencyForAll(
-                50.0, temperature, voltage, supplyCurrent, statorCurrent, position)));
-    tryUntilOk(5, () -> (talon.optimizeBusUtilization()));
+    talon.getConfigurator().apply(config);
+    BaseStatusSignal.setUpdateFrequencyForAll(
+        50.0,
+        motorVelocityRadPerSec,
+        motorTempCelsius,
+        motorAppliedVolts,
+        motorSupplyCurrentAmps,
+        motorStatorCurrentAmps,
+        motorPositionRad);
+    talon.optimizeBusUtilization();
   }
 
   @Override
-  public void getData(ClimbDataAutoLogged data) {
-    BaseStatusSignal.refreshAll(temperature, voltage, supplyCurrent, statorCurrent, position);
+  public void updateInputs(ClimbIOInputsAutoLogged inputs) {
+    var status =
+        BaseStatusSignal.refreshAll(
+            motorVelocityRadPerSec,
+            motorTempCelsius,
+            motorSupplyCurrentAmps,
+            motorStatorCurrentAmps,
+            motorPositionRad,
+            motorAppliedVolts);
 
-    data.connected =
-        BaseStatusSignal.isAllGood(temperature, voltage, supplyCurrent, statorCurrent, position);
-    data.angle = position.getValueAsDouble();
-    data.statorCurrent = statorCurrent.getValueAsDouble();
-    data.supplyCurrent = supplyCurrent.getValueAsDouble();
-    data.voltage = voltage.getValueAsDouble();
-    data.temperature = temperature.getValueAsDouble();
+    inputs.motorConnected = connectedDebounce.calculate(status.isOK());
+    inputs.motorPositionRad = motorPositionRad.getValueAsDouble();
+    inputs.targetPositionRad = this.targetPositionRad;
+    inputs.motorTempCelsius = motorTempCelsius.getValue().in(Units.Celsius);
+    inputs.motorStatorCurrentAmps = motorStatorCurrentAmps.getValueAsDouble();
+    inputs.motorSupplyCurrentAmps = motorSupplyCurrentAmps.getValueAsDouble();
+    inputs.motorVelocityRadPerSec = motorVelocityRadPerSec.getValueAsDouble();
+    inputs.motorAppliedVolts = motorAppliedVolts.getValueAsDouble();
   }
 
   @Override
-  public void setAngle(double angle) {
-    talon.setControl(positionControl.withPosition(angle));
+  public void setPosition(Rotation2d position) {
+    this.targetPositionRad = position.getRadians();
+    talon.setControl(motionMagic.withPosition(position.getRadians()));
+  }
+
+  @Override
+  public void setVoltage(double volts) {
+    talon.setControl(voltageOut.withOutput(volts));
+  }
+
+  @Override
+  public void stop() {
+    setVoltage(0);
+  }
+
+  @Override
+  public void resetEncoder() {
+    talon.setPosition(0.0);
+  }
+
+  @Override
+  public void resetEncoder(double position) {
+    talon.setPosition(position);
+  }
+
+  @Override
+  public void setBrakeMode(boolean enabled) {
+    talon.setNeutralMode(enabled ? NeutralModeValue.Brake : NeutralModeValue.Coast);
   }
 }

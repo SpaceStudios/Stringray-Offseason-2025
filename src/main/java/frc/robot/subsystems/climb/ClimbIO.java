@@ -1,26 +1,32 @@
-// Copyright (c) FIRST and other WPILib contributors.
-// Open Source Software; you can modify and/or share it under the terms of
-// the WPILib BSD license file in the root directory of this project.
-
 package frc.robot.subsystems.climb;
 
+import edu.wpi.first.math.geometry.Rotation2d;
 import org.littletonrobotics.junction.AutoLog;
 
-/** Add your docs here. */
 public interface ClimbIO {
   @AutoLog
-  public class ClimbData {
-    public boolean connected = false;
-
-    public double angle = 0.0;
-    public double angleSetpoint = 0.0;
-    public double temperature = 0.0;
-    public double statorCurrent = 0.0;
-    public double supplyCurrent = 0.0;
-    public double voltage = 0.0;
+  public class ClimbIOInputs {
+    public boolean motorConnected = false;
+    public double motorPositionRad = 0.0;
+    public double targetPositionRad = 0.0;
+    public double motorVelocityRadPerSec = 0.0;
+    public double motorAppliedVolts = 0.0;
+    public double motorStatorCurrentAmps = 0.0;
+    public double motorSupplyCurrentAmps = 0.0;
+    public double motorTempCelsius = 0.0;
   }
 
-  public default void getData(ClimbDataAutoLogged data) {}
+  public default void updateInputs(final ClimbIOInputsAutoLogged inputs) {}
 
-  public default void setAngle(double angle) {}
+  public default void setPosition(final Rotation2d position) {}
+
+  public default void setVoltage(final double volts) {}
+
+  public default void stop() {}
+
+  public default void resetEncoder() {}
+
+  public default void resetEncoder(final double position) {}
+
+  public default void setBrakeMode(boolean enabled) {}
 }

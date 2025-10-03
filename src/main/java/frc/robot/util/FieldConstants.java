@@ -50,7 +50,7 @@ public class FieldConstants {
       L1(0.58),
       L2(0.79),
       L3(1.18),
-      L4(1.78);
+      L4(1.72);
 
       public double height;
 
@@ -138,9 +138,9 @@ public class FieldConstants {
       Logger.recordOutput(
           "Field Constants/Nearest Right Branch", poseSupplier.get().nearest(rightBranchList));
       if (left) {
-        return poseSupplier.get().nearest(FieldConstants.ReefConstants.leftBranchList);
+        return poseSupplier.get().nearest(AutoAlignConstants.leftPersPose);
       } else {
-        return poseSupplier.get().nearest(FieldConstants.ReefConstants.rightBranchList);
+        return poseSupplier.get().nearest(AutoAlignConstants.rightPersPose);
       }
     }
 
