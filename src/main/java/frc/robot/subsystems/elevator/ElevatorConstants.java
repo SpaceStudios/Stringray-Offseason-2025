@@ -75,6 +75,10 @@ public class ElevatorConstants {
   public static LoggedTunableNumber kG = new LoggedTunableNumber("Elevator/FF/kG", 0.63923);
   public static LoggedTunableNumber kV = new LoggedTunableNumber("Elevator/FF/kV", 3.9889);
   public static LoggedTunableNumber kA = new LoggedTunableNumber("Elevator/FF/kA", 0.39773);
+  public static LoggedTunableNumber kS = new LoggedTunableNumber("Elevator/FF/kS", 0.36101);
+  public static LoggedTunableNumber kG = new LoggedTunableNumber("Elevator/FF/kG", 0.63923);
+  public static LoggedTunableNumber kV = new LoggedTunableNumber("Elevator/FF/kV", 3.9889);
+  public static LoggedTunableNumber kA = new LoggedTunableNumber("Elevator/FF/kA", 0.39773);
 
   // Real Robot numbers
   public static double rampRate = 0.1;
