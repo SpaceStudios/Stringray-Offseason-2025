@@ -50,7 +50,8 @@ public class AutoRoutines {
 
   public Command oneL4Coral(Drive drive, Outtake outtake, Hopper hopper, Elevator elevator) {
     return Commands.sequence(
-        DriveCommands.autoAlign(drive, () -> ReefConstants.getBestBranch(drive::getPose, true)),
+        DriveCommands.autoAlign(
+            drive, () -> ReefConstants.getBestBranch(drive::getPose, true, true)),
         elevator.setTarget(() -> CoralTarget.L4.height),
         elevator.setExtension(),
         Commands.waitUntil(elevator::atSetpoint),
