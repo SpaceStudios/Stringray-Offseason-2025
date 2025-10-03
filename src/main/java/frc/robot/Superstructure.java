@@ -342,12 +342,6 @@ public class Superstructure {
                 elevator.setExtension()));
 
     layout
-        .scoreRequest
-        .and(stateMap.get(State.CORAL_PRESCORE))
-        .and(() -> (kCoralTarget == CoralTarget.L1))
-        .onTrue(Commands.parallel());
-
-    layout
         .L1
         .and(stateMap.get(State.CORAL_PRESCORE))
         .onTrue(
