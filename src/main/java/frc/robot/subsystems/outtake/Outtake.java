@@ -4,6 +4,8 @@
 
 package frc.robot.subsystems.outtake;
 
+import edu.wpi.first.math.filter.Debouncer;
+import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.subsystems.proximity.ProximityDataAutoLogged;
@@ -20,6 +22,7 @@ public class Outtake extends SubsystemBase {
 
   private final OuttakeDataAutoLogged data = new OuttakeDataAutoLogged();
   private final ProximityDataAutoLogged proximityData = new ProximityDataAutoLogged();
+  private final Debouncer detectedDebouncer = new Debouncer(0.25, DebounceType.kBoth);
 
   public Outtake(OuttakeIO io, ProximityIO proximityIO) {
     this.io = io;
@@ -31,7 +34,8 @@ public class Outtake extends SubsystemBase {
     // This method will be called once per scheduler run
     io.getData(data);
     proximityIO.getData(proximityData);
-    Logger.processInputs("Outtake", data);
+    Logger.processInputs("Outtake/Mechanism", data);
+    Logger.processInputs("Outtake/Proximity", proximityData);
   }
 
   public Command setVoltage(DoubleSupplier voltage) {
@@ -43,7 +47,7 @@ public class Outtake extends SubsystemBase {
 
   @AutoLogOutput(key = "Outtake/Detected")
   public boolean getDetected() {
-    return proximityData.detected;
+    return detectedDebouncer.calculate(proximityData.detected);
   }
 
   public void setDetected(boolean detected) {

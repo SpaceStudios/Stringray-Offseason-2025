@@ -50,8 +50,7 @@ public class AutoRoutines {
 
   public Command oneL4Coral(Drive drive, Outtake outtake, Hopper hopper, Elevator elevator) {
     return Commands.sequence(
-        DriveCommands.autoAlign(
-            drive, () -> ReefConstants.getBestBranch(drive::getPose, true, true)),
+        DriveCommands.autoAlign(drive, () -> ReefConstants.getBestBranch(drive::getPose, true)),
         elevator.setTarget(() -> CoralTarget.L4.height),
         elevator.setExtension(),
         Commands.waitUntil(elevator::atSetpoint),
@@ -83,7 +82,6 @@ public class AutoRoutines {
             () -> {
               Logger.recordOutput("Autos/Trajectory", traj.getPoses());
               Optional<SwerveSample> sample = traj.sampleAt(timer.get(), isRedAlliance());
-              Pose2d pose = poseSupplier.get();
               if (sample.isPresent()) {
 
               } else {

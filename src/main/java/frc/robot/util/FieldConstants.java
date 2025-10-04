@@ -127,7 +127,6 @@ public class FieldConstants {
     private static List<Pose2d> rightBranchList = List.of(rightBranches);
 
     public static Pose2d getBestBranch(Supplier<Pose2d> poseSupplier, boolean left) {
-      flipConstants();
       Pose2d nearestTag = poseSupplier.get().nearest(tagList);
       if (nearestTag == aprilTags[3] || nearestTag == aprilTags[4] || nearestTag == aprilTags[5]) {
         left = !left;

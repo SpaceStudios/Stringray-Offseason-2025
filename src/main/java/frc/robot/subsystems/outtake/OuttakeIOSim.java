@@ -4,12 +4,8 @@
 
 package frc.robot.subsystems.outtake;
 
-import edu.wpi.first.math.filter.Debouncer;
-import edu.wpi.first.math.filter.Debouncer.DebounceType;
-
 /** Add your docs here. */
 public class OuttakeIOSim implements OuttakeIO {
-  private final Debouncer outDebouncer = new Debouncer(0.0, DebounceType.kFalling);
   private double voltage = 0.0;
 
   public OuttakeIOSim() {}
@@ -23,11 +19,5 @@ public class OuttakeIOSim implements OuttakeIO {
   @Override
   public void setVoltage(double voltage) {
     this.voltage = voltage;
-  }
-
-  @Override
-  public void setDetected(boolean detected) {
-    System.out.println(detected);
-    isDetected.set(detected);
   }
 }

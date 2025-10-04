@@ -14,7 +14,6 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.math.filter.Debouncer;
-import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Temperature;
 import edu.wpi.first.units.measure.Voltage;
@@ -31,7 +30,6 @@ public class OuttakeIOTalonFX implements OuttakeIO {
   private final VoltageOut voltageControl = new VoltageOut(0.0).withEnableFOC(false);
 
   private final Debouncer connectedDebouncer = new Debouncer(0.5);
-  private final Debouncer detectedDebouncer = new Debouncer(0.25, DebounceType.kBoth);
 
   public OuttakeIOTalonFX() {
     talon = new TalonFX(20); // TODO replace this with the actual outtake id;

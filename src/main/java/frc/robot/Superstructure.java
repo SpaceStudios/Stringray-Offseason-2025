@@ -28,7 +28,6 @@ import frc.robot.subsystems.led.LEDIOCandle;
 import frc.robot.subsystems.outtake.Outtake;
 import frc.robot.subsystems.outtake.OuttakeConstants;
 import frc.robot.util.AllianceFlipUtil;
-import frc.robot.util.AutoAlignConstants;
 import frc.robot.util.FieldConstants;
 import frc.robot.util.FieldConstants.ReefConstants;
 import frc.robot.util.FieldConstants.ReefConstants.CoralTarget;
@@ -265,8 +264,7 @@ public class Superstructure {
                 () ->
                     (ReefConstants.getBestBranch(
                         drive::getPose,
-                        layout.autoAlignLeft.getAsBoolean(),
-                        kCoralTarget == CoralTarget.L4)))); // Add Auto Align Command Here
+                        layout.autoAlignLeft.getAsBoolean())))); // Add Auto Align Command Here
 
     layout
         .autoAlignLeft
@@ -278,8 +276,7 @@ public class Superstructure {
                 () ->
                     (ReefConstants.getBestBranch(
                         drive::getPose,
-                        layout.autoAlignLeft.getAsBoolean(),
-                        kCoralTarget == CoralTarget.L4)))); // Add Auto Align Command Here
+                        layout.autoAlignLeft.getAsBoolean())))); // Add Auto Align Command Here
 
     layout
         .scoreRequest
@@ -408,17 +405,6 @@ public class Superstructure {
         .onTrue(this.setState(State.IDLE));
 
     stateMap.get(State.IDLE).and(outtake::getDetected).onTrue(this.setState(State.CORAL_READY));
-    // Sim States
-    stateMap
-        .get(State.CORAL_INTAKE)
-        .and(
-            () ->
-                (FieldConstants.inTolerance(
-                    () -> (SourceConstants.getNearestSource(drive::getPose)),
-                    drive::getPose,
-                    0.5,
-                    Math.PI / 4.0)))
-        .onTrue(outtake.setDetected(true));
   }
 
   // A set of bindings for the Climb subsystem and climb states (CLIMB_READY,
@@ -528,7 +514,10 @@ public class Superstructure {
         .and(stateMap.get(State.MANUAL_ELEVATOR))
         .whileTrue(
             DriveCommands.autoAlign(
-                drive, () -> (FieldConstants.ReefConstants.getBestBranch(drive::getPose, layout.autoAlignLeft.getAsBoolean()))));
+                drive,
+                () ->
+                    (FieldConstants.ReefConstants.getBestBranch(
+                        drive::getPose, layout.autoAlignLeft.getAsBoolean()))));
 
     // Coral Setpoints
     // L1 Setpoint
